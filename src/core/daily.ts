@@ -28,7 +28,8 @@ export interface DayRange {
   readonly to: string;
 }
 
-function shiftDay(day: string, days: number): string {
+/** Suma (o resta) días a "YYYY-MM-DD". */
+export function shiftDay(day: string, days: number): string {
   const date = new Date(`${day}T12:00:00Z`);
   date.setUTCDate(date.getUTCDate() + days);
   return date.toISOString().slice(0, 10);

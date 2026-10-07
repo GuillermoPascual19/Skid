@@ -180,6 +180,27 @@ export function dailyWins(day: string): Promise<DailyWin[]> {
   return api<DailyWin[]>('GET', `/daily/${day}/wins`);
 }
 
+// ------------------------------------------------------------ Estadísticas
+
+export interface PlayerStats {
+  played: number;
+  currentStreak: number;
+  bestStreak: number;
+  playedToday: boolean;
+  bestScore: number | null;
+  averageScore: number | null;
+  /** Días que quedó 1.º en alguna liga (con al menos 2 que terminaron). */
+  wins: number;
+  /** Retos con 1000 puntos. */
+  perfect: number;
+  /** Últimos 30 días, del más antiguo a hoy; score null = no jugó. */
+  history: { day: string; score: number | null; won: boolean }[];
+}
+
+export function getStats(): Promise<PlayerStats> {
+  return api<PlayerStats>('GET', '/stats');
+}
+
 // ------------------------------------------------------------------ Ligas
 
 export interface League {

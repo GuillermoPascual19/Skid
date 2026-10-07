@@ -16,11 +16,24 @@ export function homeScreen(): Screen {
   const account = h('div', { class: 'account' });
   let ticker = 0;
   let disposed = false;
+  /** Racha del servidor (null hasta que llega, o sin ranking online). */
+  let streak: { current: number; playedToday: boolean } | null = null;
 
   function renderDaily() {
     const record = loadDaily(day);
     const result = record?.result;
-    dailyCard.replaceChildren(h('p', { class: 'eyebrow' }, 'Reto diario'), h('h2', null, formatDay(day)));
+    dailyCard.replaceChildren(
+      h(
+        'div',
+        { class: 'daily-head' },
+        h('p', { class: 'eyebrow' }, 'Reto diario'),
+        streak && streak.current > 0 ? h('span', { class: 'streak-pill', title: 'Días seguidos' }, `🔥 ${streak.current}`) : null,
+      ),
+      h('h2', null, formatDay(day)),
+    );
+    if (streak && streak.current > 0 && !streak.playedToday && !result) {
+      dailyCard.append(h('p', { class: 'streak-line' }, `¡No pierdas tu racha de ${plural(streak.current, 'día', 'días')}!`));
+    }
 
     if (result) {
       dailyCard.append(
@@ -67,6 +80,13 @@ export function homeScreen(): Screen {
       const me = await currentMe();
       renderAccount(me);
       void celebrateYesterday(me.name);
+      void online
+        .getStats()
+        .then((s) => {
+          streak = { current: s.currentStreak, playedToday: s.playedToday };
+          if (!disposed) renderDaily();
+        })
+        .catch(() => {});
       // El reto pudo jugarse en otro dispositivo.
       const server = await online.getDaily(day);
       const record = loadDaily(day);
@@ -206,7 +226,12 @@ export function homeScreen(): Screen {
       h('div', { class: 'info' }, h('p', { class: 'eyebrow' }, 'Modo libre'), h('h2', null, `Nivel ${level}`), h('p', { class: 'muted' }, 'Cada nivel, un poco más difícil.')),
       h('button', { class: 'btn secondary', onclick: () => go({ name: 'levels' }) }, 'Jugar'),
     ),
-    h('button', { class: 'btn ghost big block', onclick: () => go({ name: 'ranking' }) }, '🏆 Ranking con amigos'),
+    h(
+      'div',
+      { class: 'row' },
+      h('button', { class: 'btn ghost', onclick: () => go({ name: 'ranking' }) }, '🏆 Ranking'),
+      online.onlineEnabled ? h('button', { class: 'btn ghost', onclick: () => go({ name: 'stats' }) }, '📊 Estadísticas') : null,
+    ),
     online.onlineEnabled ? account : null,
   );
 

@@ -3,6 +3,7 @@ import { h } from './ui/dom';
 import { dailyScreen, levelsScreen } from './ui/play';
 import { homeScreen } from './ui/home';
 import { rankingScreen } from './ui/ranking';
+import { statsScreen } from './ui/stats';
 import { go, setRoutes } from './ui/router';
 
 const FONT_FAMILY = '"Baloo 2"';
@@ -41,6 +42,7 @@ setRoutes({
   levels: () => levelsScreen(),
   daily: (route) => dailyScreen(route.record),
   ranking: (route) => rankingScreen(route),
+  stats: () => statsScreen(),
 });
 
 snow();

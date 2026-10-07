@@ -116,6 +116,7 @@ export function showDailyResult(day: string, r: DailyResult, opts: { error?: str
       h('p', { class: 'eyebrow' }, `Reto · ${formatDay(day)}`),
       h('h2', null, r.score >= 900 ? '¡Brutal!' : r.score >= 700 ? '¡Muy bien!' : '¡Completado!'),
       scoreEl,
+      r.streak ? h('p', { class: 'streak-line' }, `🔥 Racha de ${plural(r.streak, 'día', 'días')}`) : null,
       h(
         'div',
         { class: 'breakdown' },
