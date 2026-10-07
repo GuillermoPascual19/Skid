@@ -6,6 +6,7 @@ import {
   dayKey,
   decodeRun,
   encodeRun,
+  minPlayTimeMs,
   monthRange,
   NO_DEAD_ENDS_SINCE,
   replayRun,
@@ -58,6 +59,14 @@ describe('registro de la partida', () => {
     const board = parseBoard(['#####', '#@.1#', '#..2#', '#####']);
     // R recoge la 1; X reintenta; L no se mueve; R recoge la 1; D recoge la 2.
     expect(replayRun(board, decodeRun('RXLRD'))).toMatchObject({ moves: 3, retries: 1, hints: 0, completed: true });
+  });
+
+  it('cuenta las casillas recorridas y el tiempo mínimo de las animaciones', () => {
+    const board = parseBoard(['#####', '#@.1#', '#..2#', '#####']);
+    // R: 2 casillas; D: 1 casilla.
+    const run = replayRun(board, decodeRun('RD'));
+    expect(run).toMatchObject({ moves: 2, cells: 3 });
+    expect(minPlayTimeMs(run)).toBe(2 * 80 + 3 * 42);
   });
 
   it('cuenta las pistas sin que muevan al jugador', () => {

@@ -3,6 +3,7 @@
 
 import Phaser from 'phaser';
 import { DIRECTION_DELTA, nextPiece, type Board, type Direction, type GameState, type Piece } from '../core/board';
+import { slideDurationMs } from '../core/daily';
 
 /** Tamaño de casilla en el canvas; Phaser escala el canvas para que quepa. */
 export const TILE = 96;
@@ -169,7 +170,7 @@ export class BoardScene extends Phaser.Scene {
   private slide(before: GameState, after: GameState, dir: Direction): void {
     const board = this.board!;
     const distance = Math.abs(after.player.x - before.player.x) + Math.abs(after.player.y - before.player.y);
-    const duration = 80 + distance * 42;
+    const duration = slideDurationMs(distance);
     const target = this.center(after.player.x, after.player.y);
     this.shown = after;
     this.animating = true;

@@ -54,6 +54,18 @@ export function dailyLevel(day: string): GeneratedLevel {
 }
 
 /**
+ * Duración de la animación de un deslizamiento: base + por casilla recorrida.
+ * El juego la usa para animar y el servidor para saber cuánto tarda como
+ * mínimo una partida real (ver minPlayTimeMs).
+ */
+export const SLIDE_BASE_MS = 80;
+export const SLIDE_MS_PER_CELL = 42;
+
+export function slideDurationMs(cells: number): number {
+  return SLIDE_BASE_MS + cells * SLIDE_MS_PER_CELL;
+}
+
+/**
  * Lo que hace el jugador: un intento de movimiento, un reintento (volver al
  * inicio) o pedir una pista.
  */
@@ -79,6 +91,8 @@ export interface RunReplay {
   readonly state: GameState;
   /** Movimientos que desplazaron al jugador, sumando todos los intentos. */
   readonly moves: number;
+  /** Casillas recorridas en total (para el tiempo mínimo de las animaciones). */
+  readonly cells: number;
   readonly retries: number;
   readonly hints: number;
   readonly completed: boolean;
@@ -91,6 +105,7 @@ export interface RunReplay {
 export function replayRun(board: Board, events: readonly RunEvent[]): RunReplay {
   let state = initialState(board);
   let moves = 0;
+  let cells = 0;
   let retries = 0;
   let hints = 0;
   let completed = false;
@@ -108,9 +123,19 @@ export function replayRun(board: Board, events: readonly RunEvent[]): RunReplay 
     }
     const next = applyMove(board, state, event);
     if (!next) continue;
+    cells += Math.abs(next.player.x - state.player.x) + Math.abs(next.player.y - state.player.y);
     state = next;
     moves++;
     completed = isComplete(board, state);
   }
-  return { state, moves, retries, hints, completed };
+  return { state, moves, cells, retries, hints, completed };
+}
+
+/**
+ * Tiempo mínimo de una partida jugada de verdad: la suma de las animaciones de
+ * todos sus deslizamientos (el juego no envía el resultado hasta que termina la
+ * última). Una partida más rápida no se ha jugado en el juego.
+ */
+export function minPlayTimeMs(replay: Pick<RunReplay, 'moves' | 'cells'>): number {
+  return replay.moves * SLIDE_BASE_MS + replay.cells * SLIDE_MS_PER_CELL;
 }

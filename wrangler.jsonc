@@ -26,6 +26,12 @@
       "name": "SESSION_RATE_LIMITER",
       "namespace_id": "1001",
       "simple": { "limit": 3, "period": 60 }
+    },
+    // Intentos de unirse a ligas: 10 por minuto y jugador (evita probar códigos).
+    {
+      "name": "JOIN_RATE_LIMITER",
+      "namespace_id": "1002",
+      "simple": { "limit": 10, "period": 60 }
     }
   ],
   "observability": { "enabled": true }

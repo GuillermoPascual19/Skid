@@ -5,13 +5,14 @@
 // registro de movimientos y aquí se reproduce con la misma lógica del juego
 // (src/core) para calcular movimientos, reintentos, tiempo y puntuación.
 
-import { dailyLevel, dayKey, decodeRun, replayRun } from '../src/core/daily';
+import { dailyLevel, dayKey, decodeRun, minPlayTimeMs, replayRun } from '../src/core/daily';
 import { dailyScore } from '../src/core/score';
 
 interface Env {
   DB: D1Database;
   ASSETS: Fetcher;
   SESSION_RATE_LIMITER: RateLimit;
+  JOIN_RATE_LIMITER: RateLimit;
 }
 
 class HttpError extends Error {
@@ -66,6 +67,11 @@ async function handleApi(req: Request, url: URL, env: Env): Promise<Response> {
   if (route === 'PUT /me') {
     const { name } = await body<{ name?: unknown }>(req);
     const clean = cleanText(name, 2, 20, 'El nombre');
+    // Nombres únicos (sin distinguir mayúsculas), para que nadie se haga pasar por otro.
+    const taken = await env.DB.prepare('SELECT 1 FROM players WHERE lower(name) = lower(?) AND id <> ?')
+      .bind(clean, playerId)
+      .first();
+    if (taken) throw new HttpError(409, 'Ese nombre ya lo tiene otro jugador. Prueba con otro.');
     await env.DB.prepare('UPDATE players SET name = ? WHERE id = ?').bind(clean, playerId).run();
     return json({ name: clean });
   }
@@ -84,6 +90,9 @@ async function handleApi(req: Request, url: URL, env: Env): Promise<Response> {
     return json(await createLeague(env, playerId, name));
   }
   if (route === 'POST /leagues/join') {
+    // Sin límite se podrían probar códigos hasta acertar con una liga ajena.
+    const { success } = await env.JOIN_RATE_LIMITER.limit({ key: playerId });
+    if (!success) throw new HttpError(429, 'Demasiados intentos. Espera un minuto.');
     const { code } = await body<{ code?: unknown }>(req);
     return json(await joinLeague(env, playerId, code));
   }
@@ -241,6 +250,11 @@ async function finishRun(env: Env, playerId: string, day: string, log: unknown) 
 
   const finishedAt = Date.now();
   const timeMs = finishedAt - run.started_at;
+  // Jugando de verdad no se puede terminar antes de que acaben las animaciones
+  // (con un 10 % de margen). Más rápido = enviado con un script, sin jugar.
+  if (timeMs < minPlayTimeMs(replay) * 0.9) {
+    throw new HttpError(400, 'Partida demasiado rápida para haberse jugado en el juego');
+  }
   const optimal = level.solution.length;
   const score = dailyScore({ moves: replay.moves, optimal, retries: replay.retries, hints: replay.hints, timeMs }).total;
 
