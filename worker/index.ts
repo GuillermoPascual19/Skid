@@ -7,12 +7,22 @@
 
 import { dailyLevel, dayKey, decodeRun, minPlayTimeMs, replayRun } from '../src/core/daily';
 import { dailyScore } from '../src/core/score';
+import { GOOGLE_CERTS_URL, googleKeyProvider, InvalidTokenError, verifyGoogleIdToken } from './google';
 
 interface Env {
   DB: D1Database;
   ASSETS: Fetcher;
   SESSION_RATE_LIMITER: RateLimit;
   JOIN_RATE_LIMITER: RateLimit;
+  /** ID de cliente OAuth de Google (público). Sin él, el login con Google está desactivado. */
+  GOOGLE_CLIENT_ID?: string;
+  /** Solo para pruebas en local: de dónde descargar las claves de firma. */
+  GOOGLE_CERTS_URL?: string;
+}
+
+interface Session {
+  readonly playerId: string;
+  readonly tokenHash: string;
 }
 
 class HttpError extends Error {
@@ -57,12 +67,25 @@ async function handleApi(req: Request, url: URL, env: Env): Promise<Response> {
   let m: RegExpMatchArray | null;
 
   if (route === 'POST /session') return json(await createSession(req, env));
+  if (route === 'GET /config') return json({ googleClientId: env.GOOGLE_CLIENT_ID || null });
 
-  const playerId = await authenticate(req, env);
+  const session = await authenticate(req, env);
+  const { playerId } = session;
+
+  if (route === 'POST /auth/google') {
+    const { credential } = await body<{ credential?: unknown }>(req);
+    return json(await googleLogin(env, session, credential));
+  }
+  if (route === 'POST /auth/logout') {
+    await env.DB.prepare('DELETE FROM sessions WHERE token_hash = ?').bind(session.tokenHash).run();
+    return json({ ok: true });
+  }
 
   if (route === 'GET /me') {
-    const row = await env.DB.prepare('SELECT name FROM players WHERE id = ?').bind(playerId).first<{ name: string | null }>();
-    return json({ name: row?.name ?? null });
+    const row = await env.DB.prepare('SELECT name, email FROM players WHERE id = ?')
+      .bind(playerId)
+      .first<{ name: string | null; email: string | null }>();
+    return json({ name: row?.name ?? null, email: row?.email ?? null });
   }
   if (route === 'PUT /me') {
     const { name } = await body<{ name?: unknown }>(req);
@@ -149,20 +172,110 @@ async function createSession(req: Request, env: Env): Promise<{ token: string }>
   }
 
   const token = randomToken();
-  await env.DB.prepare('INSERT INTO players (id, token_hash) VALUES (?, ?)')
-    .bind(crypto.randomUUID(), await sha256(token))
-    .run();
+  const tokenHash = await sha256(token);
+  const id = crypto.randomUUID();
+  await env.DB.batch([
+    env.DB.prepare('INSERT INTO players (id, token_hash) VALUES (?, ?)').bind(id, tokenHash),
+    env.DB.prepare('INSERT INTO sessions (token_hash, player_id) VALUES (?, ?)').bind(tokenHash, id),
+  ]);
   return { token };
 }
 
-async function authenticate(req: Request, env: Env): Promise<string> {
+async function authenticate(req: Request, env: Env): Promise<Session> {
   const token = req.headers.get('Authorization')?.match(/^Bearer (.+)$/)?.[1];
   if (!token) throw new HttpError(401, 'Sin sesión');
-  const row = await env.DB.prepare('SELECT id FROM players WHERE token_hash = ?')
-    .bind(await sha256(token))
-    .first<{ id: string }>();
+  const tokenHash = await sha256(token);
+  const row = await env.DB.prepare('SELECT player_id FROM sessions WHERE token_hash = ?')
+    .bind(tokenHash)
+    .first<{ player_id: string }>();
   if (!row) throw new HttpError(401, 'Sesión no válida');
-  return row.id;
+  return { playerId: row.player_id, tokenHash };
+}
+
+// ------------------------------------------------------------- Login Google
+
+let googleKeys: ReturnType<typeof googleKeyProvider> | null = null;
+
+interface GoogleLoginResult {
+  /** Token nuevo si este dispositivo pasa a ser otro jugador; null si sigue siendo el mismo. */
+  token: string | null;
+  switched: boolean;
+  name: string | null;
+  email: string | null;
+}
+
+/**
+ * Entra con una cuenta de Google desde la sesión actual:
+ * - Si la cuenta ya tiene jugador, este dispositivo pasa a ser ese jugador.
+ * - Si no, se vincula al jugador actual (conserva nombre, historial y ligas)...
+ * - ...salvo que el jugador actual ya esté vinculado a otra cuenta: entonces se
+ *   crea un jugador nuevo para esta.
+ */
+async function googleLogin(env: Env, session: Session, credential: unknown): Promise<GoogleLoginResult> {
+  if (!env.GOOGLE_CLIENT_ID) throw new HttpError(503, 'El login con Google no está configurado');
+  if (typeof credential !== 'string' || credential.length > 4096) throw new HttpError(400, 'Credencial no válida');
+
+  googleKeys ??= googleKeyProvider(env.GOOGLE_CERTS_URL || GOOGLE_CERTS_URL);
+  let claims;
+  try {
+    claims = await verifyGoogleIdToken(credential, env.GOOGLE_CLIENT_ID, googleKeys);
+  } catch (err) {
+    // 400 y no 401: un 401 haría que el cliente tirase su sesión.
+    if (err instanceof InvalidTokenError) throw new HttpError(400, `No se pudo verificar la cuenta de Google: ${err.message}`);
+    throw err;
+  }
+  const email = claims.email_verified === false ? null : (claims.email ?? null);
+
+  const linked = await env.DB.prepare('SELECT id, name FROM players WHERE google_sub = ?')
+    .bind(claims.sub)
+    .first<{ id: string; name: string | null }>();
+
+  if (linked?.id === session.playerId) {
+    await env.DB.prepare('UPDATE players SET email = ? WHERE id = ?').bind(email, linked.id).run();
+    return { token: null, switched: false, name: linked.name, email };
+  }
+
+  if (linked) return switchDevice(env, session, linked.id, linked.name, email);
+
+  const current = await env.DB.prepare('SELECT name, google_sub FROM players WHERE id = ?')
+    .bind(session.playerId)
+    .first<{ name: string | null; google_sub: string | null }>();
+  if (current?.google_sub) {
+    // El jugador de este dispositivo es de otra cuenta de Google: jugador nuevo.
+    const id = crypto.randomUUID();
+    const token = randomToken();
+    const tokenHash = await sha256(token);
+    await env.DB.batch([
+      env.DB.prepare('INSERT INTO players (id, token_hash, google_sub, email) VALUES (?, ?, ?, ?)').bind(id, tokenHash, claims.sub, email),
+      env.DB.prepare('INSERT INTO sessions (token_hash, player_id) VALUES (?, ?)').bind(tokenHash, id),
+      env.DB.prepare('DELETE FROM sessions WHERE token_hash = ?').bind(session.tokenHash),
+    ]);
+    return { token, switched: true, name: null, email };
+  }
+
+  // Primera vez con esta cuenta: se vincula al jugador actual.
+  await env.DB.prepare('UPDATE players SET google_sub = ?, email = ? WHERE id = ? AND google_sub IS NULL')
+    .bind(claims.sub, email, session.playerId)
+    .run();
+  return { token: null, switched: false, name: current?.name ?? null, email };
+}
+
+/** Este dispositivo pasa a ser `playerId`: sesión nueva para él y fuera la actual. */
+async function switchDevice(
+  env: Env,
+  session: Session,
+  playerId: string,
+  name: string | null,
+  email: string | null,
+): Promise<GoogleLoginResult> {
+  const token = randomToken();
+  const tokenHash = await sha256(token);
+  await env.DB.batch([
+    env.DB.prepare('INSERT INTO sessions (token_hash, player_id) VALUES (?, ?)').bind(tokenHash, playerId),
+    env.DB.prepare('DELETE FROM sessions WHERE token_hash = ?').bind(session.tokenHash),
+    env.DB.prepare('UPDATE players SET email = ? WHERE id = ?').bind(email, playerId),
+  ]);
+  return { token, switched: true, name, email };
 }
 
 // ------------------------------------------------------------ Utilidades

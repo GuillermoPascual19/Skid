@@ -26,6 +26,11 @@
   box-sizing: border-box;
 }
 
+html {
+  /* Debajo del degradado (iOS ignora el fondo fijo al hacer scroll). */
+  background: var(--sky-bottom);
+}
+
 html,
 body {
   margin: 0;
@@ -370,6 +375,51 @@ p {
   text-align: center;
   font-weight: 600;
   color: var(--ink-soft);
+}
+
+.account {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.player-line.small {
+  font-size: 14px;
+  margin-top: -6px;
+}
+
+.account-card {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  text-align: center;
+}
+
+.account-card[hidden],
+.or-google[hidden] {
+  display: none;
+}
+
+.google-slot {
+  display: flex;
+  justify-content: center;
+  min-height: 44px;
+}
+
+.divider {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: var(--ink-faint);
+  font-weight: 600;
+}
+
+.divider::before,
+.divider::after {
+  content: '';
+  flex: 1;
+  height: 2px;
+  background: var(--line);
 }
 
 .link-btn {

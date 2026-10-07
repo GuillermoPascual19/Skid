@@ -99,3 +99,12 @@ export function claimWinCelebration(day: string): boolean {
   write(WIN_SEEN_KEY, day);
   return true;
 }
+
+/** Olvida el reto guardado en este navegador (p. ej. al cambiar de jugador). */
+export function clearDaily(): void {
+  try {
+    localStorage.removeItem(DAILY_KEY);
+  } catch {
+    // Sin almacenamiento: nada que borrar.
+  }
+}

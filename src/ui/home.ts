@@ -5,14 +5,15 @@ import * as online from '../services/online';
 import { claimWinCelebration, loadDaily, saveDaily, startingProgress } from '../services/storage';
 import { celebrate } from './celebrate';
 import { openDaily, resultFromServer, shareText, showDailyResult, today } from './daily';
-import { formatDay, formatTime, h, PENGUIN_SVG, plural, previousDay, share, svg, untilMidnight } from './dom';
-import { askName, currentName } from './profile';
+import { formatDay, formatTime, h, openModal, PENGUIN_SVG, plural, previousDay, share, svg, toast, untilMidnight } from './dom';
+import { renderGoogleButton, signOut } from './google';
+import { askName, currentMe } from './profile';
 import { go, type Screen } from './router';
 
 export function homeScreen(): Screen {
   const day = today();
   const dailyCard = h('section', { class: 'card daily-card' });
-  const playerLine = h('p', { class: 'player-line' });
+  const account = h('div', { class: 'account' });
   let ticker = 0;
   let disposed = false;
 
@@ -63,9 +64,9 @@ export function homeScreen(): Screen {
   async function syncWithServer() {
     if (!online.onlineEnabled) return;
     try {
-      const name = await currentName();
-      renderPlayer(name);
-      void celebrateYesterday(name);
+      const me = await currentMe();
+      renderAccount(me);
+      void celebrateYesterday(me.name);
       // El reto pudo jugarse en otro dispositivo.
       const server = await online.getDaily(day);
       const record = loadDaily(day);
@@ -107,17 +108,83 @@ export function homeScreen(): Screen {
     }
   }
 
-  function renderPlayer(name: string | null) {
-    playerLine.replaceChildren(
-      name ? `Juegas como ${name} · ` : '',
-      h(
-        'button',
-        {
-          class: 'link-btn',
-          onclick: async () => renderPlayer((await askName(name ?? '')) ?? name),
+  /** Quién juega en este dispositivo y, si no está vinculado, la invitación a entrar con Google. */
+  function renderAccount(me: online.Me) {
+    const changeName = h(
+      'button',
+      {
+        class: 'link-btn',
+        onclick: async () => {
+          const name = await askName(me.name ?? '');
+          if (name) renderAccount({ ...me, name });
         },
-        name ? 'cambiar nombre' : 'elige tu nombre',
-      ),
+      },
+      me.name ? 'cambiar nombre' : 'elige tu nombre',
+    );
+    const who = h('p', { class: 'player-line' }, me.name ? `Juegas como ${me.name} · ` : '', changeName);
+
+    if (me.email) {
+      account.replaceChildren(
+        who,
+        h(
+          'p',
+          { class: 'player-line small' },
+          `🔗 Cuenta de Google: ${me.email} · `,
+          h('button', { class: 'link-btn', onclick: confirmSignOut }, 'cerrar sesión'),
+        ),
+      );
+      return;
+    }
+
+    const slot = h('div', { class: 'google-slot' });
+    const card = h(
+      'section',
+      { class: 'card account-card', hidden: true },
+      h('p', { class: 'eyebrow' }, 'Todos tus dispositivos'),
+      h('p', { class: 'muted' }, 'Entra con Google y tu nombre, tus ligas y tus puntos te seguirán en el móvil y en el ordenador.'),
+      slot,
+    );
+    account.replaceChildren(who, card);
+    void renderGoogleButton(slot, (result) => {
+      if (result.switched) {
+        toast(result.name ? `Has entrado como ${result.name}` : 'Has entrado con tu cuenta de Google');
+        go({ name: 'home' }); // Otro jugador: se vuelve a cargar todo.
+        return;
+      }
+      toast('Cuenta vinculada con Google');
+      renderAccount({ name: result.name, email: result.email });
+    }).then((shown) => (card.hidden = !shown));
+  }
+
+  function confirmSignOut() {
+    const modal = openModal(
+      [
+        h('h2', null, '¿Cerrar sesión?'),
+        h('p', { class: 'lead' }, 'Saldrás en este dispositivo. Para volver a tu cuenta, entra otra vez con Google.'),
+        h(
+          'div',
+          { class: 'row' },
+          h('button', { class: 'btn ghost', onclick: () => modal.close() }, 'Cancelar'),
+          h(
+            'button',
+            {
+              class: 'btn secondary',
+              onclick: async () => {
+                modal.close();
+                try {
+                  await signOut();
+                  toast('Sesión cerrada');
+                } catch (err) {
+                  toast((err as Error).message);
+                }
+                go({ name: 'home' });
+              },
+            },
+            'Cerrar sesión',
+          ),
+        ),
+      ],
+      { dismissable: true },
     );
   }
 
@@ -140,7 +207,7 @@ export function homeScreen(): Screen {
       h('button', { class: 'btn secondary', onclick: () => go({ name: 'levels' }) }, 'Jugar'),
     ),
     h('button', { class: 'btn ghost big block', onclick: () => go({ name: 'ranking' }) }, '🏆 Ranking con amigos'),
-    online.onlineEnabled ? playerLine : null,
+    online.onlineEnabled ? account : null,
   );
 
   return {

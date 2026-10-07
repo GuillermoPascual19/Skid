@@ -78,8 +78,60 @@ async function api<T>(method: string, path: string, body?: unknown): Promise<T> 
 
 // ------------------------------------------------------------------ Perfil
 
+export interface Me {
+  name: string | null;
+  /** Correo de la cuenta de Google vinculada, o null si no hay. */
+  email: string | null;
+}
+
+export function getMe(): Promise<Me> {
+  return api<Me>('GET', '/me');
+}
+
 export async function getName(): Promise<string | null> {
-  return (await api<{ name: string | null }>('GET', '/me')).name;
+  return (await getMe()).name;
+}
+
+// ---------------------------------------------------------- Login con Google
+
+let configPromise: Promise<{ googleClientId: string | null }> | null = null;
+
+/** ID de cliente de Google para el botón de login (null si no está configurado). */
+export async function googleClientId(): Promise<string | null> {
+  configPromise ??= request<{ googleClientId: string | null }>('GET', '/config')
+    .then(({ data }) => data)
+    .catch((err) => {
+      configPromise = null;
+      throw err;
+    });
+  return (await configPromise).googleClientId;
+}
+
+export interface GoogleLogin {
+  /** true si este dispositivo ha pasado a ser otro jugador (el de esa cuenta). */
+  switched: boolean;
+  name: string | null;
+  email: string | null;
+}
+
+/** Entra con el token que da el botón de Google. Puede cambiar el jugador de este dispositivo. */
+export async function loginWithGoogle(credential: string): Promise<GoogleLogin> {
+  const result = await api<GoogleLogin & { token: string | null }>('POST', '/auth/google', { credential });
+  if (result.token) {
+    memoryToken = result.token;
+    writeToken(result.token);
+  }
+  return { switched: result.switched, name: result.name, email: result.email };
+}
+
+/** Cierra la sesión de este dispositivo. La próxima llamada crea un jugador anónimo nuevo. */
+export async function logout(): Promise<void> {
+  try {
+    await api('POST', '/auth/logout');
+  } finally {
+    memoryToken = null;
+    writeToken(null);
+  }
 }
 
 export async function setName(name: string): Promise<void> {
