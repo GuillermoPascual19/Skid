@@ -34,5 +34,9 @@
       "simple": { "limit": 10, "period": 60 }
     }
   ],
+  // ID de cliente OAuth de Google (público). Sin él no aparece el botón de Google.
+  "vars": {
+    "GOOGLE_CLIENT_ID": "1097617216037-1n4sbfi7fpman0fc3on4b5b23985g4fn.apps.googleusercontent.com"
+  },
   "observability": { "enabled": true }
 }
