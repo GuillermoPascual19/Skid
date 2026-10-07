@@ -1,0 +1,27 @@
+{
+  "name": "skid",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "scripts": {
+    "dev": "concurrently -k -n web,api -c cyan,magenta \"vite\" \"npm:dev:api\"",
+    "dev:web": "vite",
+    "dev:api": "vite build && wrangler d1 migrations apply skid --local && wrangler dev --port 8787",
+    "build": "tsc && tsc -p worker && vite build",
+    "preview": "vite preview",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "deploy": "npm run build && wrangler d1 migrations apply skid --remote && wrangler deploy"
+  },
+  "dependencies": {
+    "phaser": "^4.2.1"
+  },
+  "devDependencies": {
+    "@cloudflare/workers-types": "^4.20260702.1",
+    "concurrently": "^9.2.4",
+    "typescript": "^7.0.2",
+    "vite": "^8.3.3",
+    "vitest": "^4.1.11",
+    "wrangler": "^4.86.0"
+  }
+}

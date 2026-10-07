@@ -1,0 +1,32 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "skid",
+  "main": "worker/index.ts",
+  "compatibility_date": "2026-04-01",
+  // URL pública: https://skid.gpm-854.workers.dev
+  "workers_dev": true,
+  "preview_urls": false,
+  // El juego compilado (npm run build). Las rutas /api/* las atiende el Worker.
+  "assets": {
+    "directory": "./dist",
+    "binding": "ASSETS",
+    "run_worker_first": ["/api/*"]
+  },
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "skid",
+      "database_id": "e31c8814-9a01-4839-b53d-7a9a016eed5b",
+      "migrations_dir": "migrations"
+    }
+  ],
+  // Ráfagas de cuentas nuevas: como mucho 3 por minuto desde la misma IP.
+  "ratelimits": [
+    {
+      "name": "SESSION_RATE_LIMITER",
+      "namespace_id": "1001",
+      "simple": { "limit": 3, "period": 60 }
+    }
+  ],
+  "observability": { "enabled": true }
+}

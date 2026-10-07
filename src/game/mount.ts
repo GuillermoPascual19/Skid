@@ -1,0 +1,27 @@
+// Crea el juego de Phaser dentro de un elemento. Este módulo se carga bajo
+// demanda (import()) para que la portada no tenga que descargar Phaser.
+
+import Phaser from 'phaser';
+import type { Board } from '../core/board';
+import { BoardScene, TILE, type BoardHooks } from './BoardScene';
+
+export interface MountedBoard {
+  readonly scene: BoardScene;
+  destroy(): void;
+}
+
+export async function mountBoard(parent: HTMLElement, board: Board, hooks: BoardHooks): Promise<MountedBoard> {
+  const scene = new BoardScene(hooks);
+  const game = new Phaser.Game({
+    type: Phaser.AUTO,
+    parent,
+    width: board.width * TILE,
+    height: board.height * TILE,
+    transparent: true,
+    banner: false,
+    scale: { mode: Phaser.Scale.FIT, autoCenter: Phaser.Scale.CENTER_BOTH },
+    scene: [scene],
+  });
+  await scene.ready;
+  return { scene, destroy: () => game.destroy(true) };
+}
