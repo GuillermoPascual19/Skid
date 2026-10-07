@@ -3,6 +3,7 @@
 
 import * as online from '../services/online';
 import { formatDay, formatTime, h, openModal, plural, previousDay, share, toast } from './dom';
+import { monthRange, weekRange, type DayRange } from '../core/daily';
 import { today } from './daily';
 import { ensureName } from './profile';
 import { go, type Screen } from './router';
@@ -38,9 +39,19 @@ export function rankingScreen(route: { join?: string }): Screen {
     return { el };
   }
 
+  type Period = 'today' | 'yesterday' | 'week' | 'month';
+  const PERIODS: [Period, string][] = [
+    ['today', 'Hoy'],
+    ['yesterday', 'Ayer'],
+    ['week', 'Semana'],
+    ['month', 'Mes'],
+  ];
+
   let leagues: online.League[] = [];
   let selected: string | null = null;
-  let day = today();
+  let period: Period = 'today';
+  /** Cada consulta lleva su número: si el jugador cambia de pestaña, se descarta la respuesta vieja. */
+  let requestId = 0;
   let disposed = false;
 
   async function load() {
@@ -81,7 +92,8 @@ export function rankingScreen(route: { join?: string }): Screen {
 
     const league = leagues.find((l) => l.id === selected)!;
     const list = h('ol', { class: 'ranking' }, h('li', { class: 'empty', style: 'display:block' }, 'Cargando…'));
-    const isToday = day === today();
+    const day = period === 'yesterday' ? previousDay(today()) : today();
+    const range = period === 'week' ? weekRange(day) : period === 'month' ? monthRange(day) : null;
 
     body.replaceChildren(
       h(
@@ -105,10 +117,11 @@ export function rankingScreen(route: { join?: string }): Screen {
       h(
         'div',
         { class: 'segmented' },
-        h('button', { class: isToday ? 'active' : '', onclick: () => ((day = today()), render()) }, 'Hoy'),
-        h('button', { class: isToday ? '' : 'active', onclick: () => ((day = previousDay(today())), render()) }, 'Ayer'),
+        ...PERIODS.map(([p, label]) =>
+          h('button', { class: p === period ? 'active' : '', onclick: () => ((period = p), render()) }, label),
+        ),
       ),
-      h('p', { class: 'muted', style: 'text-align:center; margin-top:-6px' }, formatDay(day)),
+      h('p', { class: 'muted', style: 'text-align:center; margin-top:-6px' }, range ? formatRange(range, period === 'month') : formatDay(day)),
       list,
       h(
         'section',
@@ -132,19 +145,56 @@ export function rankingScreen(route: { join?: string }): Screen {
       ),
     );
 
-    void fillRanking(list, league.id, day);
+    if (range) void fillStandings(list, league.id, range);
+    else void fillRanking(list, league.id, day);
   }
 
-  async function fillRanking(list: HTMLElement, leagueId: string, forDay: string) {
+  /** Clasificación acumulada de la semana o el mes. */
+  async function fillStandings(list: HTMLElement, leagueId: string, range: DayRange) {
+    const id = ++requestId;
     try {
-      const rows = await online.leagueRanking(leagueId, forDay);
-      if (disposed || leagueId !== selected || forDay !== day) return;
+      const rows = await online.leagueStandings(leagueId, range.from, range.to);
+      if (disposed || id !== requestId) return;
       list.replaceChildren(
         ...rows.map((row, i) =>
           h(
             'li',
             { class: row.isMe ? 'me' : '' },
-            h('span', { class: 'pos' }, row.status === 'finished' ? (i === 0 ? '🥇' : i === 1 ? '🥈' : i === 2 ? '🥉' : String(i + 1)) : '·'),
+            h('span', { class: 'pos' }, row.days > 0 ? medal(i) : '·'),
+            h(
+              'span',
+              { class: 'who' },
+              h('strong', null, row.name + (row.isMe ? ' (tú)' : '')),
+              h(
+                'small',
+                null,
+                row.days > 0
+                  ? [plural(row.days, 'reto', 'retos'), row.wins > 0 ? `🏆 ${row.wins}` : null, `mejor ${row.best}`]
+                      .filter(Boolean)
+                      .join(' · ')
+                  : 'Sin retos en este periodo',
+              ),
+            ),
+            row.days > 0 ? h('span', { class: 'pts' }, String(row.points)) : h('span', { class: 'pts none' }, '—'),
+          ),
+        ),
+      );
+    } catch (err) {
+      if (id === requestId) list.replaceChildren(h('li', { class: 'empty', style: 'display:block' }, (err as Error).message));
+    }
+  }
+
+  async function fillRanking(list: HTMLElement, leagueId: string, forDay: string) {
+    const id = ++requestId;
+    try {
+      const rows = await online.leagueRanking(leagueId, forDay);
+      if (disposed || id !== requestId) return;
+      list.replaceChildren(
+        ...rows.map((row, i) =>
+          h(
+            'li',
+            { class: row.isMe ? 'me' : '' },
+            h('span', { class: 'pos' }, row.status === 'finished' ? medal(i) : '·'),
             h(
               'span',
               { class: 'who' },
@@ -166,7 +216,7 @@ export function rankingScreen(route: { join?: string }): Screen {
         ),
       );
     } catch (err) {
-      list.replaceChildren(h('li', { class: 'empty', style: 'display:block' }, (err as Error).message));
+      if (id === requestId) list.replaceChildren(h('li', { class: 'empty', style: 'display:block' }, (err as Error).message));
     }
   }
 
@@ -238,4 +288,22 @@ export function rankingScreen(route: { join?: string }): Screen {
       disposed = true;
     },
   };
+}
+
+function medal(index: number): string {
+  return ['🥇', '🥈', '🥉'][index] ?? String(index + 1);
+}
+
+/** "Semana del 5 al 11 de octubre" o "Octubre de 2026". */
+function formatRange({ from, to }: DayRange, month: boolean): string {
+  const date = (d: string) => new Date(`${d}T12:00:00Z`);
+  const fmt = (d: string, opts: Intl.DateTimeFormatOptions) => new Intl.DateTimeFormat('es-ES', { ...opts, timeZone: 'UTC' }).format(date(d));
+  if (month) {
+    const text = fmt(from, { month: 'long', year: 'numeric' });
+    return text.charAt(0).toUpperCase() + text.slice(1);
+  }
+  const sameMonth = from.slice(0, 7) === to.slice(0, 7);
+  return sameMonth
+    ? `Semana del ${fmt(from, { day: 'numeric' })} al ${fmt(to, { day: 'numeric', month: 'long' })}`
+    : `Semana del ${fmt(from, { day: 'numeric', month: 'long' })} al ${fmt(to, { day: 'numeric', month: 'long' })}`;
 }

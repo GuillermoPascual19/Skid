@@ -1,6 +1,16 @@
 import { describe, expect, it } from 'vitest';
 import { parseBoard } from '../src/core/board';
-import { DAILY_LEVEL, dailyLevel, dayKey, decodeRun, encodeRun, NO_DEAD_ENDS_SINCE, replayRun } from '../src/core/daily';
+import {
+  DAILY_LEVEL,
+  dailyLevel,
+  dayKey,
+  decodeRun,
+  encodeRun,
+  monthRange,
+  NO_DEAD_ENDS_SINCE,
+  replayRun,
+  weekRange,
+} from '../src/core/daily';
 import { generateLevel } from '../src/core/generator';
 import { hashSeed } from '../src/core/rng';
 import { dailyScore } from '../src/core/score';
@@ -11,6 +21,21 @@ describe('dayKey', () => {
     expect(dayKey(new Date('2026-10-06T21:30:00Z'))).toBe('2026-10-06'); // 23:30 en Madrid
     expect(dayKey(new Date('2026-10-06T22:30:00Z'))).toBe('2026-10-07'); // 00:30 en Madrid
     expect(dayKey(new Date('2026-01-15T23:30:00Z'))).toBe('2026-01-16'); // invierno, UTC+1
+  });
+});
+
+describe('weekRange y monthRange', () => {
+  it('la semana va de lunes a domingo', () => {
+    expect(weekRange('2026-10-07')).toEqual({ from: '2026-10-05', to: '2026-10-11' }); // miércoles
+    expect(weekRange('2026-10-05')).toEqual({ from: '2026-10-05', to: '2026-10-11' }); // lunes
+    expect(weekRange('2026-10-11')).toEqual({ from: '2026-10-05', to: '2026-10-11' }); // domingo
+    expect(weekRange('2026-12-31')).toEqual({ from: '2026-12-28', to: '2027-01-03' }); // cambio de año
+  });
+
+  it('el mes natural, también en febrero', () => {
+    expect(monthRange('2026-10-07')).toEqual({ from: '2026-10-01', to: '2026-10-31' });
+    expect(monthRange('2026-02-14')).toEqual({ from: '2026-02-01', to: '2026-02-28' });
+    expect(monthRange('2028-02-03')).toEqual({ from: '2028-02-01', to: '2028-02-29' });
   });
 });
 

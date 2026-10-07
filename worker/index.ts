@@ -92,6 +92,14 @@ async function handleApi(req: Request, url: URL, env: Env): Promise<Response> {
     if (!/^\d{4}-\d{2}-\d{2}$/.test(day)) throw new HttpError(400, 'Día no válido');
     return json(await leagueRanking(env, playerId, m[1], day));
   }
+  if ((m = route.match(/^GET \/leagues\/([\w-]+)\/standings$/))) {
+    const from = url.searchParams.get('from') ?? '';
+    const to = url.searchParams.get('to') ?? '';
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(from) || !/^\d{4}-\d{2}-\d{2}$/.test(to)) throw new HttpError(400, 'Periodo no válido');
+    const days = (Date.parse(to) - Date.parse(from)) / 86_400_000;
+    if (days < 0 || days > 31) throw new HttpError(400, 'El periodo debe ser de 1 a 32 días');
+    return json(await leagueStandings(env, playerId, m[1], from, to));
+  }
 
   throw new HttpError(404, 'No encontrado');
 }
@@ -321,10 +329,7 @@ interface RankingDbRow {
 
 /** Ranking de una liga para un día. La puntuación de quien aún juega no se muestra. */
 async function leagueRanking(env: Env, playerId: string, leagueId: string, day: string) {
-  const member = await env.DB.prepare('SELECT 1 FROM league_members WHERE league_id = ? AND player_id = ?')
-    .bind(leagueId, playerId)
-    .first();
-  if (!member) throw new HttpError(403, 'No perteneces a esta liga');
+  await requireMember(env, playerId, leagueId);
 
   const { results } = await env.DB.prepare(
     `SELECT p.name, p.id = ?1 AS is_me, r.started_at, r.finished_at, r.score, r.moves, r.retries, r.hints, r.time_ms
@@ -385,4 +390,65 @@ async function dailyWins(env: Env, playerId: string, day: string) {
   return results
     .filter((r) => r.winner === playerId && r.finishers >= 2)
     .map((r) => ({ leagueId: r.league_id, leagueName: r.league_name, players: r.finishers, score: r.score }));
+}
+
+async function requireMember(env: Env, playerId: string, leagueId: string): Promise<void> {
+  const member = await env.DB.prepare('SELECT 1 FROM league_members WHERE league_id = ? AND player_id = ?')
+    .bind(leagueId, playerId)
+    .first();
+  if (!member) throw new HttpError(403, 'No perteneces a esta liga');
+}
+
+interface StandingRow {
+  name: string;
+  is_me: number;
+  points: number;
+  days: number;
+  wins: number;
+  best: number | null;
+}
+
+/**
+ * Clasificación de una liga en un periodo (semana, mes): suma de las
+ * puntuaciones de los retos terminados. Un día cuenta como ganado si fuiste
+ * el 1.º y terminaron al menos 2 (la misma regla que la celebración).
+ */
+async function leagueStandings(env: Env, playerId: string, leagueId: string, from: string, to: string) {
+  await requireMember(env, playerId, leagueId);
+  const { results } = await env.DB.prepare(
+    `WITH runs AS (
+       SELECT r.player_id, r.day, r.score, r.time_ms
+       FROM daily_runs r
+       JOIN league_members lm ON lm.player_id = r.player_id AND lm.league_id = ?4
+       WHERE r.day BETWEEN ?2 AND ?3 AND r.finished_at IS NOT NULL
+     ),
+     ranked AS (
+       SELECT *,
+              ROW_NUMBER() OVER (PARTITION BY day ORDER BY score DESC, time_ms ASC) AS pos,
+              COUNT(*) OVER (PARTITION BY day) AS finishers
+       FROM runs
+     )
+     SELECT p.name, p.id = ?1 AS is_me,
+            COALESCE(SUM(k.score), 0) AS points,
+            COUNT(k.day) AS days,
+            COALESCE(SUM(k.pos = 1 AND k.finishers >= 2), 0) AS wins,
+            MAX(k.score) AS best
+     FROM league_members m
+     JOIN players p ON p.id = m.player_id
+     LEFT JOIN ranked k ON k.player_id = m.player_id
+     WHERE m.league_id = ?4
+     GROUP BY p.id
+     ORDER BY points DESC, wins DESC, days DESC, p.name`,
+  )
+    .bind(playerId, from, to, leagueId)
+    .all<StandingRow>();
+
+  return results.map((r) => ({
+    name: r.name,
+    isMe: r.is_me === 1,
+    points: r.points,
+    days: r.days,
+    wins: r.wins,
+    best: r.best,
+  }));
 }

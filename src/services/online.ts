@@ -160,6 +160,23 @@ export interface RankingRow {
   timeMs: number | null;
 }
 
+export interface StandingRow {
+  name: string;
+  isMe: boolean;
+  /** Suma de puntos del periodo. */
+  points: number;
+  /** Retos terminados en el periodo. */
+  days: number;
+  /** Días que quedó 1.º (con al menos 2 que terminaron). */
+  wins: number;
+  best: number | null;
+}
+
+/** Clasificación de una liga entre dos días (ambos incluidos). */
+export function leagueStandings(leagueId: string, from: string, to: string): Promise<StandingRow[]> {
+  return api<StandingRow[]>('GET', `/leagues/${encodeURIComponent(leagueId)}/standings?from=${from}&to=${to}`);
+}
+
 export function leagueRanking(leagueId: string, day: string): Promise<RankingRow[]> {
   return api<RankingRow[]>('GET', `/leagues/${encodeURIComponent(leagueId)}/ranking?day=${day}`);
 }

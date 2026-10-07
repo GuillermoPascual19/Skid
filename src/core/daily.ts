@@ -22,6 +22,33 @@ export function dayKey(date: Date, timeZone: string = DAILY_TIME_ZONE): string {
   return new Intl.DateTimeFormat('en-CA', { timeZone, year: 'numeric', month: '2-digit', day: '2-digit' }).format(date);
 }
 
+/** Periodo de días, ambos incluidos ("YYYY-MM-DD"). */
+export interface DayRange {
+  readonly from: string;
+  readonly to: string;
+}
+
+function shiftDay(day: string, days: number): string {
+  const date = new Date(`${day}T12:00:00Z`);
+  date.setUTCDate(date.getUTCDate() + days);
+  return date.toISOString().slice(0, 10);
+}
+
+/** Semana (de lunes a domingo) que contiene `day`. */
+export function weekRange(day: string): DayRange {
+  const weekday = (new Date(`${day}T12:00:00Z`).getUTCDay() + 6) % 7; // Lunes = 0.
+  const from = shiftDay(day, -weekday);
+  return { from, to: shiftDay(from, 6) };
+}
+
+/** Mes natural que contiene `day`. */
+export function monthRange(day: string): DayRange {
+  const [y, m] = day.split('-').map(Number);
+  const last = new Date(Date.UTC(y, m, 0)).getUTCDate();
+  const month = String(m).padStart(2, '0');
+  return { from: `${y}-${month}-01`, to: `${y}-${month}-${String(last).padStart(2, '0')}` };
+}
+
 export function dailyLevel(day: string): GeneratedLevel {
   return generateLevel(DAILY_LEVEL, hashSeed(`skid-daily:${day}`), { rejectDeadEnds: day >= NO_DEAD_ENDS_SINCE });
 }
