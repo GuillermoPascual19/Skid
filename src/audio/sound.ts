@@ -173,6 +173,7 @@ export function setAudioSettings(next: Partial<AudioSettings>): void {
   if (c && sfxBus && musicBus) {
     const now = c.currentTime;
     sfxBus.gain.setTargetAtTime(settings.sfx ? SFX_VOLUME : 0, now, 0.05);
+    holdAt(musicBus.gain, now); // Por si una sintonía la tenía bajada.
     musicBus.gain.setTargetAtTime(musicGain(settings), now, 0.15);
     void c.resume();
     if (musicGain(settings) > 0) {
@@ -191,6 +192,26 @@ export function onAudioSettings(fn: (s: AudioSettings) => void): () => void {
   return () => listeners.delete(fn);
 }
 
+/** Anula lo programado en `param` dejándolo donde esté ahora (sin saltos de volumen). */
+function holdAt(param: AudioParam, t: number): void {
+  if (param.cancelAndHoldAtTime) param.cancelAndHoldAtTime(t);
+  else {
+    const value = param.value;
+    param.cancelScheduledValues(t);
+    param.setValueAtTime(value, t);
+  }
+}
+
+/** Baja la música durante `seconds` para que se oiga bien una sintonía, y la recupera poco a poco. */
+function duckMusic(seconds: number): void {
+  if (!settings.sfx || !ctx || !musicBus || ctx.state !== 'running') return;
+  const gain = musicGain(settings);
+  const now = ctx.currentTime;
+  holdAt(musicBus.gain, now);
+  musicBus.gain.setTargetAtTime(gain * 0.3, now, 0.05);
+  musicBus.gain.setTargetAtTime(gain, now + seconds, 0.6);
+}
+
 /** Ejecuta un efecto si los efectos están activados y el audio ya está en marcha. */
 function play(fn: (c: AudioContext, out: AudioNode, t: number) => void): void {
   if (!settings.sfx || !ctx || !sfxBus || ctx.state !== 'running') return;
@@ -206,7 +227,10 @@ export const sfx = {
   land: () => play((c, o, t) => synth.thud(c, o, t, 1)),
   bump: () => play((c, o, t) => synth.thud(c, o, t, 0.55)),
   collect: (index: number) => play((c, o, t) => synth.collect(c, o, t, index)),
-  win: () => play((c, o, t) => synth.win(c, o, t)),
+  win: () => {
+    duckMusic(synth.WIN_S);
+    play((c, o, t) => synth.win(c, o, t));
+  },
   fanfare: () => play((c, o, t) => synth.fanfare(c, o, t)),
   hint: () => play((c, o, t) => synth.hint(c, o, t)),
   stuck: () => play((c, o, t) => synth.stuck(c, o, t)),
