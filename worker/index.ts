@@ -7,6 +7,8 @@
 
 import { dailyLevel, dayKey, decodeRun, minPlayTimeMs, replayRun, shiftDay } from '../src/core/daily';
 import { streaks } from '../src/core/stats';
+import { computeAchievements, unlockedHats, weekTitles, type LeagueRun } from '../src/core/achievements';
+import { isHatId } from '../src/art/hats';
 import { dailyScore } from '../src/core/score';
 import { GOOGLE_CERTS_URL, googleKeyProvider, InvalidTokenError, verifyGoogleIdToken } from './google';
 
@@ -83,10 +85,26 @@ async function handleApi(req: Request, url: URL, env: Env): Promise<Response> {
   }
 
   if (route === 'GET /me') {
-    const row = await env.DB.prepare('SELECT name, email FROM players WHERE id = ?')
+    const row = await env.DB.prepare('SELECT name, email, hat FROM players WHERE id = ?')
       .bind(playerId)
-      .first<{ name: string | null; email: string | null }>();
-    return json({ name: row?.name ?? null, email: row?.email ?? null });
+      .first<{ name: string | null; email: string | null; hat: string | null }>();
+    return json({ name: row?.name ?? null, email: row?.email ?? null, hat: isHatId(row?.hat) ? row.hat : null });
+  }
+  if (route === 'GET /achievements') {
+    const [items, row] = await Promise.all([
+      playerAchievements(env, playerId),
+      env.DB.prepare('SELECT hat FROM players WHERE id = ?').bind(playerId).first<{ hat: string | null }>(),
+    ]);
+    return json({ hat: isHatId(row?.hat) ? row.hat : null, items });
+  }
+  if (route === 'PUT /me/hat') {
+    const { hat } = await body<{ hat?: unknown }>(req);
+    if (hat !== null && !isHatId(hat)) throw new HttpError(400, 'Gorro desconocido');
+    if (hat !== null && !unlockedHats(await playerAchievements(env, playerId)).has(hat)) {
+      throw new HttpError(403, 'Aún no has desbloqueado ese gorro');
+    }
+    await env.DB.prepare('UPDATE players SET hat = ? WHERE id = ?').bind(hat, playerId).run();
+    return json({ hat });
   }
   if (route === 'PUT /me') {
     const { name } = await body<{ name?: unknown }>(req);
@@ -451,6 +469,7 @@ async function joinLeague(env: Env, playerId: string, code: unknown): Promise<Le
 
 interface RankingDbRow {
   name: string;
+  hat: string | null;
   is_me: number;
   started_at: number | null;
   finished_at: number | null;
@@ -466,7 +485,7 @@ async function leagueRanking(env: Env, playerId: string, leagueId: string, day: 
   await requireMember(env, playerId, leagueId);
 
   const { results } = await env.DB.prepare(
-    `SELECT p.name, p.id = ?1 AS is_me, r.started_at, r.finished_at, r.score, r.moves, r.retries, r.hints, r.time_ms
+    `SELECT p.name, p.hat, p.id = ?1 AS is_me, r.started_at, r.finished_at, r.score, r.moves, r.retries, r.hints, r.time_ms
      FROM league_members m
      JOIN players p ON p.id = m.player_id
      LEFT JOIN daily_runs r ON r.player_id = m.player_id AND r.day = ?2
@@ -480,6 +499,7 @@ async function leagueRanking(env: Env, playerId: string, leagueId: string, day: 
     const finished = r.finished_at !== null;
     return {
       name: r.name,
+      hat: isHatId(r.hat) ? r.hat : null,
       isMe: r.is_me === 1,
       status: finished ? 'finished' : r.started_at !== null ? 'playing' : 'pending',
       score: finished ? r.score : null,
@@ -535,6 +555,7 @@ async function requireMember(env: Env, playerId: string, leagueId: string): Prom
 
 interface StandingRow {
   name: string;
+  hat: string | null;
   is_me: number;
   points: number;
   days: number;
@@ -562,7 +583,7 @@ async function leagueStandings(env: Env, playerId: string, leagueId: string, fro
               COUNT(*) OVER (PARTITION BY day) AS finishers
        FROM runs
      )
-     SELECT p.name, p.id = ?1 AS is_me,
+     SELECT p.name, p.hat, p.id = ?1 AS is_me,
             COALESCE(SUM(k.score), 0) AS points,
             COUNT(k.day) AS days,
             COALESCE(SUM(k.pos = 1 AND k.finishers >= 2), 0) AS wins,
@@ -579,6 +600,7 @@ async function leagueStandings(env: Env, playerId: string, leagueId: string, fro
 
   return results.map((r) => ({
     name: r.name,
+    hat: isHatId(r.hat) ? r.hat : null,
     isMe: r.is_me === 1,
     points: r.points,
     days: r.days,
@@ -646,4 +668,26 @@ async function playerStats(env: Env, playerId: string) {
     perfect: scores.filter((s) => s >= 1000).length,
     history,
   };
+}
+
+// ------------------------------------------------------------------ Logros
+
+async function playerAchievements(env: Env, playerId: string) {
+  const [{ results: runs }, wins, { results: leagueRuns }] = await Promise.all([
+    env.DB.prepare('SELECT day, score, retries, hints FROM daily_runs WHERE player_id = ? AND finished_at IS NOT NULL')
+      .bind(playerId)
+      .all<{ day: string; score: number; retries: number; hints: number }>(),
+    wonDays(env, playerId),
+    env.DB.prepare(
+      `SELECT lm.league_id AS leagueId, r.player_id AS playerId, r.day, r.score
+       FROM daily_runs r
+       JOIN league_members lm ON lm.player_id = r.player_id
+       WHERE r.finished_at IS NOT NULL
+         AND lm.league_id IN (SELECT league_id FROM league_members WHERE player_id = ?)`,
+    )
+      .bind(playerId)
+      .all<LeagueRun>(),
+  ]);
+  const today = dayKey(new Date());
+  return computeAchievements({ runs, wonDays: wins.size, weekTitles: weekTitles(leagueRuns, playerId, today), today });
 }

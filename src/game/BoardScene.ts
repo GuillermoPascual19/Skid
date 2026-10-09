@@ -4,6 +4,7 @@
 import Phaser from 'phaser';
 import { DIRECTION_DELTA, nextPiece, type Board, type Direction, type GameState, type Piece } from '../core/board';
 import { slideDurationMs } from '../core/daily';
+import { HAT_BOX, hatSvg, type HatId } from '../art/hats';
 
 /** Tamaño de casilla en el canvas; Phaser escala el canvas para que quepa. */
 export const TILE = 96;
@@ -81,6 +82,8 @@ export class BoardScene extends Phaser.Scene {
   private face!: Phaser.GameObjects.Container;
   private pulse: Phaser.Tweens.Tween | null = null;
   private hint: Phaser.GameObjects.Container | null = null;
+  private hat: HatId | null = null;
+  private hatImage: Phaser.GameObjects.Image | null = null;
 
   constructor(private readonly hooks: BoardHooks) {
     super('board');
@@ -452,6 +455,48 @@ export class BoardScene extends Phaser.Scene {
 
     this.penguin = this.add.container(0, 0, [shadow, ...feet, ...flippers, body, this.face]);
     this.layer.add(this.penguin);
+    this.hatImage = null;
+    void this.applyHat();
+  }
+
+  // ------------------------------------------------------------------- Gorro
+
+  /** Pone (o quita, con null) el gorro del pingüino. */
+  setHat(hat: HatId | null): void {
+    this.hat = hat;
+    if (this.penguin) void this.applyHat();
+  }
+
+  /** El SVG del gorro (src/art/hats.ts) se convierte en textura una sola vez. */
+  private async hatTexture(hat: HatId): Promise<string> {
+    const key = `hat-${hat}`;
+    if (this.textures.exists(key)) return key;
+    const img = new Image();
+    img.src = `data:image/svg+xml;charset=utf-8,${encodeURIComponent(hatSvg(hat))}`;
+    await img.decode();
+    if (!this.textures.exists(key)) this.textures.addImage(key, img);
+    return key;
+  }
+
+  private async applyHat(): Promise<void> {
+    const hat = this.hat;
+    const penguin = this.penguin;
+    this.hatImage?.destroy();
+    this.hatImage = null;
+    if (!hat) return;
+    const key = await this.hatTexture(hat).catch(() => null);
+    // Mientras se cargaba pudo cambiar el gorro o el tablero.
+    if (!key || hat !== this.hat || penguin !== this.penguin || !penguin.active) return;
+
+    // Coordenadas del SVG: el cuerpo mide 64 de ancho y la cabeza acaba en y = 14.
+    // Aquí el cuerpo mide 2r y la cabeza acaba en -1.075r.
+    const r = TILE * 0.33;
+    const unit = (2 * r) / 64;
+    const headTopInBox = 14 - HAT_BOX.top;
+    const image = this.add.image(0, -1.075 * r + (HAT_BOX.height / 2 - headTopInBox) * unit, key);
+    image.setDisplaySize(100 * unit, HAT_BOX.height * unit);
+    penguin.add(image);
+    this.hatImage = image;
   }
 
   /** La cara del pingüino se gira hacia donde va. */

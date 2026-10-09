@@ -145,21 +145,6 @@ export function plural(n: number, one: string, many: string): string {
 
 // -------------------------------------------------------------------- Iconos
 
-export const PENGUIN_SVG = `
-<svg viewBox="0 0 100 100" aria-hidden="true">
-  <ellipse cx="50" cy="93" rx="26" ry="5" fill="#2a6f99" opacity=".2"/>
-  <ellipse cx="38" cy="89" rx="9" ry="5" fill="#ff9f1c"/><ellipse cx="62" cy="89" rx="9" ry="5" fill="#ff9f1c"/>
-  <ellipse cx="20" cy="56" rx="7" ry="17" fill="#1f2f45" transform="rotate(18 20 56)"/>
-  <ellipse cx="80" cy="56" rx="7" ry="17" fill="#1f2f45" transform="rotate(-18 80 56)"/>
-  <ellipse cx="50" cy="52" rx="32" ry="38" fill="#1f2f45"/>
-  <ellipse cx="50" cy="60" rx="21" ry="25" fill="#fff"/>
-  <circle cx="41" cy="40" r="11" fill="#fff"/><circle cx="59" cy="40" r="11" fill="#fff"/>
-  <circle cx="42" cy="40" r="4.5" fill="#1f2f45"/><circle cx="58" cy="40" r="4.5" fill="#1f2f45"/>
-  <circle cx="43.5" cy="38.5" r="1.6" fill="#fff"/><circle cx="59.5" cy="38.5" r="1.6" fill="#fff"/>
-  <ellipse cx="33" cy="51" rx="4.5" ry="2.6" fill="#ff8fa3" opacity=".7"/><ellipse cx="67" cy="51" rx="4.5" ry="2.6" fill="#ff8fa3" opacity=".7"/>
-  <path d="M44 47 L56 47 L50 55 Z" fill="#ff9f1c"/>
-</svg>`;
-
 export function starSvg(filled: boolean): SVGElement {
   const fill = filled ? '#ffc93c' : '#d5e3ef';
   const stroke = filled ? '#e48f0c' : '#bccfdf';

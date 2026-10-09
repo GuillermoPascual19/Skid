@@ -5,7 +5,9 @@ import * as online from '../services/online';
 import { claimWinCelebration, loadDaily, saveDaily, startingProgress } from '../services/storage';
 import { celebrate } from './celebrate';
 import { openDaily, resultFromServer, shareText, showDailyResult, today } from './daily';
-import { formatDay, formatTime, h, openModal, PENGUIN_SVG, plural, previousDay, share, svg, toast, untilMidnight } from './dom';
+import { penguinSvg } from '../art/hats';
+import { celebrateNewAchievements } from './achievements';
+import { formatDay, formatTime, h, openModal, plural, previousDay, share, svg, toast, untilMidnight } from './dom';
 import { renderGoogleButton, signOut } from './google';
 import { askName, currentMe } from './profile';
 import { go, type Screen } from './router';
@@ -14,6 +16,8 @@ export function homeScreen(): Screen {
   const day = today();
   const dailyCard = h('section', { class: 'card daily-card' });
   const account = h('div', { class: 'account' });
+  const logoPenguin = h('div', { class: 'logo-penguin' }, svg(penguinSvg()));
+  const wearHat = (hat: online.Me['hat']) => logoPenguin.replaceChildren(svg(penguinSvg(hat)));
   let ticker = 0;
   let disposed = false;
   /** Racha del servidor (null hasta que llega, o sin ranking online). */
@@ -79,7 +83,11 @@ export function homeScreen(): Screen {
     try {
       const me = await currentMe();
       renderAccount(me);
-      void celebrateYesterday(me.name);
+      wearHat(me.hat);
+      // Primero la victoria de ayer y después los logros nuevos, nunca dos a la vez.
+      void celebrateYesterday(me.name)
+        .then(() => (disposed || !me.name ? undefined : celebrateNewAchievements(wearHat)))
+        .catch(() => {});
       void online
         .getStats()
         .then((s) => {
@@ -172,7 +180,7 @@ export function homeScreen(): Screen {
         return;
       }
       toast('Cuenta vinculada con Google');
-      renderAccount({ name: result.name, email: result.email });
+      renderAccount({ name: result.name, email: result.email, hat: null });
     }).then((shown) => (card.hidden = !shown));
   }
 
@@ -215,7 +223,7 @@ export function homeScreen(): Screen {
     h(
       'header',
       { class: 'logo' },
-      svg(PENGUIN_SVG),
+      logoPenguin,
       h('h1', null, 'Skid'),
       h('p', null, 'Desliza sobre el hielo. Recoge en orden.'),
     ),
@@ -227,10 +235,11 @@ export function homeScreen(): Screen {
       h('button', { class: 'btn secondary', onclick: () => go({ name: 'levels' }) }, 'Jugar'),
     ),
     h(
-      'div',
-      { class: 'row' },
-      h('button', { class: 'btn ghost', onclick: () => go({ name: 'ranking' }) }, '🏆 Ranking'),
-      online.onlineEnabled ? h('button', { class: 'btn ghost', onclick: () => go({ name: 'stats' }) }, '📊 Estadísticas') : null,
+      'nav',
+      { class: 'nav-tiles' },
+      navTile('🏆', 'Ranking', () => go({ name: 'ranking' })),
+      online.onlineEnabled ? navTile('📊', 'Estadísticas', () => go({ name: 'stats' })) : null,
+      online.onlineEnabled ? navTile('🎩', 'Logros', () => go({ name: 'achievements' })) : null,
     ),
     online.onlineEnabled ? account : null,
   );
@@ -247,4 +256,8 @@ export function homeScreen(): Screen {
       clearInterval(ticker);
     },
   };
+}
+
+function navTile(icon: string, label: string, onclick: () => void): HTMLElement {
+  return h('button', { class: 'nav-tile', onclick }, h('span', { class: 'nav-icon', 'aria-hidden': 'true' }, icon), h('span', null, label));
 }

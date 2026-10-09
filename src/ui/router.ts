@@ -14,7 +14,8 @@ export type Route =
   | { name: 'levels' }
   | { name: 'daily'; record: DailyRecord }
   | { name: 'ranking'; join?: string }
-  | { name: 'stats' };
+  | { name: 'stats' }
+  | { name: 'achievements' };
 
 type Renderers = { [N in Route['name']]: (route: Extract<Route, { name: N }>) => Screen };
 

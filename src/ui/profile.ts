@@ -19,6 +19,12 @@ export async function currentName(): Promise<string | null> {
   return (await currentMe()).name;
 }
 
+/** Actualiza el gorro en la caché del perfil (tras ponérselo). */
+export function setCachedHat(hat: online.Me['hat']): void {
+  const previous = cachedMe;
+  if (previous) cachedMe = previous.then((me) => ({ ...me, hat }));
+}
+
 /** Olvida lo que se sabe del jugador (tras entrar con Google o cerrar sesión). */
 export function resetProfile(): void {
   cachedMe = null;
@@ -62,7 +68,7 @@ export function askName(initial = ''): Promise<string | null> {
           save.disabled = true;
           try {
             await online.setName(name);
-            const me = await currentMe().catch(() => ({ name, email: null }));
+            const me = await currentMe().catch(() => ({ name, email: null, hat: null }));
             cachedMe = Promise.resolve({ ...me, name });
             finish(name);
           } catch (err) {

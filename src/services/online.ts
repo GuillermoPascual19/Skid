@@ -6,6 +6,8 @@
 // Cada jugador es anónimo: la primera vez el servidor le da un token, que se
 // guarda en el navegador y lo identifica a partir de entonces.
 
+import type { HatId } from '../art/hats';
+import type { AchievementProgress } from '../core/achievements';
 import type { DailyResult } from './storage';
 
 const API = import.meta.env.VITE_API_BASE ?? '/api';
@@ -82,6 +84,8 @@ export interface Me {
   name: string | null;
   /** Correo de la cuenta de Google vinculada, o null si no hay. */
   email: string | null;
+  /** Gorro que lleva el pingüino. */
+  hat: HatId | null;
 }
 
 export function getMe(): Promise<Me> {
@@ -180,6 +184,22 @@ export function dailyWins(day: string): Promise<DailyWin[]> {
   return api<DailyWin[]>('GET', `/daily/${day}/wins`);
 }
 
+// ------------------------------------------------------------------ Logros
+
+export interface Achievements {
+  hat: HatId | null;
+  items: AchievementProgress[];
+}
+
+export function getAchievements(): Promise<Achievements> {
+  return api<Achievements>('GET', '/achievements');
+}
+
+/** Ponerse un gorro (o quitárselo con null). El servidor comprueba que esté desbloqueado. */
+export async function setHat(hat: HatId | null): Promise<void> {
+  await api('PUT', '/me/hat', { hat });
+}
+
 // ------------------------------------------------------------ Estadísticas
 
 export interface PlayerStats {
@@ -224,6 +244,7 @@ export function joinLeague(code: string): Promise<League> {
 
 export interface RankingRow {
   name: string;
+  hat: HatId | null;
   isMe: boolean;
   status: 'finished' | 'playing' | 'pending';
   score: number | null;
@@ -235,6 +256,7 @@ export interface RankingRow {
 
 export interface StandingRow {
   name: string;
+  hat: HatId | null;
   isMe: boolean;
   /** Suma de puntos del periodo. */
   points: number;
