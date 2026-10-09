@@ -1112,6 +1112,126 @@ p {
   margin-top: -6px;
 }
 
+.freeze-line {
+  font-weight: 600;
+  color: var(--secondary-dark);
+  background: #e6f3fc;
+  border-radius: 12px;
+  padding: 6px 10px;
+}
+
+.freeze-row {
+  grid-column: 1 / -1;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: #e6f3fc;
+  border-radius: 14px;
+  padding: 8px 14px;
+}
+
+.freeze-row > span:last-child {
+  display: flex;
+  flex-direction: column;
+  line-height: 1.25;
+}
+
+.freeze-row small {
+  color: var(--ink-soft);
+  font-size: 13px;
+}
+
+.shields {
+  display: flex;
+  gap: 2px;
+  font-size: 24px;
+}
+
+.shield {
+  filter: grayscale(1) opacity(0.35);
+}
+
+.shield.on {
+  filter: none;
+}
+
+/* Calendario de rachas */
+
+.cal-nav {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin: 4px 0 8px;
+}
+
+.icon-btn.small {
+  width: 36px;
+  height: 36px;
+  border-radius: 11px;
+  font-size: 20px;
+}
+
+.icon-btn:disabled {
+  opacity: 0.35;
+  cursor: default;
+}
+
+.cal-title {
+  font-size: 16px;
+}
+
+.cal-grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 4px;
+}
+
+.cal-head {
+  text-align: center;
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--ink-faint);
+}
+
+.cal-day {
+  aspect-ratio: 1;
+  display: grid;
+  place-items: center;
+  border-radius: 10px;
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--ink-faint);
+  background: #f0f6fb;
+}
+
+.cal-day.empty {
+  background: none;
+}
+
+.cal-day.future {
+  background: none;
+  color: #c7d6e3;
+}
+
+.cal-day.played {
+  background: var(--secondary);
+  color: #fff;
+}
+
+.cal-day.won {
+  background: var(--gold);
+  color: var(--ink);
+}
+
+.cal-day.frozen {
+  background: #d4ecfb;
+  font-size: 16px;
+}
+
+.cal-day.today {
+  box-shadow: inset 0 0 0 2px var(--primary);
+}
+
 .tiles {
   display: grid;
   grid-template-columns: 1fr 1fr;

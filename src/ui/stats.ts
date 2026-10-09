@@ -1,5 +1,7 @@
-// Estadísticas personales del reto diario: racha, totales y los últimos 30 días.
+// Estadísticas personales del reto diario: racha, totales, calendario y los últimos 30 días.
 
+import { dayKey, shiftDay } from '../core/daily';
+import { FREEZE_EVERY, MAX_FREEZES } from '../core/stats';
 import * as online from '../services/online';
 import { openDaily } from './daily';
 import { formatDay, h, plural } from './dom';
@@ -53,6 +55,7 @@ export function statsScreen(): Screen {
         tile('Media', s.averageScore ?? '—'),
         tile('Días ganados', s.wins, s.wins > 0 ? '🏆 1.º en tu liga' : null),
       ),
+      h('section', { class: 'card chart-card' }, h('h2', null, 'Calendario'), streakCalendar(s.calendar)),
       h('section', { class: 'card chart-card' }, h('h2', null, 'Últimos 30 días'), scoreChart(s.history)),
     );
   }
@@ -87,7 +90,92 @@ function streakCard(s: online.PlayerStats): HTMLElement {
       h('p', { class: 'streak-label' }, s.currentStreak === 1 ? 'día seguido' : 'días seguidos'),
       h('p', { class: 'muted' }, `Mejor racha: ${plural(s.bestStreak, 'día', 'días')}`),
     ),
+    freezeRow(s.freezes ?? 0),
     status,
+  );
+}
+
+/** Protectores de racha: los que tiene y cómo se ganan. */
+function freezeRow(freezes: number): HTMLElement {
+  const shields = Array.from({ length: MAX_FREEZES }, (_, i) => h('span', { class: `shield ${i < freezes ? 'on' : ''}` }, '🛡️'));
+  return h(
+    'div',
+    { class: 'freeze-row', title: 'Si un día no juegas, se gasta un protector y la racha sigue.' },
+    h('span', { class: 'shields', 'aria-hidden': 'true' }, ...shields),
+    h(
+      'span',
+      null,
+      h('strong', null, `${freezes} de ${MAX_FREEZES} protectores`),
+      h('small', null, `Ganas uno cada ${FREEZE_EVERY} días seguidos. Si un día no juegas, se gasta uno y la racha sigue.`),
+    ),
+  );
+}
+
+const WEEKDAYS = ['L', 'M', 'X', 'J', 'V', 'S', 'D'];
+
+/** Primer día del mes de `day`, desplazado `months` meses. */
+function monthStart(day: string, months = 0): string {
+  const [y, m] = day.split('-').map(Number);
+  const d = new Date(Date.UTC(y, m - 1 + months, 1));
+  return d.toISOString().slice(0, 10);
+}
+
+/**
+ * Calendario mensual con los retos jugados (azul), ganados (dorado) y los días
+ * salvados por un protector (🛡️). Se puede ir a meses anteriores.
+ */
+function streakCalendar(calendar: online.PlayerStats['calendar'] | undefined): HTMLElement {
+  const played = new Set(calendar?.played ?? []);
+  const won = new Set(calendar?.won ?? []);
+  const frozen = new Set(calendar?.frozen ?? []);
+  const today = dayKey(new Date());
+  const first = monthStart([...played].sort()[0] ?? today);
+  const last = monthStart(today);
+  let month = last;
+
+  const title = h('strong', { class: 'cal-title' });
+  const prev = h('button', { class: 'icon-btn small', 'aria-label': 'Mes anterior' }, '‹');
+  const next = h('button', { class: 'icon-btn small', 'aria-label': 'Mes siguiente' }, '›');
+  const grid = h('div', { class: 'cal-grid', role: 'grid' });
+
+  const render = () => {
+    const label = new Intl.DateTimeFormat('es-ES', { month: 'long', year: 'numeric', timeZone: 'UTC' }).format(new Date(`${month}T12:00:00Z`));
+    title.textContent = label.charAt(0).toUpperCase() + label.slice(1);
+    prev.disabled = month <= first;
+    next.disabled = month >= last;
+
+    const offset = (new Date(`${month}T12:00:00Z`).getUTCDay() + 6) % 7; // Lunes = 0.
+    const cells: HTMLElement[] = WEEKDAYS.map((d) => h('span', { class: 'cal-head', 'aria-hidden': 'true' }, d));
+    for (let i = 0; i < offset; i++) cells.push(h('span', { class: 'cal-day empty' }));
+    for (let day = month; day.slice(0, 7) === month.slice(0, 7); day = shiftDay(day, 1)) {
+      const state = won.has(day) ? 'won' : played.has(day) ? 'played' : frozen.has(day) ? 'frozen' : day > today ? 'future' : 'missed';
+      const text = { won: 'ganado', played: 'jugado', frozen: 'salvado por un protector', future: '', missed: 'sin jugar' }[state];
+      cells.push(
+        h(
+          'span',
+          { class: `cal-day ${state} ${day === today ? 'today' : ''}`, 'aria-label': text ? `${formatDay(day)}: ${text}` : formatDay(day) },
+          state === 'frozen' ? '🛡️' : String(Number(day.slice(8))),
+        ),
+      );
+    }
+    grid.replaceChildren(...cells);
+  };
+  prev.addEventListener('click', () => ((month = monthStart(month, -1)), render()));
+  next.addEventListener('click', () => ((month = monthStart(month, 1)), render()));
+  render();
+
+  return h(
+    'div',
+    null,
+    h(
+      'div',
+      { class: 'legend' },
+      h('span', null, h('i', { class: 'swatch' }), 'Jugado'),
+      h('span', null, h('i', { class: 'swatch won' }), 'Día ganado'),
+      h('span', null, '🛡️ Protector usado'),
+    ),
+    h('div', { class: 'cal-nav' }, prev, title, next),
+    grid,
   );
 }
 

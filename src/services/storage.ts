@@ -53,6 +53,10 @@ export interface DailyResult {
   readonly hints?: number;
   /** Racha tras terminar este reto (la calcula el servidor). */
   readonly streak?: number;
+  /** Protectores de racha que le quedan tras este reto. */
+  readonly freezes?: number;
+  /** Si este reto le dio un protector nuevo. */
+  readonly freezeEarned?: boolean;
   readonly timeMs: number;
   readonly optimal: number;
   readonly score: number;

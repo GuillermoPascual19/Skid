@@ -6,6 +6,7 @@ import { dailyScore, SCORING } from '../core/score';
 import * as online from '../services/online';
 import { loadDaily, saveDaily, type DailyRecord, type DailyResult } from '../services/storage';
 import { formatDay, formatTime, h, openModal, plural, share, toast } from './dom';
+import { celebrate } from './celebrate';
 import { ensureName } from './profile';
 import { go } from './router';
 
@@ -101,8 +102,33 @@ export function shareText(day: string, r: DailyResult): string {
     `🐧 Skid · reto del ${formatDay(day)}`,
     `⭐ ${r.score} puntos`,
     `🧊 ${r.moves} mov. (óptimo ${r.optimal}) · ↺ ${r.retries}${r.hints ? ` · 💡 ${r.hints}` : ''} · ⏱ ${formatTime(r.timeMs)}`,
+    r.streak && r.streak > 1 ? `🔥 Racha de ${r.streak} días` : null,
     link,
-  ].join('\n');
+  ]
+    .filter((line) => line !== null)
+    .join('\n');
+}
+
+/** Rachas que se celebran con confeti al alcanzarlas (y luego cada 100). */
+const STREAK_MILESTONES = [7, 14, 30, 50, 100];
+
+function isStreakMilestone(n: number): boolean {
+  return STREAK_MILESTONES.includes(n) || (n > 100 && n % 100 === 0);
+}
+
+/** Celebración si el reto recién enviado lleva la racha a un hito. Se resuelve al cerrarla. */
+export async function celebrateStreak(r: DailyResult): Promise<void> {
+  if (!r.streak || !isStreakMilestone(r.streak)) return;
+  await celebrate({
+    icon: '🔥',
+    eyebrow: 'Racha del reto diario',
+    title: `¡${r.streak} días seguidos!`,
+    text:
+      r.streak >= 30
+        ? 'Eres constante como un glaciar. Pocos pingüinos llegan tan lejos.'
+        : 'Vuelve mañana para que siga creciendo. Cada 7 días ganas un protector de racha 🛡️.',
+    button: '¡Seguimos!',
+  });
 }
 
 /** Penalización del desglose: en rojo solo si resta algo. */
@@ -117,6 +143,7 @@ export function showDailyResult(day: string, r: DailyResult, opts: { error?: str
       h('h2', null, r.score >= 900 ? '¡Brutal!' : r.score >= 700 ? '¡Muy bien!' : '¡Completado!'),
       scoreEl,
       r.streak ? h('p', { class: 'streak-line' }, `🔥 Racha de ${plural(r.streak, 'día', 'días')}`) : null,
+      r.freezeEarned ? h('p', { class: 'freeze-line' }, '🛡️ ¡Protector de racha ganado! Si un día no juegas, tu racha no se rompe.') : null,
       h(
         'div',
         { class: 'breakdown' },
