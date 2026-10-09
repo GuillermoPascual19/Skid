@@ -1,35 +1,38 @@
 // Celebración: pop-up que sale del centro de la pantalla con confeti.
 // Se usa al superar los niveles 25, 50, 75 y 100, y al ganar el reto del día anterior.
 
-import { h, haptic, openModal } from './dom';
+import { h, haptic, openModal, svg } from './dom';
 
 const CONFETTI_COLORS = ['#ffc93c', '#ff7a45', '#2b8fd6', '#2bb673', '#ff8fa3', '#a78bfa', '#ffffff'];
 
 export interface Celebration {
   /** Emoji grande que corona el pop-up. */
   readonly icon: string;
+  /** En lugar del emoji, un dibujo SVG propio (p. ej. el pingüino con su gorro nuevo). */
+  readonly iconSvg?: string;
   readonly eyebrow: string;
   readonly title: string;
   readonly text: string;
   readonly button?: string;
 }
 
-/** Muestra la celebración. Se resuelve cuando el jugador la cierra. */
-export function celebrate(c: Celebration): Promise<void> {
+/** Muestra la celebración. Se resuelve al cerrarla: true si se pulsó el botón. */
+export function celebrate(c: Celebration): Promise<boolean> {
   return new Promise((resolve) => {
+    let confirmed = false;
     confetti(); // Sigue cayendo y se desvanece sola aunque se cierre el pop-up.
     haptic([40, 60, 40, 60, 80]);
     const modal = openModal(
       [
-        h('div', { class: 'celebrate-icon', 'aria-hidden': 'true' }, c.icon),
+        h('div', { class: `celebrate-icon ${c.iconSvg ? 'svg' : ''}`, 'aria-hidden': 'true' }, c.iconSvg ? svg(c.iconSvg) : c.icon),
         h('p', { class: 'eyebrow' }, c.eyebrow),
         h('h2', null, c.title),
         h('p', { class: 'lead' }, c.text),
-        h('button', { class: 'btn big block', onclick: () => modal.close() }, c.button ?? '¡Genial!'),
+        h('button', { class: 'btn big block', onclick: () => ((confirmed = true), modal.close()) }, c.button ?? '¡Genial!'),
       ],
       {
         dismissable: true,
-        onClose: resolve,
+        onClose: () => resolve(confirmed),
       },
     );
     modal.el.classList.add('celebrate');

@@ -22,6 +22,7 @@ import {
 import { celebrate } from './celebrate';
 import { showDailyResult } from './daily';
 import { formatDay, formatTime, h, haptic, isTouch, openModal, starSvg, toast, type Modal } from './dom';
+import { currentMe } from './profile';
 import { go, type Screen } from './router';
 
 // ------------------------------------------------------------------ Layout
@@ -143,6 +144,14 @@ function playLayout(opts: {
 async function loadBoard(parent: HTMLElement, board: Board, hooks: BoardHooks): Promise<MountedBoard> {
   const { mountBoard } = await import('../game/mount');
   return mountBoard(parent, board, hooks);
+}
+
+/** El pingüino de la partida lleva el gorro que el jugador eligió en Logros. */
+function wearHat(mounted: MountedBoard): void {
+  if (!online.onlineEnabled) return;
+  currentMe()
+    .then((me) => mounted.scene.setHat(me.hat))
+    .catch(() => {});
 }
 
 function onKey(handler: (e: KeyboardEvent) => void): () => void {
@@ -293,6 +302,7 @@ export function levelsScreen(): Screen {
       if (disposed) return m.destroy();
       mounted = m;
       m.scene.setBoard(board, state);
+      wearHat(m);
     },
     dispose() {
       disposed = true;
@@ -524,6 +534,7 @@ export function dailyScreen(record: DailyRecord): Screen {
       if (disposed) return m.destroy();
       mounted = m;
       m.scene.setBoard(board, state);
+      wearHat(m);
       if (finished) void submit(); // Terminado pero sin enviar (p. ej. se cerró la página).
       else ui.setStuck(solve(board, state) === null); // Al reanudar, por si se quedó atascado.
     },

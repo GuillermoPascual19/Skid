@@ -102,6 +102,17 @@ export function claimWinCelebration(day: string): boolean {
   return true;
 }
 
+const ACHIEVEMENTS_SEEN_KEY = 'skid.achievementsSeen.v1';
+
+/** Logros ya celebrados en este navegador (para celebrar solo los nuevos). */
+export function seenAchievements(): Set<string> {
+  return new Set(read<string[]>(ACHIEVEMENTS_SEEN_KEY) ?? []);
+}
+
+export function markAchievementsSeen(ids: Iterable<string>): void {
+  write(ACHIEVEMENTS_SEEN_KEY, [...new Set([...seenAchievements(), ...ids])]);
+}
+
 /** Olvida el reto guardado en este navegador (p. ej. al cambiar de jugador). */
 export function clearDaily(): void {
   try {

@@ -2,7 +2,8 @@
 // enlace (?join=CÓDIGO) o con su código de 6 caracteres.
 
 import * as online from '../services/online';
-import { formatDay, formatTime, h, openModal, plural, previousDay, share, toast } from './dom';
+import { penguinSvg } from '../art/hats';
+import { formatDay, formatTime, h, openModal, plural, previousDay, share, svg, toast } from './dom';
 import { monthRange, weekRange, type DayRange } from '../core/daily';
 import { today } from './daily';
 import { ensureName } from './profile';
@@ -161,6 +162,7 @@ export function rankingScreen(route: { join?: string }): Screen {
             'li',
             { class: row.isMe ? 'me' : '' },
             h('span', { class: 'pos' }, row.days > 0 ? medal(i) : '·'),
+            avatar(row.hat),
             h(
               'span',
               { class: 'who' },
@@ -195,6 +197,7 @@ export function rankingScreen(route: { join?: string }): Screen {
             'li',
             { class: row.isMe ? 'me' : '' },
             h('span', { class: 'pos' }, row.status === 'finished' ? medal(i) : '·'),
+            avatar(row.hat),
             h(
               'span',
               { class: 'who' },
@@ -288,6 +291,11 @@ export function rankingScreen(route: { join?: string }): Screen {
       disposed = true;
     },
   };
+}
+
+/** El pingüino de cada amigo, con su gorro. */
+function avatar(hat: online.RankingRow['hat']): HTMLElement {
+  return h('span', { class: 'avatar' }, svg(penguinSvg(hat)));
 }
 
 function medal(index: number): string {
