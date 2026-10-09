@@ -11,7 +11,7 @@ export const midi = (n: number) => 440 * 2 ** ((n - 69) / 12);
 const noiseBuffers = new WeakMap<Ctx, AudioBuffer>();
 
 /** Un segundo de ruido blanco, creado una vez por contexto. */
-function noise(ctx: Ctx): AudioBuffer {
+export function noise(ctx: Ctx): AudioBuffer {
   let buffer = noiseBuffers.get(ctx);
   if (!buffer) {
     buffer = ctx.createBuffer(1, ctx.sampleRate, ctx.sampleRate);
@@ -22,9 +22,20 @@ function noise(ctx: Ctx): AudioBuffer {
   return buffer;
 }
 
-/** Envolvente: sube a `peak` en `attack` s y cae exponencialmente durante `decay` s. */
-function envelope(ctx: Ctx, t: number, peak: number, attack: number, decay: number): GainNode {
+/**
+ * Ganancia que nace en silencio. Un GainNode nuevo vale 1 hasta que empieza su
+ * automatización y, si el sonido arranca justo en ese instante, se cuela una
+ * muestra a volumen completo: un clic audible.
+ */
+export function silentGain(ctx: Ctx): GainNode {
   const g = ctx.createGain();
+  g.gain.value = 0.0001;
+  return g;
+}
+
+/** Envolvente: sube a `peak` en `attack` s y cae exponencialmente durante `decay` s. */
+export function envelope(ctx: Ctx, t: number, peak: number, attack: number, decay: number): GainNode {
+  const g = silentGain(ctx);
   g.gain.setValueAtTime(0.0001, t);
   g.gain.exponentialRampToValueAtTime(peak, t + attack);
   g.gain.exponentialRampToValueAtTime(0.0001, t + attack + decay);
@@ -32,7 +43,7 @@ function envelope(ctx: Ctx, t: number, peak: number, attack: number, decay: numb
 }
 
 /** Nota tipo campana: fundamental + un parcial inarmónico que se apaga antes. */
-function bell(ctx: Ctx, out: AudioNode, t: number, freq: number, peak: number, decay: number): void {
+export function bell(ctx: Ctx, out: AudioNode, t: number, freq: number, peak: number, decay: number): void {
   const partials: [number, number, number][] = [
     [1, 1, decay],
     [2.76, 0.35, decay * 0.45],
@@ -61,7 +72,7 @@ export function slide(ctx: Ctx, out: AudioNode, t: number, durationS: number): v
   band.Q.value = 1.4;
   band.frequency.setValueAtTime(5200, t);
   band.frequency.exponentialRampToValueAtTime(1800, t + durationS);
-  const g = ctx.createGain();
+  const g = silentGain(ctx);
   g.gain.setValueAtTime(0.0001, t);
   g.gain.exponentialRampToValueAtTime(0.16, t + 0.03);
   g.gain.setValueAtTime(0.16, t + Math.max(0.04, durationS * 0.6));
@@ -178,7 +189,7 @@ export function musicBar(ctx: Ctx, out: AudioNode, t: number, bar: number, rando
       osc.type = 'triangle';
       osc.frequency.setValueAtTime(midi(note), t);
       osc.detune.setValueAtTime(detune, t);
-      const g = ctx.createGain();
+      const g = silentGain(ctx);
       g.gain.setValueAtTime(0.0001, t);
       g.gain.exponentialRampToValueAtTime(0.022, t + 1.8);
       g.gain.setValueAtTime(0.022, t + BAR_S - 0.4);
