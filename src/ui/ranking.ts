@@ -9,6 +9,29 @@ import { today } from './daily';
 import { ensureName } from './profile';
 import { go, type Screen } from './router';
 
+type Period = 'today' | 'yesterday' | 'week' | 'month';
+
+/** Liga y pestaña que se estaban viendo (dura mientras la página esté abierta). */
+const remembered: { selected: string | null; period: Period } = { selected: null, period: 'today' };
+
+/** Fila del ranking que abre el perfil de ese jugador (con el dedo o con el teclado). */
+function rowProps(row: { id: string; name: string; isMe: boolean }) {
+  const open = () => go({ name: 'player', id: row.id });
+  return {
+    class: `rank-row ${row.isMe ? 'me' : ''}`,
+    role: 'button',
+    tabIndex: 0,
+    'aria-label': `Ver el perfil de ${row.name}`,
+    onclick: open,
+    onkeydown: (e: KeyboardEvent) => {
+      if (e.key === 'Enter' || e.key === ' ') {
+        e.preventDefault();
+        open();
+      }
+    },
+  };
+}
+
 export function rankingScreen(route: { join?: string }): Screen {
   const body = h('div', { class: 'row', style: 'flex-direction: column; gap: 14px' });
   const el = h(
@@ -40,7 +63,6 @@ export function rankingScreen(route: { join?: string }): Screen {
     return { el };
   }
 
-  type Period = 'today' | 'yesterday' | 'week' | 'month';
   const PERIODS: [Period, string][] = [
     ['today', 'Hoy'],
     ['yesterday', 'Ayer'],
@@ -49,8 +71,9 @@ export function rankingScreen(route: { join?: string }): Screen {
   ];
 
   let leagues: online.League[] = [];
-  let selected: string | null = null;
-  let period: Period = 'today';
+  // Al volver del perfil de un amigo se sigue en la misma liga y pestaña.
+  let selected: string | null = remembered.selected;
+  let period: Period = remembered.period;
   /** Cada consulta lleva su número: si el jugador cambia de pestaña, se descarta la respuesta vieja. */
   let requestId = 0;
   let disposed = false;
@@ -92,6 +115,8 @@ export function rankingScreen(route: { join?: string }): Screen {
     }
 
     const league = leagues.find((l) => l.id === selected)!;
+    remembered.selected = selected;
+    remembered.period = period;
     const list = h('ol', { class: 'ranking' }, h('li', { class: 'empty', style: 'display:block' }, 'Cargando…'));
     const day = period === 'yesterday' ? previousDay(today()) : today();
     const range = period === 'week' ? weekRange(day) : period === 'month' ? monthRange(day) : null;
@@ -160,7 +185,7 @@ export function rankingScreen(route: { join?: string }): Screen {
         ...rows.map((row, i) =>
           h(
             'li',
-            { class: row.isMe ? 'me' : '' },
+            rowProps(row),
             h('span', { class: 'pos' }, row.days > 0 ? medal(i) : '·'),
             avatar(row.hat),
             h(
@@ -195,7 +220,7 @@ export function rankingScreen(route: { join?: string }): Screen {
         ...rows.map((row, i) =>
           h(
             'li',
-            { class: row.isMe ? 'me' : '' },
+            rowProps(row),
             h('span', { class: 'pos' }, row.status === 'finished' ? medal(i) : '·'),
             avatar(row.hat),
             h(

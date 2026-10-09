@@ -119,6 +119,7 @@ async function handleApi(req: Request, url: URL, env: Env): Promise<Response> {
   }
 
   if (route === 'GET /stats') return json(await playerStats(env, playerId));
+  if ((m = route.match(/^GET \/players\/([\w-]+)$/))) return json(await playerProfile(env, playerId, m[1]));
   if ((m = route.match(/^GET \/daily\/(\d{4}-\d{2}-\d{2})$/))) return json(await getRun(env, playerId, m[1]));
   if ((m = route.match(/^POST \/daily\/(\d{4}-\d{2}-\d{2})\/start$/))) return json(await startRun(env, playerId, m[1]));
   if ((m = route.match(/^GET \/daily\/(\d{4}-\d{2}-\d{2})\/wins$/))) return json(await dailyWins(env, playerId, m[1]));
@@ -468,6 +469,7 @@ async function joinLeague(env: Env, playerId: string, code: unknown): Promise<Le
 }
 
 interface RankingDbRow {
+  id: string;
   name: string;
   hat: string | null;
   is_me: number;
@@ -485,7 +487,7 @@ async function leagueRanking(env: Env, playerId: string, leagueId: string, day: 
   await requireMember(env, playerId, leagueId);
 
   const { results } = await env.DB.prepare(
-    `SELECT p.name, p.hat, p.id = ?1 AS is_me, r.started_at, r.finished_at, r.score, r.moves, r.retries, r.hints, r.time_ms
+    `SELECT p.id, p.name, p.hat, p.id = ?1 AS is_me, r.started_at, r.finished_at, r.score, r.moves, r.retries, r.hints, r.time_ms
      FROM league_members m
      JOIN players p ON p.id = m.player_id
      LEFT JOIN daily_runs r ON r.player_id = m.player_id AND r.day = ?2
@@ -498,6 +500,7 @@ async function leagueRanking(env: Env, playerId: string, leagueId: string, day: 
   return results.map((r) => {
     const finished = r.finished_at !== null;
     return {
+      id: r.id,
       name: r.name,
       hat: isHatId(r.hat) ? r.hat : null,
       isMe: r.is_me === 1,
@@ -515,34 +518,36 @@ interface WinRow {
   league_id: string;
   league_name: string;
   finishers: number;
-  winner: string | null;
-  score: number | null;
+  /** Cuántos de la liga lo hicieron mejor ese día. */
+  better: number;
+  score: number;
 }
 
 /**
  * Ligas en las que el jugador quedó 1.º en el reto de `day` (mejor puntuación;
- * a igualdad, menos tiempo). Solo cuenta si terminaron al menos 2 personas.
+ * a igualdad, menos tiempo; un empate exacto en cabeza cuenta para todos).
+ * Solo cuenta si terminaron al menos 2 personas.
  */
 async function dailyWins(env: Env, playerId: string, day: string) {
   const { results } = await env.DB.prepare(
-    `SELECT l.id AS league_id, l.name AS league_name,
+    `SELECT l.id AS league_id, l.name AS league_name, me.score,
             (SELECT COUNT(*) FROM league_members m2
                JOIN daily_runs r2 ON r2.player_id = m2.player_id AND r2.day = ?2 AND r2.finished_at IS NOT NULL
              WHERE m2.league_id = l.id) AS finishers,
-            (SELECT m3.player_id FROM league_members m3
+            (SELECT COUNT(*) FROM league_members m3
                JOIN daily_runs r3 ON r3.player_id = m3.player_id AND r3.day = ?2 AND r3.finished_at IS NOT NULL
              WHERE m3.league_id = l.id
-             ORDER BY r3.score DESC, r3.time_ms ASC LIMIT 1) AS winner,
-            (SELECT score FROM daily_runs WHERE player_id = ?1 AND day = ?2) AS score
+               AND (r3.score > me.score OR (r3.score = me.score AND r3.time_ms < me.time_ms))) AS better
      FROM leagues l
      JOIN league_members m ON m.league_id = l.id AND m.player_id = ?1
+     JOIN daily_runs me ON me.player_id = ?1 AND me.day = ?2 AND me.finished_at IS NOT NULL
      ORDER BY m.joined_at`,
   )
     .bind(playerId, day)
     .all<WinRow>();
 
   return results
-    .filter((r) => r.winner === playerId && r.finishers >= 2)
+    .filter((r) => r.better === 0 && r.finishers >= 2)
     .map((r) => ({ leagueId: r.league_id, leagueName: r.league_name, players: r.finishers, score: r.score }));
 }
 
@@ -554,6 +559,7 @@ async function requireMember(env: Env, playerId: string, leagueId: string): Prom
 }
 
 interface StandingRow {
+  id: string;
   name: string;
   hat: string | null;
   is_me: number;
@@ -579,11 +585,11 @@ async function leagueStandings(env: Env, playerId: string, leagueId: string, fro
      ),
      ranked AS (
        SELECT *,
-              ROW_NUMBER() OVER (PARTITION BY day ORDER BY score DESC, time_ms ASC) AS pos,
+              RANK() OVER (PARTITION BY day ORDER BY score DESC, time_ms ASC) AS pos,
               COUNT(*) OVER (PARTITION BY day) AS finishers
        FROM runs
      )
-     SELECT p.name, p.hat, p.id = ?1 AS is_me,
+     SELECT p.id, p.name, p.hat, p.id = ?1 AS is_me,
             COALESCE(SUM(k.score), 0) AS points,
             COUNT(k.day) AS days,
             COALESCE(SUM(k.pos = 1 AND k.finishers >= 2), 0) AS wins,
@@ -599,6 +605,7 @@ async function leagueStandings(env: Env, playerId: string, leagueId: string, fro
     .all<StandingRow>();
 
   return results.map((r) => ({
+    id: r.id,
     name: r.name,
     hat: isHatId(r.hat) ? r.hat : null,
     isMe: r.is_me === 1,
@@ -613,7 +620,10 @@ async function leagueStandings(env: Env, playerId: string, leagueId: string, fro
 
 const HISTORY_DAYS = 30;
 
-/** Días en los que el jugador quedó 1.º en alguna de sus ligas (con al menos 2 que terminaron). */
+/**
+ * Días en los que el jugador quedó 1.º en alguna de sus ligas (con al menos 2
+ * que terminaron). Un empate exacto en cabeza cuenta para todos los empatados.
+ */
 async function wonDays(env: Env, playerId: string): Promise<Set<string>> {
   const { results } = await env.DB.prepare(
     `WITH runs AS (
@@ -625,7 +635,7 @@ async function wonDays(env: Env, playerId: string): Promise<Set<string>> {
      ),
      ranked AS (
        SELECT *,
-              ROW_NUMBER() OVER (PARTITION BY league_id, day ORDER BY score DESC, time_ms ASC) AS pos,
+              RANK() OVER (PARTITION BY league_id, day ORDER BY score DESC, time_ms ASC) AS pos,
               COUNT(*) OVER (PARTITION BY league_id, day) AS finishers
        FROM runs
      )
@@ -690,4 +700,65 @@ async function playerAchievements(env: Env, playerId: string) {
   ]);
   const today = dayKey(new Date());
   return computeAchievements({ runs, wonDays: wins.size, weekTitles: weekTitles(leagueRuns, playerId, today), today });
+}
+
+// ------------------------------------------------------------ Perfil de otro
+
+/**
+ * Perfil público de un jugador: estadísticas, gorros conseguidos y el cara a
+ * cara con quien lo mira. Solo se puede ver el propio o el de alguien que
+ * comparta liga contigo.
+ */
+async function playerProfile(env: Env, viewerId: string, targetId: string) {
+  const isMe = viewerId === targetId;
+  const { results: shared } = await env.DB.prepare(
+    `SELECT l.name FROM leagues l
+     JOIN league_members a ON a.league_id = l.id AND a.player_id = ?1
+     JOIN league_members b ON b.league_id = l.id AND b.player_id = ?2
+     ORDER BY a.joined_at`,
+  )
+    .bind(viewerId, targetId)
+    .all<{ name: string }>();
+  if (!isMe && shared.length === 0) throw new HttpError(403, 'Solo puedes ver el perfil de jugadores de tus ligas');
+
+  const player = await env.DB.prepare('SELECT name, hat FROM players WHERE id = ?')
+    .bind(targetId)
+    .first<{ name: string | null; hat: string | null }>();
+  if (!player) throw new HttpError(404, 'No existe ese jugador');
+
+  const [stats, achievements, headToHead] = await Promise.all([
+    playerStats(env, targetId),
+    playerAchievements(env, targetId),
+    isMe ? Promise.resolve(null) : headToHeadRecord(env, viewerId, targetId),
+  ]);
+
+  return {
+    name: player.name,
+    hat: isHatId(player.hat) ? player.hat : null,
+    isMe,
+    sharedLeagues: shared.map((l) => l.name),
+    stats,
+    achievements: achievements.filter((a) => a.unlocked).map((a) => a.id),
+    headToHead,
+  };
+}
+
+/** Días que jugaron los dos: quién sacó más puntos (a igualdad, menos tiempo). */
+async function headToHeadRecord(env: Env, viewerId: string, targetId: string) {
+  const { results } = await env.DB.prepare(
+    `SELECT a.score AS my_score, a.time_ms AS my_time, b.score AS their_score, b.time_ms AS their_time
+     FROM daily_runs a
+     JOIN daily_runs b ON b.day = a.day AND b.player_id = ?2 AND b.finished_at IS NOT NULL
+     WHERE a.player_id = ?1 AND a.finished_at IS NOT NULL`,
+  )
+    .bind(viewerId, targetId)
+    .all<{ my_score: number; my_time: number; their_score: number; their_time: number }>();
+  let myWins = 0;
+  let theirWins = 0;
+  for (const r of results) {
+    const diff = r.my_score - r.their_score || r.their_time - r.my_time;
+    if (diff > 0) myWins++;
+    else if (diff < 0) theirWins++;
+  }
+  return { played: results.length, myWins, theirWins, ties: results.length - myWins - theirWins };
 }
