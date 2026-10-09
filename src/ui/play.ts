@@ -23,7 +23,7 @@ import { celebrate } from './celebrate';
 import { showDailyResult } from './daily';
 import { formatDay, formatTime, h, haptic, isTouch, openModal, starSvg, toast, type Modal } from './dom';
 import { sfx } from '../audio/sound';
-import { muteButton } from './audio-controls';
+import { soundSettings } from './audio-controls';
 import { currentMe } from './profile';
 import { go, type Screen } from './router';
 
@@ -54,7 +54,8 @@ const SWIPE_MIN = 24;
 function playLayout(opts: {
   stats: StatDef[];
   hint: { keys: string; touch: string };
-  onBack(): void;
+  /** Abre el menú de pausa. */
+  onMenu(): void;
   onRestart(): void;
   onSwipe(dir: Direction): void;
   restartLabel: string;
@@ -83,7 +84,6 @@ function playLayout(opts: {
   );
 
   const hintBadge = h('span', { class: 'badge', hidden: true });
-  const mute = muteButton();
 
   const boardWrap = h('div', { class: 'board-wrap' });
   const el = h(
@@ -92,7 +92,7 @@ function playLayout(opts: {
     h(
       'header',
       { class: 'topbar' },
-      h('button', { class: 'icon-btn', 'aria-label': 'Volver', onclick: opts.onBack }, '←'),
+      h('button', { class: 'icon-btn', 'aria-label': 'Pausa', title: 'Pausa', onclick: opts.onMenu }, '⏸'),
       h('div', { class: 'title' }, title, subtitle),
       opts.onHint ? h('button', { class: 'icon-btn hint-btn', 'aria-label': 'Pista', title: 'Pista', onclick: opts.onHint }, '💡', hintBadge) : null,
       h('button', { class: 'icon-btn', 'aria-label': opts.restartLabel, title: opts.restartLabel, onclick: opts.onRestart }, '↺'),
@@ -100,7 +100,7 @@ function playLayout(opts: {
     stats,
     stuck,
     boardWrap,
-    h('div', { class: 'hint-row' }, h('p', { class: 'hint' }, isTouch() ? opts.hint.touch : opts.hint.keys), mute.el),
+    h('p', { class: 'hint' }, isTouch() ? opts.hint.touch : opts.hint.keys),
   );
 
   // Gestos en toda la pantalla de juego (no solo sobre el tablero). El movimiento
@@ -143,7 +143,7 @@ function playLayout(opts: {
       hintBadge.textContent = String(n);
       hintBadge.hidden = n === 0;
     },
-    dispose: mute.dispose,
+    dispose: () => {},
   };
 }
 
@@ -159,6 +159,47 @@ function wearHat(mounted: MountedBoard): void {
   currentMe()
     .then((me) => mounted.scene.setHat(me.hat))
     .catch(() => {});
+}
+
+/**
+ * Menú de pausa: congela la partida y ofrece los ajustes de sonido, volver a
+ * empezar y salir. En el reto diario el reloj del servidor no se para (`note`).
+ */
+function openPauseMenu(
+  mounted: MountedBoard | null,
+  opts: { note?: string | null; restartLabel: string; onRestart: (() => void) | null; onExit: () => void },
+): void {
+  mounted?.scene.pause();
+  const modal = openModal(
+    [
+      h('h2', null, 'Pausa'),
+      opts.note ? h('p', { class: 'pause-note' }, opts.note) : null,
+      // Las acciones arriba, siempre a la vista; los ajustes de sonido debajo.
+      h('button', { class: 'btn big block', onclick: () => modal.close() }, '▶ Continuar'),
+      h(
+        'div',
+        { class: 'row' },
+        opts.onRestart
+          ? h(
+              'button',
+              {
+                class: 'btn ghost',
+                onclick: () => {
+                  modal.close();
+                  opts.onRestart?.();
+                },
+              },
+              `↺ ${opts.restartLabel}`,
+            )
+          : null,
+        h('button', { class: 'btn secondary', onclick: opts.onExit }, 'Salir al inicio'),
+      ),
+      h('p', { class: 'eyebrow pause-section' }, 'Sonido'),
+      ...soundSettings({ compact: true }),
+    ],
+    { dismissable: true, onClose: () => mounted?.scene.resume() },
+  );
+  modal.el.classList.add('pause-menu');
 }
 
 function onKey(handler: (e: KeyboardEvent) => void): () => void {
@@ -193,7 +234,8 @@ export function levelsScreen(): Screen {
       { key: 'optimal', label: 'Óptimo', tone: 'gold' },
     ],
     hint: { keys: 'Flechas o WASD para moverte · R reinicia', touch: 'Desliza el dedo en cualquier parte de la pantalla' },
-    onBack: () => go({ name: 'home' }),
+    onMenu: () =>
+      openPauseMenu(mounted, { restartLabel: 'Reiniciar', onRestart: () => restart(), onExit: () => go({ name: 'home' }) }),
     onRestart: () => restart(),
     onSwipe: (dir) => mounted?.scene.requestMove(dir),
     restartLabel: 'Reiniciar',
@@ -305,6 +347,7 @@ export function levelsScreen(): Screen {
       hud();
       removeKeys = onKey((e) => {
         if (e.key === 'r' || e.key === 'R') restart();
+        if (e.key === 'Escape') ui.el.querySelector<HTMLButtonElement>('[aria-label=Pausa]')?.click();
       });
       document.addEventListener('keydown', nextOnEnter);
       const m = await loadBoard(ui.boardWrap, board, hooks);
@@ -366,7 +409,13 @@ export function dailyScreen(record: DailyRecord): Screen {
       keys: 'Flechas o WASD para moverte · R reintenta (resta puntos)',
       touch: 'Desliza el dedo en cualquier parte · ↺ reintenta (resta puntos)',
     },
-    onBack: () => confirmLeave(),
+    onMenu: () =>
+      openPauseMenu(mounted, {
+        note: finished ? null : '⏱ El reloj del reto sigue corriendo: la pausa no lo para.',
+        restartLabel: `Reintentar (−${SCORING.perRetry})`,
+        onRestart: finished ? null : () => confirmRetry(),
+        onExit: () => go({ name: 'home' }),
+      }),
     onRestart: () => confirmRetry(),
     onSwipe: (dir) => mounted?.scene.requestMove(dir),
     restartLabel: 'Reintentar',
@@ -477,23 +526,6 @@ export function dailyScreen(record: DailyRecord): Screen {
     );
   }
 
-  function confirmLeave() {
-    if (finished) return go({ name: 'home' });
-    const modal = openModal(
-      [
-        h('h2', null, '¿Salir del reto?'),
-        h('p', { class: 'lead' }, 'Puedes volver y continuar donde lo dejaste, pero el reloj sigue corriendo.'),
-        h(
-          'div',
-          { class: 'row' },
-          h('button', { class: 'btn ghost', onclick: () => modal.close() }, 'Seguir jugando'),
-          h('button', { class: 'btn secondary', onclick: () => go({ name: 'home' }) }, 'Salir'),
-        ),
-      ],
-      { dismissable: true },
-    );
-  }
-
   async function submit() {
     if (submitting) return;
     submitting = true;
@@ -541,6 +573,7 @@ export function dailyScreen(record: DailyRecord): Screen {
       if (!finished) timer = window.setInterval(hud, 250);
       removeKeys = onKey((e) => {
         if (e.key === 'r' || e.key === 'R') confirmRetry();
+        if (e.key === 'Escape') ui.el.querySelector<HTMLButtonElement>('[aria-label=Pausa]')?.click();
       });
       const m = await loadBoard(ui.boardWrap, board, hooks);
       if (disposed) return m.destroy();

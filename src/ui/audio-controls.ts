@@ -1,7 +1,7 @@
-// Botones de sonido: en la portada, efectos y música por separado; en la
-// partida, un silencio rápido que lo apaga o enciende todo.
+// Botones y controles de sonido: en la portada (efectos y panel de música) y
+// dentro del menú de pausa de la partida.
 
-import { getAudioSettings, onAudioSettings, setAudioSettings, toggleMute, type AudioSettings } from '../audio/sound';
+import { getAudioSettings, onAudioSettings, setAudioSettings, type AudioSettings } from '../audio/sound';
 import { TRACKS } from '../audio/tracks';
 import { h, openModal } from './dom';
 
@@ -29,21 +29,11 @@ export function audioToggles(): AudioControls {
   return { el: h('div', { class: 'audio-toggles' }, sfxBtn, musicBtn), dispose: onAudioSettings(paint) };
 }
 
-/** Un botón pequeño de silencio para la partida. */
-export function muteButton(): AudioControls {
-  const btn = h('button', { class: 'audio-btn small', onclick: toggleMute });
-  const paint = (s: AudioSettings) => {
-    const on = s.sfx || s.music;
-    btn.textContent = on ? '🔊' : '🔇';
-    btn.setAttribute('aria-label', on ? 'Silenciar' : 'Activar el sonido');
-    btn.title = on ? 'Silenciar' : 'Activar el sonido';
-  };
-  paint(getAudioSettings());
-  return { el: btn, dispose: onAudioSettings(paint) };
-}
-
-/** Panel de sonido: volumen de la música (se oye en directo al moverlo) y efectos sí/no. */
-export function openSoundPanel(): void {
+/**
+ * Controles de sonido (volumen y elección de música, efectos sí/no). Se usan
+ * en el panel de la portada y en el menú de pausa de la partida.
+ */
+export function soundSettings({ compact = false }: { compact?: boolean } = {}): HTMLElement[] {
   const s = getAudioSettings();
   const percent = (v: number) => `${Math.round(v * 100)} %`;
 
@@ -99,7 +89,8 @@ export function openSoundPanel(): void {
       btn.tabIndex = selected ? 0 : -1;
     }
   };
-  const trackList = h('div', { class: 'tracks', role: 'radiogroup', 'aria-label': 'Música' }, ...options);
+  // Compacta (menú de pausa): cuadrícula de 2×2 sin descripciones, para que quepa todo.
+  const trackList = h('div', { class: `tracks ${compact ? 'compact' : ''}`, role: 'radiogroup', 'aria-label': 'Música' }, ...options);
   // Flechas para moverse entre opciones, como en cualquier grupo de opciones.
   trackList.addEventListener('keydown', (e) => {
     if (!['ArrowDown', 'ArrowUp', 'ArrowRight', 'ArrowLeft'].includes(e.key)) return;
@@ -114,19 +105,21 @@ export function openSoundPanel(): void {
   const sfxSwitch = h('input', { type: 'checkbox', class: 'switch', checked: s.sfx, 'aria-label': 'Efectos de sonido' });
   sfxSwitch.addEventListener('change', () => setAudioSettings({ sfx: sfxSwitch.checked }));
 
-  const modal = openModal(
-    [
-      h('h2', null, 'Sonido'),
-      h(
-        'div',
-        { class: 'sound-row' },
-        h('div', { class: 'sound-label' }, h('span', null, '🎵 Música'), volumeLabel),
-        h('div', { class: 'volume-row' }, h('span', { 'aria-hidden': 'true' }, '🔈'), slider, h('span', { 'aria-hidden': 'true' }, '🔊')),
-        trackList,
-      ),
-      h('label', { class: 'sound-row switch-row' }, h('span', null, '🔔 Efectos'), sfxSwitch),
-      h('button', { class: 'btn block', onclick: () => modal.close() }, 'Listo'),
-    ],
-    { dismissable: true },
-  );
+  return [
+    h(
+      'div',
+      { class: 'sound-row' },
+      h('div', { class: 'sound-label' }, h('span', null, '🎵 Música'), volumeLabel),
+      h('div', { class: 'volume-row' }, h('span', { 'aria-hidden': 'true' }, '🔈'), slider, h('span', { 'aria-hidden': 'true' }, '🔊')),
+      trackList,
+    ),
+    h('label', { class: 'sound-row switch-row' }, h('span', null, '🔔 Efectos'), sfxSwitch),
+  ];
+}
+
+/** Panel de sonido de la portada. */
+export function openSoundPanel(): void {
+  const modal = openModal([h('h2', null, 'Sonido'), ...soundSettings(), h('button', { class: 'btn block', onclick: () => modal.close() }, 'Listo')], {
+    dismissable: true,
+  });
 }
