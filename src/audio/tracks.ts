@@ -51,49 +51,79 @@ function hit(ctx: Ctx, out: AudioNode, t: number, type: BiquadFilterType, freq: 
   src.stop(t + decay + 0.05);
 }
 
-/** Pad: acorde sostenido que entra y sale despacio, con dos osciladores desafinados por nota. */
-function pad(ctx: Ctx, out: AudioNode, t: number, notes: number[], length: number, opts: { type: OscillatorType; level: number; attack: number; release: number; cutoff: number }): void {
+// --------------------------------------------------------------------- Aurora
+// Distinta de Hielo sereno a propósito: en vez de acordes con campanitas al
+// azar, un zumbido grave que "respira" (filtro que se abre y se cierra), un
+// motivo cristalino que se repite con eco y un viento helado de fondo.
+
+/** Raíz grave y notas del motivo (La menor, Fa, Do, Sol). */
+const AURORA_HARMONY = [
+  { root: 33, motif: [69, 72, 76, 79, 76, 72] }, // La m
+  { root: 29, motif: [69, 72, 77, 81, 77, 72] }, // Fa
+  { root: 36, motif: [67, 72, 76, 79, 76, 72] }, // Do
+  { root: 31, motif: [67, 71, 74, 79, 74, 71] }, // Sol
+];
+const AURORA_BAR = 8;
+/** Separación entre notas del motivo y entre ecos. */
+const AURORA_STEP = AURORA_BAR / 12;
+const AURORA_ECHO = 0.5;
+
+function auroraBar(ctx: Ctx, out: AudioNode, t: number, index: number, random: () => number): void {
+  const { root, motif } = AURORA_HARMONY[index % AURORA_HARMONY.length];
+
+  // Zumbido grave: dientes de sierra (raíz y quinta) por un filtro que sube y baja.
   const filter = ctx.createBiquadFilter();
   filter.type = 'lowpass';
-  filter.frequency.value = opts.cutoff;
+  filter.Q.value = 6;
+  filter.frequency.setValueAtTime(220, t);
+  filter.frequency.linearRampToValueAtTime(1300, t + AURORA_BAR * 0.5);
+  filter.frequency.linearRampToValueAtTime(220, t + AURORA_BAR);
   filter.connect(out);
-  for (const note of notes) {
-    for (const detune of [-7, 7]) {
+  for (const note of [root, root + 7, root + 12]) {
+    for (const detune of [-9, 9]) {
       const osc = ctx.createOscillator();
-      osc.type = opts.type;
+      osc.type = 'sawtooth';
       osc.frequency.setValueAtTime(midi(note), t);
       osc.detune.setValueAtTime(detune, t);
       const g = silentGain(ctx);
       g.gain.setValueAtTime(0.0001, t);
-      g.gain.exponentialRampToValueAtTime(opts.level, t + opts.attack);
-      g.gain.setValueAtTime(opts.level, t + Math.max(opts.attack, length - 0.3));
-      g.gain.exponentialRampToValueAtTime(0.0001, t + length + opts.release);
+      g.gain.exponentialRampToValueAtTime(0.012, t + 1.5);
+      g.gain.setValueAtTime(0.012, t + AURORA_BAR - 0.2);
+      g.gain.exponentialRampToValueAtTime(0.0001, t + AURORA_BAR + 1.5);
       osc.connect(g).connect(filter);
       osc.start(t);
-      osc.stop(t + length + opts.release + 0.1);
+      osc.stop(t + AURORA_BAR + 1.6);
     }
   }
-}
 
-// --------------------------------------------------------------------- Aurora
-
-const AURORA_CHORDS = [
-  [45, 52, 57, 59, 64], // La m (add9)
-  [41, 48, 53, 57, 64], // Fa maj7
-  [48, 55, 60, 62, 64], // Do (add9)
-  [43, 50, 55, 59, 64], // Sol 6
-];
-const AURORA_BAR = 8;
-
-function auroraBar(ctx: Ctx, out: AudioNode, t: number, index: number, random: () => number): void {
-  const chord = AURORA_CHORDS[index % AURORA_CHORDS.length];
-  pad(ctx, out, t, chord, AURORA_BAR, { type: 'sine', level: 0.03, attack: 3, release: 3, cutoff: 1400 });
-  // Destellos: notas muy agudas y largas, como luces que aparecen y se van.
-  for (let i = 0; i < 6; i++) {
-    if (random() > 0.3) continue;
-    const note = chord[Math.floor(random() * chord.length)] + 36;
-    bell(ctx, out, t + i * (AURORA_BAR / 6) + random() * 0.4, midi(Math.min(note, 100)), 0.022, 3);
+  // Motivo cristalino que se repite dos veces por compás, cada nota con dos ecos.
+  for (let i = 0; i < 12; i++) {
+    const note = motif[i % motif.length] + 12;
+    const at = t + i * AURORA_STEP;
+    [0.03, 0.012, 0.005].forEach((peak, echo) => {
+      tone(ctx, out, at + echo * AURORA_ECHO, midi(note), { type: 'triangle', peak, attack: 0.004, decay: 0.9 });
+    });
   }
+  // De vez en cuando, un destello más agudo.
+  if (random() < 0.5) bell(ctx, out, t + AURORA_BAR * (0.25 + random() * 0.5), midi(motif[3] + 24), 0.012, 2.5);
+
+  // Viento helado: ruido filtrado que crece y se va.
+  const wind = ctx.createBufferSource();
+  wind.buffer = noise(ctx);
+  wind.loop = true;
+  const band = ctx.createBiquadFilter();
+  band.type = 'bandpass';
+  band.Q.value = 0.8;
+  band.frequency.setValueAtTime(500, t);
+  band.frequency.linearRampToValueAtTime(900, t + AURORA_BAR * 0.6);
+  band.frequency.linearRampToValueAtTime(500, t + AURORA_BAR);
+  const wg = silentGain(ctx);
+  wg.gain.setValueAtTime(0.0001, t);
+  wg.gain.exponentialRampToValueAtTime(0.02, t + AURORA_BAR * 0.5);
+  wg.gain.exponentialRampToValueAtTime(0.0001, t + AURORA_BAR + 1);
+  wind.connect(band).connect(wg).connect(out);
+  wind.start(t, random() * 0.5);
+  wind.stop(t + AURORA_BAR + 1.1);
 }
 
 // --------------------------------------------------------------- Copos alegres
@@ -176,7 +206,7 @@ function lofiBar(ctx: Ctx, out: AudioNode, t: number, index: number, random: () 
 
 export const TRACKS: readonly MusicTrack[] = [
   { id: 'calm', name: 'Hielo sereno', emoji: '🧊', description: 'Acordes lentos y cajita de música', barSeconds: BAR_S, level: 1, bar: musicBar },
-  { id: 'aurora', name: 'Aurora', emoji: '🌌', description: 'Etérea, con destellos agudos', barSeconds: AURORA_BAR, level: 0.65, bar: auroraBar },
+  { id: 'aurora', name: 'Aurora', emoji: '🌌', description: 'Zumbido que respira y notas con eco', barSeconds: AURORA_BAR, level: 2.3, bar: auroraBar },
   { id: 'playful', name: 'Copos alegres', emoji: '❄️', description: 'Marimba animada y ritmo ligero', barSeconds: PLAYFUL_BAR, level: 3.7, bar: playfulBar },
   { id: 'lofi', name: 'Lofi del iglú', emoji: '☕', description: 'Piano eléctrico y batería suave', barSeconds: LOFI_BAR, level: 2.7, bar: lofiBar },
 ];
