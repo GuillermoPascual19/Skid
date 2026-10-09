@@ -5,6 +5,7 @@ import { homeScreen } from './ui/home';
 import { rankingScreen } from './ui/ranking';
 import { statsScreen } from './ui/stats';
 import { achievementsScreen } from './ui/achievements';
+import { playerScreen } from './ui/player';
 import { go, setRoutes } from './ui/router';
 
 const FONT_FAMILY = '"Baloo 2"';
@@ -45,6 +46,7 @@ setRoutes({
   ranking: (route) => rankingScreen(route),
   stats: () => statsScreen(),
   achievements: () => achievementsScreen(),
+  player: (route) => playerScreen(route.id),
 });
 
 snow();

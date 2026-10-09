@@ -91,7 +91,7 @@ function streakCard(s: online.PlayerStats): HTMLElement {
   );
 }
 
-function tile(label: string, value: string | number, note: string | null = null): HTMLElement {
+export function tile(label: string, value: string | number, note: string | null = null): HTMLElement {
   return h('div', { class: 'card tile' }, h('span', { class: 'tile-label' }, label), h('strong', null, String(value)), note ? h('small', null, note) : null);
 }
 
@@ -111,7 +111,7 @@ function shortDay(day: string): string {
  * ganado, punto en la base = no jugado. Tooltip al tocar o pasar por encima, y
  * la misma información en una lista (el dorado tiene poco contraste con el fondo).
  */
-function scoreChart(history: online.PlayerStats['history']): HTMLElement {
+export function scoreChart(history: online.PlayerStats['history']): HTMLElement {
   const W = 320;
   const H = 150;
   const pad = { left: 30, right: 6, top: 10, bottom: 22 };

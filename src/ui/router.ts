@@ -15,7 +15,8 @@ export type Route =
   | { name: 'daily'; record: DailyRecord }
   | { name: 'ranking'; join?: string }
   | { name: 'stats' }
-  | { name: 'achievements' };
+  | { name: 'achievements' }
+  | { name: 'player'; id: string };
 
 type Renderers = { [N in Route['name']]: (route: Extract<Route, { name: N }>) => Screen };
 

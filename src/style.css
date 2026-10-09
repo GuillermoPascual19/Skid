@@ -1430,3 +1430,106 @@ p {
   font-size: 22px;
   opacity: 0.6;
 }
+
+/* ---------------------------------------------------------- Perfil de amigo */
+
+.ranking .rank-row {
+  cursor: pointer;
+  transition: transform 0.1s;
+}
+
+.ranking .rank-row:active {
+  transform: scale(0.98);
+}
+
+.ranking .rank-row:focus-visible {
+  outline: 3px solid var(--secondary);
+  outline-offset: 2px;
+}
+
+.profile-head {
+  display: grid;
+  grid-template-columns: 110px 1fr;
+  align-items: center;
+  gap: 14px;
+}
+
+.profile-head h2 {
+  font-size: 26px;
+  overflow-wrap: anywhere;
+}
+
+.profile-head .chips {
+  margin-top: 8px;
+}
+
+.h2h {
+  text-align: center;
+}
+
+.h2h-score {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 18px;
+  margin: 6px 0 4px;
+}
+
+.h2h-score div {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  min-width: 80px;
+}
+
+.h2h-score strong {
+  font-size: 48px;
+  line-height: 1;
+  font-weight: 800;
+}
+
+.h2h-score span {
+  font-weight: 700;
+  color: var(--ink-soft);
+  max-width: 120px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.h2h-vs {
+  font-size: 32px;
+  font-weight: 800;
+  color: var(--ink-faint);
+}
+
+.section-title {
+  font-size: 18px;
+  margin-bottom: 8px;
+}
+
+.hat-shelf {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 8px;
+}
+
+.hat-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 2px;
+}
+
+.hat-item svg {
+  width: 52px;
+  height: auto;
+}
+
+.hat-item small {
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--ink-soft);
+  line-height: 1.2;
+}
