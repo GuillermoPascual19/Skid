@@ -2,7 +2,7 @@
 // partida, un silencio rápido que lo apaga o enciende todo.
 
 import { getAudioSettings, onAudioSettings, setAudioSettings, toggleMute, type AudioSettings } from '../audio/sound';
-import { h } from './dom';
+import { h, openModal } from './dom';
 
 export interface AudioControls {
   readonly el: HTMLElement;
@@ -13,7 +13,7 @@ export interface AudioControls {
 /** Dos botones (efectos y música) para la esquina de la portada. */
 export function audioToggles(): AudioControls {
   const sfxBtn = h('button', { class: 'audio-btn', onclick: () => setAudioSettings({ sfx: !getAudioSettings().sfx }) });
-  const musicBtn = h('button', { class: 'audio-btn', onclick: () => setAudioSettings({ music: !getAudioSettings().music }) });
+  const musicBtn = h('button', { class: 'audio-btn', onclick: openSoundPanel });
   const paint = (s: AudioSettings) => {
     sfxBtn.textContent = s.sfx ? '🔊' : '🔇';
     sfxBtn.setAttribute('aria-label', s.sfx ? 'Desactivar efectos de sonido' : 'Activar efectos de sonido');
@@ -21,9 +21,8 @@ export function audioToggles(): AudioControls {
     sfxBtn.title = s.sfx ? 'Efectos: sí' : 'Efectos: no';
     musicBtn.textContent = '🎵';
     musicBtn.classList.toggle('off', !s.music);
-    musicBtn.setAttribute('aria-label', s.music ? 'Desactivar música' : 'Activar música');
-    musicBtn.setAttribute('aria-pressed', String(s.music));
-    musicBtn.title = s.music ? 'Música: sí' : 'Música: no';
+    musicBtn.setAttribute('aria-label', 'Volumen de la música');
+    musicBtn.title = s.music ? `Música: ${Math.round(s.musicVolume * 100)} %` : 'Música: no';
   };
   paint(getAudioSettings());
   return { el: h('div', { class: 'audio-toggles' }, sfxBtn, musicBtn), dispose: onAudioSettings(paint) };
@@ -40,4 +39,49 @@ export function muteButton(): AudioControls {
   };
   paint(getAudioSettings());
   return { el: btn, dispose: onAudioSettings(paint) };
+}
+
+/** Panel de sonido: volumen de la música (se oye en directo al moverlo) y efectos sí/no. */
+export function openSoundPanel(): void {
+  const s = getAudioSettings();
+  const percent = (v: number) => `${Math.round(v * 100)} %`;
+
+  const volumeLabel = h('strong', null, s.music ? percent(s.musicVolume) : 'Apagada');
+  const slider = h('input', {
+    type: 'range',
+    class: 'volume',
+    min: 0,
+    max: 100,
+    step: 5,
+    value: String(s.music ? Math.round(s.musicVolume * 100) : 0),
+    'aria-label': 'Volumen de la música',
+  });
+  const paintSlider = () => {
+    const v = Number(slider.value);
+    slider.style.setProperty('--fill', `${v}%`);
+    volumeLabel.textContent = v === 0 ? 'Apagada' : `${v} %`;
+  };
+  slider.addEventListener('input', () => {
+    paintSlider();
+    setAudioSettings({ musicVolume: Number(slider.value) / 100 });
+  });
+  paintSlider();
+
+  const sfxSwitch = h('input', { type: 'checkbox', class: 'switch', checked: s.sfx, 'aria-label': 'Efectos de sonido' });
+  sfxSwitch.addEventListener('change', () => setAudioSettings({ sfx: sfxSwitch.checked }));
+
+  const modal = openModal(
+    [
+      h('h2', null, 'Sonido'),
+      h(
+        'div',
+        { class: 'sound-row' },
+        h('div', { class: 'sound-label' }, h('span', null, '🎵 Música'), volumeLabel),
+        h('div', { class: 'volume-row' }, h('span', { 'aria-hidden': 'true' }, '🔈'), slider, h('span', { 'aria-hidden': 'true' }, '🔊')),
+      ),
+      h('label', { class: 'sound-row switch-row' }, h('span', null, '🔔 Efectos'), sfxSwitch),
+      h('button', { class: 'btn block', onclick: () => modal.close() }, 'Listo'),
+    ],
+    { dismissable: true },
+  );
 }
