@@ -115,9 +115,58 @@ export function collect(ctx: Ctx, out: AudioNode, t: number, index: number): voi
   bell(ctx, out, t + 0.06, midi(note + 12), 0.08, 0.5);
 }
 
-/** Arpegio ascendente al terminar un nivel. */
+/** Nota tipo metal suave: dos sierras desafinadas con un filtro que se abre al atacar. */
+function brass(ctx: Ctx, out: AudioNode, t: number, freq: number, peak: number, dur: number): void {
+  const filter = ctx.createBiquadFilter();
+  filter.type = 'lowpass';
+  filter.Q.value = 2;
+  filter.frequency.setValueAtTime(freq * 1.5, t);
+  filter.frequency.exponentialRampToValueAtTime(freq * 6, t + 0.06);
+  filter.frequency.exponentialRampToValueAtTime(freq * 2.5, t + dur);
+  const g = silentGain(ctx);
+  g.gain.setValueAtTime(0.0001, t);
+  g.gain.exponentialRampToValueAtTime(peak, t + 0.025);
+  g.gain.setValueAtTime(peak, t + dur * 0.7);
+  g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+  filter.connect(g).connect(out);
+  for (const detune of [-7, 7]) {
+    const osc = ctx.createOscillator();
+    osc.type = 'sawtooth';
+    osc.frequency.setValueAtTime(freq, t);
+    osc.detune.setValueAtTime(detune, t);
+    osc.connect(filter);
+    osc.start(t);
+    osc.stop(t + dur + 0.05);
+  }
+}
+
+/** Duración aproximada de la sintonía de nivel superado (segundos). */
+export const WIN_S = 2.6;
+
+/** Sintonía de «¡enhorabuena!» al terminar un nivel: subida, «ta-chán» y destellos. */
 export function win(ctx: Ctx, out: AudioNode, t: number): void {
-  [72, 76, 79, 84].forEach((n, i) => bell(ctx, out, t + i * 0.09, midi(n), 0.2, 0.9));
+  const step = 0.11;
+  // Subida: Sol-Do-Mi-Sol, un respiro, Mi-Sol... y el acorde final.
+  const lead: [number, number, number][] = [
+    [67, 0, 1],
+    [72, 1, 1],
+    [76, 2, 1],
+    [79, 3, 2],
+    [76, 5, 1],
+    [79, 6, 1.5],
+  ];
+  for (const [note, at, len] of lead) {
+    brass(ctx, out, t + at * step, midi(note), 0.07, len * step + 0.06);
+    bell(ctx, out, t + at * step, midi(note + 12), 0.1, 0.5);
+  }
+  const final = t + 8 * step;
+  for (const note of [60, 64, 67, 72, 76]) brass(ctx, out, final, midi(note), 0.045, 1.5);
+  [72, 76, 79, 84].forEach((n) => bell(ctx, out, final, midi(n), 0.11, 1.6));
+  // Destellos que suben por encima del acorde.
+  for (let i = 0; i < 7; i++) {
+    const note = 91 + PENTATONIC[i % 5] + 12 * Math.floor(i / 5);
+    bell(ctx, out, final + 0.18 + i * 0.06, midi(note), 0.04, 0.4);
+  }
 }
 
 /** Fanfarria de celebración (logros, hitos, ganador del día). */
