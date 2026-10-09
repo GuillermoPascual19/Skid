@@ -51,6 +51,8 @@ export interface DailyResult {
   readonly retries: number;
   /** Pistas pedidas (no existe en resultados anteriores a las pistas). */
   readonly hints?: number;
+  /** Racha tras terminar este reto (la calcula el servidor). */
+  readonly streak?: number;
   readonly timeMs: number;
   readonly optimal: number;
   readonly score: number;
