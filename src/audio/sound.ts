@@ -6,24 +6,41 @@ import * as synth from './synth';
 
 const SETTINGS_KEY = 'skid.audio.v1';
 const SFX_VOLUME = 1;
-/** La música va bastante por debajo de los efectos. */
-const MUSIC_VOLUME = 0.28;
+/** Ganancia de la música con el control al 100 %. Por defecto va bastante por debajo de los efectos. */
+const MUSIC_MAX = 0.57;
+/** Volumen de la música por defecto (control al 70 %, como antes de poder cambiarlo). */
+const DEFAULT_MUSIC_VOLUME = 0.7;
 /** Cuánto se adelanta la programación de la música (segundos). */
 const LOOKAHEAD_S = 1.5;
 
 export interface AudioSettings {
   readonly sfx: boolean;
   readonly music: boolean;
+  /** Volumen de la música, de 0 a 1 (posición del control). */
+  readonly musicVolume: number;
+}
+
+const DEFAULTS: AudioSettings = { sfx: true, music: true, musicVolume: DEFAULT_MUSIC_VOLUME };
+
+/**
+ * Ganancia de la música. El control va al cuadrado para que la mitad suene a
+ * "la mitad" para el oído (una escala lineal sonaría casi igual de alta hasta abajo).
+ */
+function musicGain(s: AudioSettings): number {
+  return s.music ? MUSIC_MAX * s.musicVolume ** 2 : 0;
 }
 
 function readSettings(): AudioSettings {
   try {
     const raw = localStorage.getItem(SETTINGS_KEY);
-    if (raw) return { sfx: true, music: true, ...(JSON.parse(raw) as Partial<AudioSettings>) };
+    if (raw) {
+      const saved = { ...DEFAULTS, ...(JSON.parse(raw) as Partial<AudioSettings>) };
+      return { ...saved, musicVolume: Math.min(1, Math.max(0, Number(saved.musicVolume) || 0)) };
+    }
   } catch {
     // Sin almacenamiento: valores por defecto.
   }
-  return { sfx: true, music: true };
+  return DEFAULTS;
 }
 
 let settings = readSettings();
@@ -60,7 +77,7 @@ function ensureContext(): AudioContext | null {
   sfxBus.connect(sfxSend).connect(room);
 
   musicBus = ctx.createGain();
-  musicBus.gain.value = settings.music ? MUSIC_VOLUME : 0;
+  musicBus.gain.value = musicGain(settings);
   musicBus.connect(master);
   const musicSend = ctx.createGain();
   musicSend.gain.value = 0.8;
@@ -70,7 +87,7 @@ function ensureContext(): AudioContext | null {
 
 /** Programa compases de música por adelantado mientras esté activada. */
 function scheduleMusic(): void {
-  if (!ctx || !musicBus || !settings.music || ctx.state !== 'running') return;
+  if (!ctx || !musicBus || musicGain(settings) === 0 || ctx.state !== 'running') return;
   if (nextBarAt < ctx.currentTime) nextBarAt = ctx.currentTime + 0.1;
   while (nextBarAt < ctx.currentTime + LOOKAHEAD_S) {
     synth.musicBar(ctx, musicBus, nextBarAt, bar++);
@@ -119,6 +136,9 @@ export function getAudioSettings(): AudioSettings {
 
 export function setAudioSettings(next: Partial<AudioSettings>): void {
   settings = { ...settings, ...next };
+  // Subir el volumen desde 0 enciende la música; bajarlo a 0 la apaga.
+  if (next.musicVolume !== undefined) settings = { ...settings, music: next.musicVolume > 0 };
+  if (next.music && settings.musicVolume === 0) settings = { ...settings, musicVolume: DEFAULT_MUSIC_VOLUME };
   try {
     localStorage.setItem(SETTINGS_KEY, JSON.stringify(settings));
   } catch {
@@ -128,9 +148,9 @@ export function setAudioSettings(next: Partial<AudioSettings>): void {
   if (c && sfxBus && musicBus) {
     const now = c.currentTime;
     sfxBus.gain.setTargetAtTime(settings.sfx ? SFX_VOLUME : 0, now, 0.05);
-    musicBus.gain.setTargetAtTime(settings.music ? MUSIC_VOLUME : 0, now, 0.4);
+    musicBus.gain.setTargetAtTime(musicGain(settings), now, 0.15);
     void c.resume();
-    if (settings.music) startMusicLoop();
+    if (musicGain(settings) > 0) startMusicLoop();
     else stopMusicLoop();
   }
   listeners.forEach((fn) => fn(settings));

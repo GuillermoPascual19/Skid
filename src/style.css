@@ -1590,3 +1590,131 @@ p {
 .hint-row .hint {
   flex: 1;
 }
+
+.sound-row {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  text-align: left;
+  background: #f2f8fd;
+  border-radius: 16px;
+  padding: 12px 14px;
+  font-weight: 700;
+}
+
+.sound-label {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+}
+
+.sound-label strong {
+  font-variant-numeric: tabular-nums;
+  color: var(--secondary-dark);
+}
+
+.volume-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+/* Control de volumen grande, fácil de arrastrar con el dedo. */
+input.volume {
+  --fill: 70%;
+  appearance: none;
+  -webkit-appearance: none;
+  flex: 1;
+  height: 32px;
+  background: transparent;
+  cursor: pointer;
+}
+
+input.volume::-webkit-slider-runnable-track {
+  height: 10px;
+  border-radius: 999px;
+  background: linear-gradient(to right, var(--secondary) var(--fill), #d8e6f1 var(--fill));
+}
+
+input.volume::-moz-range-track {
+  height: 10px;
+  border-radius: 999px;
+  background: #d8e6f1;
+}
+
+input.volume::-moz-range-progress {
+  height: 10px;
+  border-radius: 999px;
+  background: var(--secondary);
+}
+
+input.volume::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 28px;
+  height: 28px;
+  margin-top: -9px;
+  border-radius: 50%;
+  background: #fff;
+  border: 3px solid var(--secondary);
+  box-shadow: 0 2px 6px rgba(21, 50, 79, 0.25);
+}
+
+input.volume::-moz-range-thumb {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: #fff;
+  border: 3px solid var(--secondary);
+}
+
+input.volume:focus-visible {
+  outline: 3px solid var(--secondary);
+  outline-offset: 4px;
+  border-radius: 8px;
+}
+
+.switch-row {
+  flex-direction: row;
+  justify-content: space-between;
+  align-items: center;
+  cursor: pointer;
+}
+
+input.switch {
+  appearance: none;
+  -webkit-appearance: none;
+  width: 52px;
+  height: 30px;
+  border-radius: 999px;
+  background: #c7d6e3;
+  position: relative;
+  cursor: pointer;
+  transition: background 0.2s;
+  flex: none;
+}
+
+input.switch::after {
+  content: '';
+  position: absolute;
+  top: 3px;
+  left: 3px;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: #fff;
+  box-shadow: 0 1px 3px rgba(21, 50, 79, 0.3);
+  transition: transform 0.2s;
+}
+
+input.switch:checked {
+  background: var(--good);
+}
+
+input.switch:checked::after {
+  transform: translateX(22px);
+}
+
+input.switch:focus-visible {
+  outline: 3px solid var(--secondary);
+  outline-offset: 2px;
+}
