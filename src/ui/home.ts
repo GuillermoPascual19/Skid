@@ -7,6 +7,7 @@ import { celebrate } from './celebrate';
 import { openDaily, resultFromServer, shareText, showDailyResult, today } from './daily';
 import { penguinSvg } from '../art/hats';
 import { celebrateNewAchievements } from './achievements';
+import { audioToggles } from './audio-controls';
 import { formatDay, formatTime, h, openModal, plural, previousDay, share, svg, toast, untilMidnight } from './dom';
 import { renderGoogleButton, signOut } from './google';
 import { askName, currentMe } from './profile';
@@ -217,9 +218,11 @@ export function homeScreen(): Screen {
   }
 
   const level = startingProgress().level;
+  const audio = audioToggles();
   const el = h(
     'div',
-    { class: 'screen' },
+    { class: 'screen home' },
+    audio.el,
     h(
       'header',
       { class: 'logo' },
@@ -254,6 +257,7 @@ export function homeScreen(): Screen {
     dispose() {
       disposed = true;
       clearInterval(ticker);
+      audio.dispose();
     },
   };
 }

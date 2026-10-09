@@ -1533,3 +1533,60 @@ p {
   color: var(--ink-soft);
   line-height: 1.2;
 }
+
+/* ------------------------------------------------------------------ Sonido */
+
+.screen.home {
+  position: relative;
+}
+
+.audio-toggles {
+  position: absolute;
+  top: max(14px, env(safe-area-inset-top));
+  right: 14px;
+  display: flex;
+  gap: 8px;
+  z-index: 2;
+}
+
+.audio-btn {
+  appearance: none;
+  border: 0;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.75);
+  box-shadow: 0 3px 0 #c7d9e8;
+  font-size: 18px;
+  cursor: pointer;
+  display: grid;
+  place-items: center;
+}
+
+.audio-btn:active {
+  transform: translateY(2px);
+  box-shadow: 0 1px 0 #c7d9e8;
+}
+
+.audio-btn.off {
+  opacity: 0.45;
+  text-decoration: line-through;
+}
+
+.audio-btn.small {
+  width: 34px;
+  height: 34px;
+  font-size: 15px;
+  flex: none;
+}
+
+.hint-row {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+}
+
+.hint-row .hint {
+  flex: 1;
+}
