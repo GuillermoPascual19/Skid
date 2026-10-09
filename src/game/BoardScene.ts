@@ -5,6 +5,7 @@ import Phaser from 'phaser';
 import { DIRECTION_DELTA, nextPiece, type Board, type Direction, type GameState, type Piece } from '../core/board';
 import { slideDurationMs } from '../core/daily';
 import { HAT_BOX, hatSvg, type HatId } from '../art/hats';
+import { sfx } from '../audio/sound';
 
 /** Tamaño de casilla en el canvas; Phaser escala el canvas para que quepa. */
 export const TILE = 96;
@@ -178,6 +179,7 @@ export class BoardScene extends Phaser.Scene {
     this.shown = after;
     this.animating = true;
     this.puff(this.penguin.x, this.penguin.y, dir);
+    sfx.slide(duration);
 
     // Con 'Cubic.easeOut' la posición en el instante t es 1 - (1 - t)^3:
     // se invierte para saber cuándo pasa el pingüino por cada pieza recogida.
@@ -195,12 +197,14 @@ export class BoardScene extends Phaser.Scene {
       ease: 'Cubic.easeOut',
       onComplete: () => {
         this.squash(dir);
+        sfx.land();
         this.settle();
       },
     });
   }
 
   private bump(dir: Direction): void {
+    sfx.bump();
     const delta = DIRECTION_DELTA[dir];
     const { x, y } = this.center(this.shown.player.x, this.shown.player.y);
     this.animating = true;
@@ -234,6 +238,7 @@ export class BoardScene extends Phaser.Scene {
   private collect(piece: Piece): void {
     const view = this.pieceViews.get(piece.order);
     if (!view) return;
+    sfx.collect(piece.order - 1);
     this.tweens.add({
       targets: view.container,
       scale: 1.6,

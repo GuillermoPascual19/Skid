@@ -1,4 +1,5 @@
 import './style.css';
+import { installAudio } from './audio/sound';
 import { h } from './ui/dom';
 import { dailyScreen, levelsScreen } from './ui/play';
 import { homeScreen } from './ui/home';
@@ -50,6 +51,7 @@ setRoutes({
 });
 
 snow();
+installAudio();
 await waitForFonts();
 
 const join = new URLSearchParams(location.search).get('join');

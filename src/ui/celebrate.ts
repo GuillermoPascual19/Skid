@@ -1,6 +1,7 @@
 // Celebración: pop-up que sale del centro de la pantalla con confeti.
 // Se usa al superar los niveles 25, 50, 75 y 100, y al ganar el reto del día anterior.
 
+import { sfx } from '../audio/sound';
 import { h, haptic, openModal, svg } from './dom';
 
 const CONFETTI_COLORS = ['#ffc93c', '#ff7a45', '#2b8fd6', '#2bb673', '#ff8fa3', '#a78bfa', '#ffffff'];
@@ -22,6 +23,7 @@ export function celebrate(c: Celebration): Promise<boolean> {
     let confirmed = false;
     confetti(); // Sigue cayendo y se desvanece sola aunque se cierre el pop-up.
     haptic([40, 60, 40, 60, 80]);
+    sfx.fanfare();
     const modal = openModal(
       [
         h('div', { class: `celebrate-icon ${c.iconSvg ? 'svg' : ''}`, 'aria-hidden': 'true' }, c.iconSvg ? svg(c.iconSvg) : c.icon),

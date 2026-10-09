@@ -22,6 +22,8 @@ import {
 import { celebrate } from './celebrate';
 import { showDailyResult } from './daily';
 import { formatDay, formatTime, h, haptic, isTouch, openModal, starSvg, toast, type Modal } from './dom';
+import { sfx } from '../audio/sound';
+import { muteButton } from './audio-controls';
 import { currentMe } from './profile';
 import { go, type Screen } from './router';
 
@@ -40,6 +42,8 @@ interface PlayLayout {
   setStat(key: string, value: string | number, tone?: 'warn'): void;
   /** Muestra (o quita, con null) el aviso de que ya no se puede terminar. */
   setStuck(stuck: boolean): void;
+  /** Deja de escuchar los ajustes de sonido (al salir de la pantalla). */
+  dispose(): void;
   /** Contador de pistas usadas sobre la bombilla (0 lo oculta). */
   setHintCount(n: number): void;
 }
@@ -79,6 +83,7 @@ function playLayout(opts: {
   );
 
   const hintBadge = h('span', { class: 'badge', hidden: true });
+  const mute = muteButton();
 
   const boardWrap = h('div', { class: 'board-wrap' });
   const el = h(
@@ -95,7 +100,7 @@ function playLayout(opts: {
     stats,
     stuck,
     boardWrap,
-    h('p', { class: 'hint' }, isTouch() ? opts.hint.touch : opts.hint.keys),
+    h('div', { class: 'hint-row' }, h('p', { class: 'hint' }, isTouch() ? opts.hint.touch : opts.hint.keys), mute.el),
   );
 
   // Gestos en toda la pantalla de juego (no solo sobre el tablero). El movimiento
@@ -131,12 +136,14 @@ function playLayout(opts: {
       boxes.get(key)!.classList.toggle('warn', tone === 'warn');
     },
     setStuck(isStuck) {
+      if (isStuck && stuck.hidden) sfx.stuck(); // Solo al caer en el callejón, no en cada movimiento.
       stuck.hidden = !isStuck;
     },
     setHintCount(n) {
       hintBadge.textContent = String(n);
       hintBadge.hidden = n === 0;
     },
+    dispose: mute.dispose,
   };
 }
 
@@ -199,6 +206,7 @@ export function levelsScreen(): Screen {
     const [next] = solve(board, state) ?? [];
     if (!next) return toast('Sin salida desde aquí: reinicia el nivel');
     mounted.scene.showHint(next);
+    sfx.hint();
   }
 
   const hud = () => {
@@ -275,6 +283,7 @@ export function levelsScreen(): Screen {
   }
 
   function showResult() {
+    sfx.win();
     const stars = starsFor(moves, optimal);
     result = openModal([
       h('div', { class: 'stars' }, ...[0, 1, 2].map((i) => starSvg(i < stars))),
@@ -309,6 +318,7 @@ export function levelsScreen(): Screen {
       removeKeys();
       document.removeEventListener('keydown', nextOnEnter);
       mounted?.destroy();
+      ui.dispose();
     },
   };
 
@@ -456,6 +466,7 @@ export function dailyScreen(record: DailyRecord): Screen {
                 persist();
                 hud();
                 mounted?.scene.showHint(next);
+                sfx.hint();
               },
             },
             `Pista (−${SCORING.perHint})`,
@@ -497,6 +508,7 @@ export function dailyScreen(record: DailyRecord): Screen {
       score: dailyScore({ moves, optimal, retries, hints, timeMs }).total,
     };
 
+    sfx.win();
     if (!online.onlineEnabled) {
       saveDaily({ day, startedAt: record.startedAt, log, result: local });
       return showDailyResult(day, local);
@@ -543,6 +555,7 @@ export function dailyScreen(record: DailyRecord): Screen {
       clearInterval(timer);
       removeKeys();
       mounted?.destroy();
+      ui.dispose();
     },
   };
 }

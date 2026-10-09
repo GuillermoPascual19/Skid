@@ -19,6 +19,8 @@ export async function mountBoard(parent: HTMLElement, board: Board, hooks: Board
     height: board.height * TILE,
     transparent: true,
     banner: false,
+    // El sonido lo genera src/audio; sin esto Phaser abriría otro contexto de audio.
+    audio: { noAudio: true },
     scale: { mode: Phaser.Scale.FIT, autoCenter: Phaser.Scale.CENTER_BOTH },
     scene: [scene],
   });
