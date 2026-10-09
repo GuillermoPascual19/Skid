@@ -2,6 +2,7 @@
 // partida, un silencio rápido que lo apaga o enciende todo.
 
 import { getAudioSettings, onAudioSettings, setAudioSettings, toggleMute, type AudioSettings } from '../audio/sound';
+import { TRACKS } from '../audio/tracks';
 import { h, openModal } from './dom';
 
 export interface AudioControls {
@@ -64,8 +65,51 @@ export function openSoundPanel(): void {
   slider.addEventListener('input', () => {
     paintSlider();
     setAudioSettings({ musicVolume: Number(slider.value) / 100 });
+    paintTracks();
   });
   paintSlider();
+
+  // Lista de músicas: al elegir una empieza a sonar (y enciende la música si estaba apagada).
+  const options = TRACKS.map((track) =>
+    h(
+      'button',
+      {
+        class: 'track',
+        role: 'radio',
+        'data-track': track.id,
+        onclick: () => {
+          setAudioSettings({ track: track.id, music: true });
+          const now = getAudioSettings();
+          slider.value = String(Math.round(now.musicVolume * 100));
+          paintSlider();
+          paintTracks();
+        },
+      },
+      h('span', { class: 'track-emoji', 'aria-hidden': 'true' }, track.emoji),
+      h('span', { class: 'track-text' }, h('strong', null, track.name), h('small', null, track.description)),
+    ),
+  );
+  const paintTracks = () => {
+    const { track, music } = getAudioSettings();
+    for (const btn of options) {
+      const selected = btn.dataset.track === track;
+      btn.setAttribute('aria-checked', String(selected));
+      btn.classList.toggle('selected', selected);
+      btn.classList.toggle('muted-track', selected && !music);
+      btn.tabIndex = selected ? 0 : -1;
+    }
+  };
+  const trackList = h('div', { class: 'tracks', role: 'radiogroup', 'aria-label': 'Música' }, ...options);
+  // Flechas para moverse entre opciones, como en cualquier grupo de opciones.
+  trackList.addEventListener('keydown', (e) => {
+    if (!['ArrowDown', 'ArrowUp', 'ArrowRight', 'ArrowLeft'].includes(e.key)) return;
+    e.preventDefault();
+    const i = TRACKS.findIndex((t) => t.id === getAudioSettings().track);
+    const next = options[(i + (e.key === 'ArrowDown' || e.key === 'ArrowRight' ? 1 : -1) + options.length) % options.length];
+    next.click();
+    next.focus();
+  });
+  paintTracks();
 
   const sfxSwitch = h('input', { type: 'checkbox', class: 'switch', checked: s.sfx, 'aria-label': 'Efectos de sonido' });
   sfxSwitch.addEventListener('change', () => setAudioSettings({ sfx: sfxSwitch.checked }));
@@ -78,6 +122,7 @@ export function openSoundPanel(): void {
         { class: 'sound-row' },
         h('div', { class: 'sound-label' }, h('span', null, '🎵 Música'), volumeLabel),
         h('div', { class: 'volume-row' }, h('span', { 'aria-hidden': 'true' }, '🔈'), slider, h('span', { 'aria-hidden': 'true' }, '🔊')),
+        trackList,
       ),
       h('label', { class: 'sound-row switch-row' }, h('span', null, '🔔 Efectos'), sfxSwitch),
       h('button', { class: 'btn block', onclick: () => modal.close() }, 'Listo'),

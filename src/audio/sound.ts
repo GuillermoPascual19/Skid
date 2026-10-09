@@ -3,6 +3,7 @@
 // preferencias y pausa todo cuando la pestaña no se ve.
 
 import * as synth from './synth';
+import { trackById, type TrackId } from './tracks';
 
 const SETTINGS_KEY = 'skid.audio.v1';
 const SFX_VOLUME = 1;
@@ -18,9 +19,11 @@ export interface AudioSettings {
   readonly music: boolean;
   /** Volumen de la música, de 0 a 1 (posición del control). */
   readonly musicVolume: number;
+  /** Música elegida (ver tracks.ts). */
+  readonly track: TrackId;
 }
 
-const DEFAULTS: AudioSettings = { sfx: true, music: true, musicVolume: DEFAULT_MUSIC_VOLUME };
+const DEFAULTS: AudioSettings = { sfx: true, music: true, musicVolume: DEFAULT_MUSIC_VOLUME, track: 'calm' };
 
 /**
  * Ganancia de la música. El control va al cuadrado para que la mitad suene a
@@ -35,7 +38,7 @@ function readSettings(): AudioSettings {
     const raw = localStorage.getItem(SETTINGS_KEY);
     if (raw) {
       const saved = { ...DEFAULTS, ...(JSON.parse(raw) as Partial<AudioSettings>) };
-      return { ...saved, musicVolume: Math.min(1, Math.max(0, Number(saved.musicVolume) || 0)) };
+      return { ...saved, musicVolume: Math.min(1, Math.max(0, Number(saved.musicVolume) || 0)), track: trackById(saved.track).id };
     }
   } catch {
     // Sin almacenamiento: valores por defecto.
@@ -52,6 +55,27 @@ let musicBus: GainNode | null = null;
 let musicTimer = 0;
 let nextBarAt = 0;
 let bar = 0;
+/** Canal de la música que suena: cada cambio de música crea uno nuevo y funde el anterior. */
+let trackBus: GainNode | null = null;
+let trackBusId: TrackId | null = null;
+
+/** Canal para la música elegida; si ha cambiado, funde la anterior y empieza la nueva. */
+function currentTrackBus(c: AudioContext, music: GainNode): GainNode {
+  const track = trackById(settings.track);
+  if (trackBus && trackBusId === track.id) return trackBus;
+  if (trackBus) {
+    const old = trackBus;
+    old.gain.setTargetAtTime(0, c.currentTime, 0.4);
+    setTimeout(() => old.disconnect(), 4000);
+  }
+  trackBus = c.createGain();
+  trackBus.gain.value = track.level;
+  trackBus.connect(music);
+  trackBusId = track.id;
+  bar = 0;
+  nextBarAt = c.currentTime + 0.1; // La nueva empieza ya, sin esperar al compás de la anterior.
+  return trackBus;
+}
 
 /** Crea el grafo de audio (solo tras un gesto del jugador). */
 function ensureContext(): AudioContext | null {
@@ -90,8 +114,9 @@ function scheduleMusic(): void {
   if (!ctx || !musicBus || musicGain(settings) === 0 || ctx.state !== 'running') return;
   if (nextBarAt < ctx.currentTime) nextBarAt = ctx.currentTime + 0.1;
   while (nextBarAt < ctx.currentTime + LOOKAHEAD_S) {
-    synth.musicBar(ctx, musicBus, nextBarAt, bar++);
-    nextBarAt += synth.BAR_S;
+    const track = trackById(settings.track);
+    track.bar(ctx, currentTrackBus(ctx, musicBus), nextBarAt, bar++, Math.random);
+    nextBarAt += track.barSeconds;
   }
 }
 
@@ -150,8 +175,12 @@ export function setAudioSettings(next: Partial<AudioSettings>): void {
     sfxBus.gain.setTargetAtTime(settings.sfx ? SFX_VOLUME : 0, now, 0.05);
     musicBus.gain.setTargetAtTime(musicGain(settings), now, 0.15);
     void c.resume();
-    if (musicGain(settings) > 0) startMusicLoop();
-    else stopMusicLoop();
+    if (musicGain(settings) > 0) {
+      // Al elegir otra música, cambia ya (sin esperar a que acabe lo ya programado).
+      if (next.track && musicBus) currentTrackBus(c, musicBus);
+      startMusicLoop();
+      scheduleMusic();
+    } else stopMusicLoop();
   }
   listeners.forEach((fn) => fn(settings));
 }
