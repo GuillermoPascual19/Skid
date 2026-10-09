@@ -23,6 +23,13 @@ describe('computeAchievements', () => {
     expect(progress(days.map((d) => run(d))).streak7.unlocked).toBe(true);
   });
 
+  it('rachas largas de 14 y 30 días', () => {
+    const days = Array.from({ length: 14 }, (_, i) => `2026-09-${String(i + 1).padStart(2, '0')}`);
+    const p = progress(days.map((d) => run(d)));
+    expect(p.streak14.unlocked).toBe(true);
+    expect(p.streak30).toMatchObject({ unlocked: false, current: 14, target: 30 });
+  });
+
   it('perfección, sin ayuda y veterano', () => {
     const runs = [run('2026-10-01', 1000), run('2026-10-02', 900, 1), run('2026-10-03', 900, 0, 2), ...['04', '05', '06', '07'].map((d) => run(`2026-10-${d}`))];
     const p = progress(runs);

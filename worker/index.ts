@@ -404,9 +404,22 @@ async function finishRun(env: Env, playerId: string, day: string, log: unknown) 
   const { results: played } = await env.DB.prepare('SELECT day FROM daily_runs WHERE player_id = ? AND finished_at IS NOT NULL')
     .bind(playerId)
     .all<{ day: string }>();
-  const streak = streaks(played.map((r) => r.day), dayKey(new Date())).current;
+  const streak = streaks(
+    played.map((r) => r.day),
+    day,
+  );
 
-  return { moves: replay.moves, retries: replay.retries, hints: replay.hints, timeMs, optimal, score, streak };
+  return {
+    moves: replay.moves,
+    retries: replay.retries,
+    hints: replay.hints,
+    timeMs,
+    optimal,
+    score,
+    streak: streak.current,
+    freezes: streak.freezes,
+    freezeEarned: streak.lastFreezeEarned === day,
+  };
 }
 
 // ------------------------------------------------------------------ Ligas
@@ -672,6 +685,8 @@ async function playerStats(env: Env, playerId: string) {
     currentStreak: streak.current,
     bestStreak: streak.best,
     playedToday: streak.playedToday,
+    freezes: streak.freezes,
+    calendar: { played: runs.map((r) => r.day), won: [...wins].sort(), frozen: streak.frozenDays },
     bestScore: scores.length ? Math.max(...scores) : null,
     averageScore: scores.length ? Math.round(scores.reduce((a, b) => a + b, 0) / scores.length) : null,
     wins: wins.size,

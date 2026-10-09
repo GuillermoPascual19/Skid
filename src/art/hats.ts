@@ -5,7 +5,7 @@
 // elipse centrada en (50, 52) de radios 32 × 38, así que la cabeza acaba en y = 14.
 // Los gorros pueden subir hasta y = -30.
 
-export type HatId = 'beanie' | 'earmuffs' | 'cap' | 'tophat' | 'viking' | 'party' | 'santa' | 'crown';
+export type HatId = 'beanie' | 'earmuffs' | 'cap' | 'tophat' | 'viking' | 'party' | 'santa' | 'ushanka' | 'wizard' | 'crown';
 
 export const HAT_NAMES: Record<HatId, string> = {
   beanie: 'Gorro de lana',
@@ -15,6 +15,8 @@ export const HAT_NAMES: Record<HatId, string> = {
   viking: 'Casco vikingo',
   party: 'Gorro de fiesta',
   santa: 'Gorro de Papá Noel',
+  ushanka: 'Gorro polar',
+  wizard: 'Gorro de mago',
   crown: 'Corona',
 };
 
@@ -58,6 +60,17 @@ const HATS: Record<HatId, string> = {
     <path d="M26 29 C26 10 42 1 57 3 C70 5 79 13 83 22 L72 29 Z" fill="#e5484d"/>
     <rect x="23" y="25" width="54" height="10" rx="5" fill="#f6f7f9"/>
     <circle cx="84" cy="24" r="6.5" fill="#f6f7f9"/>`,
+  ushanka: `
+    <path d="M14 32 C10 46 13 58 20 61 C26 59 28 48 27 34 Z" fill="#8a5a3b"/>
+    <path d="M86 32 C90 46 87 58 80 61 C74 59 72 48 73 34 Z" fill="#8a5a3b"/>
+    <path d="M27 27 C27 3 73 3 73 27 Z" fill="#6b4226"/>
+    <rect x="19" y="22" width="62" height="13" rx="6.5" fill="#e8dcc4"/>
+    <path d="M50 24.5 L51.8 28 L55.6 28.4 L52.8 31 L53.6 34.7 L50 32.8 L46.4 34.7 L47.2 31 L44.4 28.4 L48.2 28 Z" fill="#e5484d"/>`,
+  wizard: `
+    <path d="M31 26 L48 -6 Q54 -18 71 -19 Q60 -12 59 -1 L69 26 Z" fill="#4f46e5"/>
+    <path d="M49 3 L50.6 6.6 L54.5 7 L51.6 9.6 L52.4 13.4 L49 11.4 L45.6 13.4 L46.4 9.6 L43.5 7 L47.4 6.6 Z" fill="#ffc93c"/>
+    <circle cx="58" cy="17" r="1.8" fill="#ffc93c"/><circle cx="41" cy="18" r="1.4" fill="#ffc93c"/><circle cx="54" cy="-1" r="1.3" fill="#ffc93c"/>
+    <ellipse cx="50" cy="26" rx="31" ry="6" fill="#3730a3"/>`,
   crown: `
     <path d="M30 25 L30 4 L40 14 L50 -1 L60 14 L70 4 L70 25 Z" fill="#ffc93c" stroke="#e48f0c" stroke-width="2" stroke-linejoin="round"/>
     <circle cx="30" cy="4" r="3" fill="#ffc93c" stroke="#e48f0c" stroke-width="1.5"/>

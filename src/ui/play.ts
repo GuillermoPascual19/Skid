@@ -20,7 +20,7 @@ import {
   type DailyResult,
 } from '../services/storage';
 import { celebrate } from './celebrate';
-import { showDailyResult } from './daily';
+import { celebrateStreak, showDailyResult } from './daily';
 import { formatDay, formatTime, h, haptic, isTouch, openModal, starSvg, toast, type Modal } from './dom';
 import { sfx } from '../audio/sound';
 import { soundSettings } from './audio-controls';
@@ -551,6 +551,7 @@ export function dailyScreen(record: DailyRecord): Screen {
       const result = await online.finishDaily(day, log);
       saveDaily({ day, startedAt: record.startedAt, log, result });
       sending.close();
+      await celebrateStreak(result);
       showDailyResult(day, result);
     } catch (err) {
       saveDaily({ day, startedAt: record.startedAt, log, result: local, pendingSubmit: true });

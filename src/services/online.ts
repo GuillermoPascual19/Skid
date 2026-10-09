@@ -207,6 +207,10 @@ export interface PlayerStats {
   currentStreak: number;
   bestStreak: number;
   playedToday: boolean;
+  /** Protectores de racha disponibles (se gana uno cada 7 días seguidos). */
+  freezes: number;
+  /** Días ("YYYY-MM-DD") jugados, ganados y salvados por un protector. */
+  calendar: { played: string[]; won: string[]; frozen: string[] };
   bestScore: number | null;
   averageScore: number | null;
   /** Días que quedó 1.º en alguna liga (con al menos 2 que terminaron). */

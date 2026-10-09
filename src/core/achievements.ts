@@ -10,6 +10,8 @@ export type AchievementId =
   | 'first'
   | 'streak3'
   | 'streak7'
+  | 'streak14'
+  | 'streak30'
   | 'perfect'
   | 'clean5'
   | 'firstWin'
@@ -32,7 +34,9 @@ export const ACHIEVEMENTS: readonly AchievementDef[] = [
   { id: 'clean5', name: 'Sin ayuda', description: 'Termina 5 retos sin reintentos ni pistas.', hat: 'viking', target: 5 },
   { id: 'streak7', name: 'Semana de hielo', description: 'Juega el reto 7 días seguidos.', hat: 'cap', target: 7 },
   { id: 'perfect', name: 'Perfección', description: 'Consigue 1000 puntos en un reto.', hat: 'tophat', target: 1 },
+  { id: 'streak14', name: 'Quincena polar', description: 'Juega el reto 14 días seguidos.', hat: 'ushanka', target: 14 },
   { id: 'veteran', name: 'Veterano', description: 'Termina 30 retos.', hat: 'santa', target: 30 },
+  { id: 'streak30', name: 'Mago del hielo', description: 'Juega el reto 30 días seguidos.', hat: 'wizard', target: 30 },
   { id: 'weekChampion', name: 'Campeón semanal', description: 'Gana una semana completa en tu liga.', hat: 'crown', target: 1 },
 ];
 
@@ -69,6 +73,8 @@ export function computeAchievements(input: AchievementInput): AchievementProgres
     first: input.runs.length,
     streak3: best,
     streak7: best,
+    streak14: best,
+    streak30: best,
     perfect: input.runs.filter((r) => r.score >= 1000).length,
     clean5: input.runs.filter((r) => r.retries === 0 && r.hints === 0).length,
     firstWin: input.wonDays,
