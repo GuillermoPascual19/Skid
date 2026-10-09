@@ -84,6 +84,7 @@ export class BoardScene extends Phaser.Scene {
   private pulse: Phaser.Tweens.Tween | null = null;
   private hint: Phaser.GameObjects.Container | null = null;
   private hat: HatId | null = null;
+  private paused = false;
   private hatImage: Phaser.GameObjects.Image | null = null;
 
   constructor(private readonly hooks: BoardHooks) {
@@ -145,8 +146,20 @@ export class BoardScene extends Phaser.Scene {
     this.request(dir);
   }
 
+  /** Congela la partida (animaciones y tiempos) mientras está abierto el menú de pausa. */
+  pause(): void {
+    this.paused = true;
+    this.scene.pause();
+  }
+
+  resume(): void {
+    this.paused = false;
+    this.scene.resume();
+  }
+
   private request(dir: Direction): void {
-    if (!this.board) return;
+    // Nada de moverse en pausa ni con un menú o diálogo encima (las flechas llegan igual).
+    if (!this.board || this.paused || document.querySelector('.overlay')) return;
     if (this.animating) {
       this.queued = dir; // Se aplica al terminar el movimiento actual.
       return;

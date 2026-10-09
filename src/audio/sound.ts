@@ -191,12 +191,6 @@ export function onAudioSettings(fn: (s: AudioSettings) => void): () => void {
   return () => listeners.delete(fn);
 }
 
-/** Silencio rápido en la partida: lo apaga todo, o lo vuelve a encender todo. */
-export function toggleMute(): void {
-  const anyOn = settings.sfx || settings.music;
-  setAudioSettings({ sfx: !anyOn, music: !anyOn });
-}
-
 /** Ejecuta un efecto si los efectos están activados y el audio ya está en marcha. */
 function play(fn: (c: AudioContext, out: AudioNode, t: number) => void): void {
   if (!settings.sfx || !ctx || !sfxBus || ctx.state !== 'running') return;
