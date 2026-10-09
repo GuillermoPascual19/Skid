@@ -182,16 +182,73 @@ export function hint(ctx: Ctx, out: AudioNode, t: number): void {
   bell(ctx, out, t + 0.12, midi(86), 0.12, 0.8);
 }
 
-/** Dos notas graves descendentes: callejón sin salida. */
+/**
+ * Graznido de pingüino: voz nasal (sierra + cuadrada) que pasa por dos
+ * formantes, con un temblor rápido de volumen que la vuelve rasposa. El tono
+ * va de `from` a `peakAt` (Hz) en el primer tercio y acaba en `to`.
+ */
+function honk(ctx: Ctx, out: AudioNode, t: number, from: number, peakAt: number, to: number, dur: number, peak: number): void {
+  const voice = ctx.createGain();
+  voice.gain.value = 0.5;
+  for (const [type, detune] of [['sawtooth', 0], ['square', 8]] as const) {
+    const osc = ctx.createOscillator();
+    osc.type = type;
+    osc.detune.value = detune;
+    osc.frequency.setValueAtTime(from, t);
+    osc.frequency.exponentialRampToValueAtTime(peakAt, t + dur * 0.3);
+    osc.frequency.exponentialRampToValueAtTime(to, t + dur);
+    osc.connect(voice);
+    osc.start(t);
+    osc.stop(t + dur + 0.05);
+  }
+
+  // Aspereza: el volumen tiembla a ~35 Hz.
+  const rasp = ctx.createGain();
+  rasp.gain.value = 0.7;
+  const lfo = ctx.createOscillator();
+  lfo.frequency.value = 32 + Math.random() * 8;
+  const depth = ctx.createGain();
+  depth.gain.value = 0.3;
+  lfo.connect(depth).connect(rasp.gain);
+  lfo.start(t);
+  lfo.stop(t + dur + 0.05);
+  voice.connect(rasp);
+
+  // Formantes de una vocal nasal entre «a» y «e».
+  const env = envelope(ctx, t, peak, 0.015, dur);
+  for (const [freq, q, level] of [
+    [1100, 5, 1],
+    [2600, 7, 0.45],
+  ]) {
+    const band = ctx.createBiquadFilter();
+    band.type = 'bandpass';
+    band.frequency.value = freq;
+    band.Q.value = q;
+    const g = ctx.createGain();
+    g.gain.value = level;
+    rasp.connect(band).connect(g).connect(env);
+  }
+  env.connect(out);
+}
+
+/** «¡Cuac!» corto al chocar contra algo sin moverse. Varía un poco cada vez. */
+export function squawk(ctx: Ctx, out: AudioNode, t: number): void {
+  const k = 0.9 + Math.random() * 0.25;
+  honk(ctx, out, t, 420 * k, 640 * k, 380 * k, 0.13, 0.5);
+}
+
+/** «Meeeh» triste que cae de tono, y dos notas graves: callejón sin salida. */
 export function stuck(ctx: Ctx, out: AudioNode, t: number): void {
+  honk(ctx, out, t, 520, 560, 260, 0.6, 0.45);
   [64, 60].forEach((n, i) => {
+    const at = t + 0.55 + i * 0.22;
     const osc = ctx.createOscillator();
     osc.type = 'triangle';
-    osc.frequency.setValueAtTime(midi(n), t + i * 0.22);
-    const env = envelope(ctx, t + i * 0.22, 0.14, 0.02, 0.4);
+    osc.frequency.setValueAtTime(midi(n), at);
+    const env = envelope(ctx, at, 0.09, 0.02, 0.4);
     osc.connect(env).connect(out);
-    osc.start(t + i * 0.22);
-    osc.stop(t + i * 0.22 + 0.5);
+    osc.start(at);
+    osc.stop(at + 0.5);
   });
 }
 
