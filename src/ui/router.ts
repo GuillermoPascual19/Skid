@@ -1,6 +1,7 @@
 // Navegación entre pantallas. Cada pantalla es un elemento con ganchos opcionales
 // para cuando ya está en el documento (mount) y cuando se sustituye (dispose).
 
+import type { CustomLevel, CustomLevelSort } from '../services/online';
 import type { DailyRecord } from '../services/storage';
 
 export interface Screen {
@@ -16,7 +17,11 @@ export type Route =
   | { name: 'ranking'; join?: string }
   | { name: 'stats' }
   | { name: 'achievements' }
-  | { name: 'player'; id: string };
+  | { name: 'player'; id: string }
+  | { name: 'community'; tab?: CustomLevelSort }
+  | { name: 'editor' }
+  | { name: 'custom'; level: CustomLevel }
+  | { name: 'customTest'; rows: string[] };
 
 type Renderers = { [N in Route['name']]: (route: Extract<Route, { name: N }>) => Screen };
 

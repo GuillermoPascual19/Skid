@@ -54,6 +54,11 @@ input {
   color: inherit;
 }
 
+/* Que `hidden` oculte siempre, aunque la clase del elemento le dé otro display (p. ej. .btn.block). */
+[hidden] {
+  display: none !important;
+}
+
 /* Sin el retraso del doble toque para hacer zoom. */
 button,
 a {
@@ -1932,4 +1937,344 @@ input.switch:focus-visible {
   text-align: left;
   margin-top: 4px;
   margin-bottom: -6px;
+}
+
+/* ------------------------------------------------------------ Multijugador */
+
+.create-card {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.create-card .info {
+  flex: 1;
+}
+
+.create-card h2 {
+  font-size: 20px;
+}
+
+.level-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.level-card {
+  padding: 10px;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+}
+
+.level-card.done {
+  border-color: #c9eedb;
+}
+
+.level-open {
+  appearance: none;
+  border: 0;
+  background: none;
+  padding: 0;
+  font: inherit;
+  color: inherit;
+  text-align: left;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.level-thumb {
+  flex: none;
+  width: 76px;
+  height: 76px;
+  display: grid;
+  place-items: center;
+  background: #f6fbff;
+  border-radius: 14px;
+  padding: 4px;
+}
+
+.board-thumb {
+  max-width: 100%;
+  max-height: 100%;
+  border-radius: 6px;
+}
+
+.level-info {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.level-name {
+  font-size: 18px;
+  line-height: 1.2;
+  overflow-wrap: anywhere;
+}
+
+.level-author {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--ink-soft);
+}
+
+.mini-penguin svg {
+  width: 18px;
+  height: 18px;
+  display: block;
+}
+
+.level-meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px 10px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--ink-faint);
+}
+
+.level-meta .rating {
+  color: var(--gold-dark);
+  font-weight: 800;
+}
+
+.mini-element svg {
+  width: 18px;
+  height: 18px;
+  display: block;
+}
+
+.done-badge {
+  flex: none;
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  background: var(--good);
+  color: #fff;
+  font-weight: 800;
+}
+
+.link-btn.danger {
+  align-self: flex-end;
+  color: var(--bad);
+  font-size: 14px;
+  padding: 4px 6px 0;
+}
+
+/* Editor */
+
+.editor-size {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.stepper {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-weight: 700;
+  color: var(--ink-soft);
+}
+
+.editor-grid {
+  display: grid;
+  gap: 2px;
+  padding: 6px;
+  background: #f6fbff;
+  border-radius: 16px;
+  box-shadow: 0 0 0 4px #fff, var(--shadow);
+  touch-action: none;
+  user-select: none;
+}
+
+.ecell {
+  aspect-ratio: 1;
+  border-radius: calc(36px / var(--cols, 7));
+  background: #a6e1f5;
+  display: grid;
+  place-items: center;
+  cursor: pointer;
+  overflow: hidden;
+}
+
+.ecell.alt {
+  background: #9bdaf1;
+}
+
+.ecell.wall {
+  background: #fff;
+  box-shadow: inset 0 -4px 0 #c4dcef;
+}
+
+.ecell svg {
+  width: 100%;
+  height: 100%;
+  display: block;
+  pointer-events: none;
+}
+
+.epiece {
+  width: 74%;
+  aspect-ratio: 1;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  background: #fff;
+  box-shadow: inset 0 -3px 0 #8fb0cc;
+  color: #4f7391;
+  font-weight: 800;
+  font-size: clamp(11px, calc(140px / var(--cols, 7)), 22px);
+  pointer-events: none;
+}
+
+.epiece.first {
+  background: var(--gold);
+  box-shadow: inset 0 -3px 0 var(--gold-dark);
+  color: #7a3d00;
+}
+
+.editor-status {
+  font-weight: 700;
+  border-radius: 14px;
+  padding: 8px 12px;
+  margin: 0;
+}
+
+.editor-status.ok {
+  background: #e7f7ef;
+  color: #1f7a4d;
+}
+
+.editor-status.error {
+  background: #fdecec;
+  color: #b4282d;
+}
+
+.palette {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 6px;
+}
+
+.tool {
+  appearance: none;
+  border: 2px solid transparent;
+  background: var(--card-solid);
+  border-radius: 14px;
+  padding: 6px 2px;
+  font: inherit;
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--ink-soft);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  cursor: pointer;
+  box-shadow: 0 3px 0 #c7d9e8;
+}
+
+.tool.active {
+  border-color: var(--secondary);
+  color: var(--secondary-dark);
+}
+
+.tool.locked {
+  cursor: default;
+  opacity: 0.55;
+}
+
+.tool.locked .tool-icon {
+  filter: grayscale(1);
+}
+
+.tool-icon {
+  width: 34px;
+  height: 34px;
+  display: grid;
+  place-items: center;
+}
+
+.tool-icon svg {
+  width: 100%;
+  height: 100%;
+}
+
+.tool-swatch {
+  width: 28px;
+  height: 28px;
+  border-radius: 8px;
+}
+
+.tool-swatch.wall {
+  background: #fff;
+  box-shadow: inset 0 -4px 0 #c4dcef, 0 0 0 1px #dbe9f4;
+}
+
+.tool-swatch.ice {
+  background: #a6e1f5;
+}
+
+.tool-piece {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  background: var(--gold);
+  color: #7a3d00;
+  font-weight: 800;
+}
+
+.editor-help {
+  margin: -4px 0 0;
+  font-size: 14px;
+  color: var(--ink-soft);
+  min-height: 2.6em;
+}
+
+/* Valoración al terminar un nivel */
+
+.rate-status {
+  margin-bottom: 0;
+}
+
+.rate {
+  display: flex;
+  justify-content: center;
+  gap: 4px;
+}
+
+.rate-star {
+  appearance: none;
+  border: 0;
+  background: none;
+  font-size: 38px;
+  line-height: 1;
+  color: #d6e2ec;
+  cursor: pointer;
+  padding: 2px;
+  transition: transform 0.12s;
+}
+
+.rate-star.on {
+  color: var(--gold);
+  text-shadow: 0 2px 0 var(--gold-dark);
+}
+
+.rate-star:hover {
+  transform: scale(1.15);
 }
