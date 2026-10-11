@@ -324,7 +324,13 @@ export interface CustomLevel {
   /** Tu mejor marca, o null si no lo has superado. */
   myBest: number | null;
   myRating: number | null;
+  /** Oculto por denuncias: solo lo ve su autor. */
+  hidden: boolean;
+  /** Ya lo has denunciado. */
+  reported: boolean;
 }
+
+export type ReportReason = 'name' | 'broken' | 'other';
 
 export type CustomLevelSort = 'top' | 'new' | 'mine';
 
@@ -351,4 +357,8 @@ export function rateCustomLevel(id: string, stars: number): Promise<CustomLevel>
 
 export async function deleteCustomLevel(id: string): Promise<void> {
   await api('DELETE', `/levels/${encodeURIComponent(id)}`);
+}
+
+export async function reportCustomLevel(id: string, reason: ReportReason): Promise<void> {
+  await api('POST', `/levels/${encodeURIComponent(id)}/report`, { reason });
 }

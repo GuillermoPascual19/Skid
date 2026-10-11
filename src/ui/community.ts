@@ -7,7 +7,7 @@ import { ELEMENTS } from '../core/elements';
 import * as online from '../services/online';
 import { loadEditorDraft } from '../services/storage';
 import { boardThumb } from './board-art';
-import { h, openModal, plural, svg, toast } from './dom';
+import { h, openModal, plural, share, svg, toast } from './dom';
 import { go, type Screen } from './router';
 
 const TABS: { id: online.CustomLevelSort; label: string }[] = [
@@ -19,7 +19,61 @@ const TABS: { id: online.CustomLevelSort; label: string }[] = [
 /** Pestaña que se estaba viendo (dura mientras la página esté abierta). */
 let lastTab: online.CustomLevelSort = 'top';
 
-export function communityScreen(tab?: online.CustomLevelSort): Screen {
+/** Enlace que abre directamente un nivel (ver main.ts). */
+export function levelLink(level: online.CustomLevel): string {
+  return `${location.origin}${location.pathname}?nivel=${encodeURIComponent(level.id)}`;
+}
+
+/** Comparte un nivel (menú de compartir del móvil, o copiar el enlace). */
+export function shareLevel(level: online.CustomLevel): void {
+  const text = level.mine ? `🐧 Prueba mi nivel «${level.name}» en Skid` : `🐧 Prueba el nivel «${level.name}» de ${level.author} en Skid`;
+  void share(`${text}\n${levelLink(level)}`);
+}
+
+const REPORT_REASONS: { id: online.ReportReason; label: string }[] = [
+  { id: 'name', label: 'Nombre ofensivo o inapropiado' },
+  { id: 'broken', label: 'No se puede jugar bien' },
+  { id: 'other', label: 'Otro motivo' },
+];
+
+/** Pide el motivo y denuncia el nivel. Se resuelve a true si se envió. */
+export function reportLevel(level: online.CustomLevel): Promise<boolean> {
+  return new Promise((resolve) => {
+    let sent = false;
+    const modal = openModal(
+      [
+        h('h2', null, 'Denunciar nivel'),
+        h('p', { class: 'lead' }, '¿Qué le pasa a este nivel?'),
+        ...REPORT_REASONS.map((r) =>
+          h(
+            'button',
+            {
+              class: 'btn secondary block',
+              onclick: async () => {
+                try {
+                  await online.reportCustomLevel(level.id, r.id);
+                  sent = true;
+                  modal.close();
+                  toast('Gracias por avisar. Si más jugadores lo denuncian, se ocultará.');
+                } catch (err) {
+                  toast((err as Error).message);
+                }
+              },
+            },
+            r.label,
+          ),
+        ),
+        h('button', { class: 'link-btn', onclick: () => modal.close() }, 'Cancelar'),
+      ],
+      { dismissable: true, onClose: () => resolve(sent) },
+    );
+  });
+}
+
+/**
+ * `open`: id de un nivel que abrir nada más entrar (enlace compartido).
+ */
+export function communityScreen(tab?: online.CustomLevelSort, open?: string): Screen {
   let current = tab ?? lastTab;
   let levels: online.CustomLevel[] = [];
   let more = false;
@@ -135,7 +189,28 @@ export function communityScreen(tab?: online.CustomLevelSort): Screen {
         ),
         level.mine ? null : level.myBest !== null ? h('span', { class: 'done-badge', title: `Tu mejor marca: ${level.myBest}` }, '✓') : null,
       ),
-      level.mine ? h('button', { class: 'link-btn danger', onclick: () => confirmDelete(level) }, 'Borrar') : null,
+      level.hidden ? h('p', { class: 'hidden-note' }, '🚫 Oculto por denuncias: solo lo ves tú.') : null,
+      h(
+        'div',
+        { class: 'level-actions' },
+        h('button', { class: 'link-btn', onclick: () => shareLevel(level) }, 'Compartir'),
+        level.mine
+          ? h('button', { class: 'link-btn danger', onclick: () => confirmDelete(level) }, 'Borrar')
+          : level.reported
+            ? h('span', { class: 'muted reported' }, 'Denunciado')
+            : h(
+                'button',
+                {
+                  class: 'link-btn danger',
+                  onclick: async () => {
+                    if (!(await reportLevel(level))) return;
+                    levels = levels.filter((l) => l.id !== level.id); // Ya no te lo enseñamos.
+                    renderList();
+                  },
+                },
+                'Denunciar',
+              ),
+      ),
     );
   }
 
@@ -172,6 +247,16 @@ export function communityScreen(tab?: online.CustomLevelSort): Screen {
     );
   }
 
+  /** Abre el nivel de un enlace compartido. */
+  async function openShared(id: string) {
+    try {
+      const level = await online.getCustomLevel(id);
+      if (!disposed) go({ name: 'custom', level });
+    } catch (err) {
+      toast((err as Error).message);
+    }
+  }
+
   return {
     el,
     mount() {
@@ -181,6 +266,7 @@ export function communityScreen(tab?: online.CustomLevelSort): Screen {
         return;
       }
       void load(false);
+      if (open) void openShared(open);
     },
     dispose() {
       disposed = true;

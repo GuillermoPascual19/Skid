@@ -50,7 +50,7 @@ setRoutes({
   stats: () => statsScreen(),
   achievements: () => achievementsScreen(),
   player: (route) => playerScreen(route.id),
-  community: (route) => communityScreen(route.tab),
+  community: (route) => communityScreen(route.tab, route.open),
   editor: () => editorScreen(),
   custom: (route) => customLevelScreen({ level: route.level }),
   customTest: (route) => customLevelScreen({ testRows: route.rows }),
@@ -60,5 +60,11 @@ snow();
 installAudio();
 await waitForFonts();
 
-const join = new URLSearchParams(location.search).get('join');
-go(join ? { name: 'ranking', join } : { name: 'home' });
+const params = new URLSearchParams(location.search);
+const join = params.get('join');
+const sharedLevel = params.get('nivel');
+if (sharedLevel) {
+  // El enlace solo abre el nivel una vez: al recargar se vuelve a la portada.
+  history.replaceState(null, '', location.pathname);
+  go({ name: 'community', open: sharedLevel });
+} else go(join ? { name: 'ranking', join } : { name: 'home' });

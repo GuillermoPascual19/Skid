@@ -48,6 +48,9 @@ const MAX_LEAGUES_PER_PLAYER = 10;
 const MAX_CUSTOM_LEVELS_PER_PLAYER = 30;
 /** Niveles por página en el listado. */
 const CUSTOM_PAGE_SIZE = 20;
+/** Denuncias (de jugadores distintos) con las que un nivel deja de verse. */
+const REPORTS_TO_HIDE = 3;
+const REPORT_REASONS = ['name', 'broken', 'other'];
 const CODE_ALPHABET = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'; // Sin 0/O ni 1/I.
 
 function json(body: unknown, status = 200): Response {
@@ -174,6 +177,10 @@ async function handleApi(req: Request, url: URL, env: Env): Promise<Response> {
   if ((m = route.match(/^POST \/levels\/([\w-]+)\/finish$/))) {
     const { log } = await body<{ log?: unknown }>(req);
     return json(await finishCustomLevel(env, playerId, m[1], log));
+  }
+  if ((m = route.match(/^POST \/levels\/([\w-]+)\/report$/))) {
+    const { reason } = await body<{ reason?: unknown }>(req);
+    return json(await reportCustomLevel(env, playerId, m[1], reason));
   }
   if ((m = route.match(/^PUT \/levels\/([\w-]+)\/rating$/))) {
     const { stars } = await body<{ stars?: unknown }>(req);
@@ -760,6 +767,8 @@ interface CustomLevelRow {
   rating_count: number;
   my_best: number | null;
   my_rating: number | null;
+  reports: number;
+  my_report: number;
 }
 
 /** Datos de un nivel con sus totales y lo que ha hecho en él quien lo pide. */
@@ -769,7 +778,9 @@ const CUSTOM_LEVEL_SELECT = `
          (SELECT COUNT(*) FROM custom_level_runs r WHERE r.level_id = l.id AND r.player_id <> l.author_id) AS plays,
          (SELECT AVG(r.rating) FROM custom_level_runs r WHERE r.level_id = l.id AND r.rating IS NOT NULL) AS rating_avg,
          (SELECT COUNT(r.rating) FROM custom_level_runs r WHERE r.level_id = l.id) AS rating_count,
-         me.best_moves AS my_best, me.rating AS my_rating
+         me.best_moves AS my_best, me.rating AS my_rating,
+         (SELECT COUNT(*) FROM custom_level_reports rp WHERE rp.level_id = l.id) AS reports,
+         EXISTS (SELECT 1 FROM custom_level_reports rp WHERE rp.level_id = l.id AND rp.player_id = ?1) AS my_report
   FROM custom_levels l
   JOIN players p ON p.id = l.author_id
   LEFT JOIN custom_level_runs me ON me.level_id = l.id AND me.player_id = ?1`;
@@ -791,6 +802,9 @@ function customLevelResponse(row: CustomLevelRow, playerId: string) {
     ratingCount: row.rating_count,
     myBest: row.my_best,
     myRating: row.my_rating,
+    /** Oculto por denuncias (solo lo ve su autor). */
+    hidden: row.reports >= REPORTS_TO_HIDE,
+    reported: row.my_report === 1,
   };
 }
 
@@ -802,8 +816,9 @@ async function listCustomLevels(env: Env, playerId: string, sort: string, offset
     mine: 'created_at DESC',
   }[sort];
   if (!order) throw new HttpError(400, 'Orden no válido');
-  const where = sort === 'mine' ? 'WHERE l.author_id = ?1' : '';
-  const { results } = await env.DB.prepare(`SELECT * FROM (${CUSTOM_LEVEL_SELECT} ${where}) ORDER BY ${order} LIMIT ?2 OFFSET ?3`)
+  // Los ocultos por denuncias solo los ve su autor (en "Mis niveles").
+  const where = sort === 'mine' ? 'author_id = ?1' : `reports < ${REPORTS_TO_HIDE}`;
+  const { results } = await env.DB.prepare(`SELECT * FROM (${CUSTOM_LEVEL_SELECT}) WHERE ${where} ORDER BY ${order} LIMIT ?2 OFFSET ?3`)
     .bind(playerId, CUSTOM_PAGE_SIZE + 1, offset)
     .all<CustomLevelRow>();
   return {
@@ -815,7 +830,20 @@ async function listCustomLevels(env: Env, playerId: string, sort: string, offset
 async function getCustomLevel(env: Env, playerId: string, id: string) {
   const row = await env.DB.prepare(`${CUSTOM_LEVEL_SELECT} WHERE l.id = ?2`).bind(playerId, id).first<CustomLevelRow>();
   if (!row) throw new HttpError(404, 'Ese nivel ya no existe');
+  if (row.reports >= REPORTS_TO_HIDE && row.author_id !== playerId) throw new HttpError(404, 'Este nivel se ha ocultado por denuncias');
   return customLevelResponse(row, playerId);
+}
+
+/** Denuncia un nivel ajeno. Cada jugador cuenta una vez por nivel. */
+async function reportCustomLevel(env: Env, playerId: string, id: string, reason: unknown) {
+  if (typeof reason !== 'string' || !REPORT_REASONS.includes(reason)) throw new HttpError(400, 'Motivo no válido');
+  const level = await env.DB.prepare('SELECT author_id FROM custom_levels WHERE id = ?').bind(id).first<{ author_id: string }>();
+  if (!level) throw new HttpError(404, 'Ese nivel ya no existe');
+  if (level.author_id === playerId) throw new HttpError(403, 'No puedes denunciar tus propios niveles');
+  await env.DB.prepare('INSERT OR IGNORE INTO custom_level_reports (level_id, player_id, reason, created_at) VALUES (?, ?, ?, ?)')
+    .bind(id, playerId, reason, Date.now())
+    .run();
+  return { ok: true };
 }
 
 /** Publica un nivel. Hay que mandar también cómo lo superó el autor (`log`). */

@@ -18,7 +18,7 @@ export type Route =
   | { name: 'stats' }
   | { name: 'achievements' }
   | { name: 'player'; id: string }
-  | { name: 'community'; tab?: CustomLevelSort }
+  | { name: 'community'; tab?: CustomLevelSort; open?: string }
   | { name: 'editor' }
   | { name: 'custom'; level: CustomLevel }
   | { name: 'customTest'; rows: string[] };
