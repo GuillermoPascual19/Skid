@@ -8,6 +8,7 @@
 
 import type { HatId } from '../art/hats';
 import type { AchievementProgress } from '../core/achievements';
+import type { ElementId } from '../core/elements';
 import type { DailyResult } from './storage';
 
 const API = import.meta.env.VITE_API_BASE ?? '/api';
@@ -299,4 +300,55 @@ export function leagueStandings(leagueId: string, from: string, to: string): Pro
 
 export function leagueRanking(leagueId: string, day: string): Promise<RankingRow[]> {
   return api<RankingRow[]>('GET', `/leagues/${encodeURIComponent(leagueId)}/ranking?day=${day}`);
+}
+
+// ------------------------------------------------- Niveles de la comunidad
+
+export interface CustomLevel {
+  id: string;
+  name: string;
+  rows: string[];
+  optimal: number;
+  elements: ElementId[];
+  createdAt: number;
+  author: string;
+  authorId: string;
+  authorHat: HatId | null;
+  /** Es un nivel tuyo. */
+  mine: boolean;
+  /** Jugadores (sin contar al autor) que lo han superado. */
+  plays: number;
+  /** Media de las valoraciones (1-5), o null si nadie lo ha valorado. */
+  rating: number | null;
+  ratingCount: number;
+  /** Tu mejor marca, o null si no lo has superado. */
+  myBest: number | null;
+  myRating: number | null;
+}
+
+export type CustomLevelSort = 'top' | 'new' | 'mine';
+
+export function listCustomLevels(sort: CustomLevelSort, offset = 0): Promise<{ levels: CustomLevel[]; more: boolean }> {
+  return api('GET', `/levels?sort=${sort}&offset=${offset}`);
+}
+
+export function getCustomLevel(id: string): Promise<CustomLevel> {
+  return api('GET', `/levels/${encodeURIComponent(id)}`);
+}
+
+/** Publica un nivel. `log` es cómo lo superó el autor (lo exige el servidor). */
+export function publishCustomLevel(name: string, rows: string[], log: string): Promise<CustomLevel> {
+  return api('POST', '/levels', { name, rows, log });
+}
+
+export function finishCustomLevel(id: string, log: string): Promise<CustomLevel> {
+  return api('POST', `/levels/${encodeURIComponent(id)}/finish`, { log });
+}
+
+export function rateCustomLevel(id: string, stars: number): Promise<CustomLevel> {
+  return api('PUT', `/levels/${encodeURIComponent(id)}/rating`, { stars });
+}
+
+export async function deleteCustomLevel(id: string): Promise<void> {
+  await api('DELETE', `/levels/${encodeURIComponent(id)}`);
 }

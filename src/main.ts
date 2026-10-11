@@ -1,7 +1,9 @@
 import './style.css';
 import { installAudio } from './audio/sound';
 import { h } from './ui/dom';
-import { dailyScreen, levelsScreen } from './ui/play';
+import { customLevelScreen, dailyScreen, levelsScreen } from './ui/play';
+import { communityScreen } from './ui/community';
+import { editorScreen } from './ui/editor';
 import { homeScreen } from './ui/home';
 import { rankingScreen } from './ui/ranking';
 import { statsScreen } from './ui/stats';
@@ -48,6 +50,10 @@ setRoutes({
   stats: () => statsScreen(),
   achievements: () => achievementsScreen(),
   player: (route) => playerScreen(route.id),
+  community: (route) => communityScreen(route.tab),
+  editor: () => editorScreen(),
+  custom: (route) => customLevelScreen({ level: route.level }),
+  customTest: (route) => customLevelScreen({ testRows: route.rows }),
 });
 
 snow();

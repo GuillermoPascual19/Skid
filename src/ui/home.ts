@@ -244,6 +244,20 @@ export function homeScreen(): Screen {
       online.onlineEnabled ? navTile('📊', 'Estadísticas', () => go({ name: 'stats' })) : null,
       online.onlineEnabled ? navTile('🎩', 'Logros', () => go({ name: 'achievements' })) : null,
     ),
+    online.onlineEnabled
+      ? h(
+          'section',
+          { class: 'card levels-card multiplayer-card' },
+          h(
+            'div',
+            { class: 'info' },
+            h('p', { class: 'eyebrow' }, 'Multijugador'),
+            h('h2', null, 'Niveles de jugadores'),
+            h('p', { class: 'muted' }, 'Juega y valora los de otros, o crea el tuyo.'),
+          ),
+          h('button', { class: 'btn secondary', onclick: () => go({ name: 'community' }) }, 'Entrar'),
+        )
+      : null,
     online.onlineEnabled ? account : null,
   );
 
