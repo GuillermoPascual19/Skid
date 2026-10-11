@@ -15,7 +15,15 @@ export const DIRECTION_DELTA: Readonly<Record<Direction, Pos>> = {
   right: { x: 1, y: 0 },
 };
 
-export type Cell = 'wall' | 'ice';
+/**
+ * Tipos de casilla. Los elementos especiales (todo salvo muro y hielo) se
+ * activan al entrar en ellos deslizando:
+ *   snow    nieve blanda: el pingüino se para encima.
+ *   arrow-* corriente: gira hacia donde apunta y sigue deslizando.
+ *   portal  teletransporte: sale por su pareja y sigue en la misma dirección.
+ *   hole    agujero: cae al agua y vuelve a la salida (conserva las piezas).
+ */
+export type Cell = 'wall' | 'ice' | 'snow' | 'hole' | 'portal' | `arrow-${Direction}`;
 
 export interface Piece {
   /** Número de la pieza, empezando en 1. Se recogen en orden ascendente. */
@@ -32,6 +40,8 @@ export interface Board {
   /** Ordenadas por `order`: pieces[i].order === i + 1. */
   readonly pieces: readonly Piece[];
   readonly start: Pos;
+  /** Parejas de teletransportes: entrar por uno te saca por el otro. */
+  readonly portals: readonly (readonly [Pos, Pos])[];
 }
 
 /** Parte dinámica de una partida. */
@@ -51,6 +61,21 @@ export function isWall(board: Board, pos: Pos): boolean {
   return board.cells[pos.y][pos.x] === 'wall';
 }
 
+/** Casilla en `pos` (las de fuera del tablero son muro). */
+export function cellAt(board: Board, pos: Pos): Cell {
+  if (pos.x < 0 || pos.y < 0 || pos.x >= board.width || pos.y >= board.height) return 'wall';
+  return board.cells[pos.y][pos.x];
+}
+
+/** Salida del teletransporte que hay en `pos`. */
+export function portalExit(board: Board, pos: Pos): Pos {
+  for (const [a, b] of board.portals) {
+    if (samePos(a, pos)) return b;
+    if (samePos(b, pos)) return a;
+  }
+  throw new Error(`No hay teletransporte en (${pos.x}, ${pos.y})`);
+}
+
 /** Pieza que toca recoger, o undefined si ya se han recogido todas. */
 export function nextPiece(board: Board, state: GameState): Piece | undefined {
   return board.pieces[state.collected];
@@ -66,10 +91,14 @@ export function samePos(a: Pos, b: Pos): boolean {
  *   .  hielo
  *   1-9  pieza numerada (sobre hielo)
  *   @  posición inicial del jugador (sobre hielo)
+ *   *  nieve blanda
+ *   ^ v < >  flecha (corriente) hacia arriba, abajo, izquierda o derecha
+ *   a-e  teletransporte: cada letra, exactamente dos veces (una pareja)
+ *   O  agujero en el hielo
  *
  * Lanza un Error si el tablero no es rectangular, contiene caracteres
- * desconocidos, no tiene exactamente un '@', o las piezas no son 1..n sin
- * huecos ni repeticiones.
+ * desconocidos, no tiene exactamente un '@', las piezas no son 1..n sin
+ * huecos ni repeticiones, o algún teletransporte no tiene pareja.
  */
 export function parseBoard(rows: readonly string[]): Board {
   if (rows.length === 0) throw new Error('El tablero está vacío');
@@ -78,6 +107,7 @@ export function parseBoard(rows: readonly string[]): Board {
 
   const cells: Cell[][] = [];
   const pieceMap = new Map<number, Pos>();
+  const portalMap = new Map<string, Pos[]>();
   let start: Pos | undefined;
 
   rows.forEach((row, y) => {
@@ -86,8 +116,10 @@ export function parseBoard(rows: readonly string[]): Board {
     }
     const line: Cell[] = [];
     [...row].forEach((ch, x) => {
-      if (ch === '#') {
-        line.push('wall');
+      const special = SPECIAL_CHARS[ch];
+      if (special) {
+        line.push(special);
+        if (special === 'portal') portalMap.set(ch, [...(portalMap.get(ch) ?? []), { x, y }]);
         return;
       }
       line.push('ice');
@@ -116,8 +148,33 @@ export function parseBoard(rows: readonly string[]): Board {
     pieces.push({ order, pos });
   }
 
-  return { width, height: rows.length, cells, pieces, start };
+  const portals: (readonly [Pos, Pos])[] = [];
+  for (const [ch, ends] of [...portalMap].sort(([a], [b]) => a.localeCompare(b))) {
+    if (ends.length !== 2) throw new Error(`El teletransporte '${ch}' aparece ${ends.length} veces: debe ser una pareja`);
+    portals.push([ends[0], ends[1]]);
+  }
+
+  return { width, height: rows.length, cells, pieces, start, portals };
 }
+
+/** Caracteres de las casillas que no son hielo normal. */
+const SPECIAL_CHARS: Readonly<Record<string, Cell>> = {
+  '#': 'wall',
+  '*': 'snow',
+  O: 'hole',
+  '^': 'arrow-up',
+  v: 'arrow-down',
+  '<': 'arrow-left',
+  '>': 'arrow-right',
+  a: 'portal',
+  b: 'portal',
+  c: 'portal',
+  d: 'portal',
+  e: 'portal',
+};
+
+/** Letras de las parejas de teletransportes, en orden. */
+export const PORTAL_CHARS = ['a', 'b', 'c', 'd', 'e'] as const;
 
 /** Tablero de ejemplo (óptimo: 11 movimientos). */
 export const EXAMPLE_BOARD: readonly string[] = [

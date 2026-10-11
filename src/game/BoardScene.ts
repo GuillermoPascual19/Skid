@@ -2,8 +2,9 @@
 // quien la usa (ver src/ui/play.ts) a través de BoardHooks.
 
 import Phaser from 'phaser';
-import { DIRECTION_DELTA, nextPiece, type Board, type Direction, type GameState, type Piece } from '../core/board';
+import { DIRECTION_DELTA, nextPiece, type Board, type Direction, type GameState, type Piece, type Pos } from '../core/board';
 import { slideDurationMs } from '../core/daily';
+import { traceMove, type MoveTrace } from '../core/move';
 import { HAT_BOX, hatSvg, type HatId } from '../art/hats';
 import { sfx } from '../audio/sound';
 
@@ -30,7 +31,27 @@ const C = {
   beak: 0xff9f1c,
   cheek: 0xff8fa3,
   spark: 0xfff4c2,
+  arrow: 0x1f86c2,
+  water: 0x1d5f8a,
+  waterDeep: 0x123f5e,
+  ripple: 0x8fd3f7,
+  iceEdge: 0xe6f6fd,
 };
+
+/** Color de cada pareja de teletransportes. */
+const PORTAL_COLORS = [0xa78bfa, 0xff8fa3, 0x2bb673, 0xff9f1c, 0x2b8fd6];
+
+/** Tramo recto del recorrido de un deslizamiento, de una casilla a la siguiente. */
+interface Segment {
+  readonly from: Pos;
+  readonly to: Pos;
+  /** Recoge al llegar la pieza que tocaba. */
+  readonly collects: boolean;
+  /** Al llegar gira hacia aquí (corriente). */
+  readonly turn: Direction | null;
+  /** Al llegar se teletransporta a esta casilla. */
+  readonly teleport: Pos | null;
+}
 
 const KEY_TO_DIR: Record<string, Direction> = {
   UP: 'up',
@@ -134,7 +155,7 @@ export class BoardScene extends Phaser.Scene {
       view.container.setVisible(visible).setAlpha(1).setScale(1);
     }
     const { x, y } = this.center(state.player.x, state.player.y);
-    this.penguin.setPosition(x, y).setScale(1);
+    this.penguin.setPosition(x, y).setScale(1).setAngle(0);
     this.look('down');
     this.highlightNext();
   }
@@ -173,7 +194,7 @@ export class BoardScene extends Phaser.Scene {
     if (result === undefined) return;
     this.look(dir);
     if (result === null) this.bump(dir);
-    else this.slide(this.shown, result, dir);
+    else this.slide(this.shown, traceMove(this.board!, this.shown, dir)!, dir);
   }
 
   private settle(): void {
@@ -184,36 +205,152 @@ export class BoardScene extends Phaser.Scene {
     if (queued) this.perform(queued);
   }
 
-  private slide(before: GameState, after: GameState, dir: Direction): void {
+  /**
+   * Anima el recorrido de un movimiento casilla a casilla (con giros,
+   * teletransportes y caídas al agua). Frena al final como si fuera un único
+   * deslizamiento: 'Cubic.easeOut' sobre el recorrido entero.
+   */
+  private slide(before: GameState, trace: MoveTrace, dir: Direction): void {
     const board = this.board!;
-    const distance = Math.abs(after.player.x - before.player.x) + Math.abs(after.player.y - before.player.y);
-    const duration = slideDurationMs(distance);
-    const target = this.center(after.player.x, after.player.y);
-    this.shown = after;
+    const segments: Segment[] = [];
+    let at = before.player;
+    let moving = dir;
+    let fall: Pos | null = null;
+    for (const step of trace.steps) {
+      if (step.kind === 'slide') {
+        segments.push({ from: at, to: step.pos, collects: step.collects, turn: step.dir !== moving ? step.dir : null, teleport: null });
+        moving = step.dir;
+      } else if (step.kind === 'teleport') {
+        segments[segments.length - 1] = { ...segments[segments.length - 1], teleport: step.pos };
+      } else {
+        fall = step.pos;
+      }
+      at = step.pos;
+    }
+
+    const duration = slideDurationMs(segments.length);
+    this.shown = trace.state;
     this.animating = true;
     this.puff(this.penguin.x, this.penguin.y, dir);
     sfx.slide(duration);
 
-    // Con 'Cubic.easeOut' la posición en el instante t es 1 - (1 - t)^3:
-    // se invierte para saber cuándo pasa el pingüino por cada pieza recogida.
-    for (const piece of board.pieces.slice(before.collected, after.collected)) {
-      const d = Math.abs(piece.pos.x - before.player.x) + Math.abs(piece.pos.y - before.player.y);
-      const t = 1 - Math.cbrt(1 - d / distance);
-      this.time.delayedCall(t * duration, () => this.collect(piece));
-    }
+    let pieceIndex = before.collected;
+    let done = 0; // Tramos ya recorridos (con sus efectos aplicados).
+    const progress = { v: 0 };
+    const place = () => {
+      // Efectos de cada tramo terminado: recoger, girar, teletransportarse.
+      while (done < Math.min(Math.floor(progress.v), segments.length)) {
+        const seg = segments[done++];
+        if (seg.collects) this.collect(board.pieces[pieceIndex++]);
+        if (seg.turn) {
+          this.look(seg.turn);
+          sfx.turn();
+        }
+        if (seg.teleport) this.teleportFx(seg.to, seg.teleport);
+      }
+      const i = Math.min(Math.floor(progress.v), segments.length - 1);
+      const seg = segments[i];
+      const f = progress.v - i;
+      const from = this.center(seg.from.x, seg.from.y);
+      const to = this.center(seg.to.x, seg.to.y);
+      this.penguin.setPosition(from.x + (to.x - from.x) * f, from.y + (to.y - from.y) * f);
+    };
 
     this.tweens.add({
-      targets: this.penguin,
-      x: target.x,
-      y: target.y,
+      targets: progress,
+      v: segments.length,
       duration,
       ease: 'Cubic.easeOut',
+      onUpdate: place,
       onComplete: () => {
-        this.squash(dir);
-        sfx.land();
+        place();
+        const last = segments[segments.length - 1];
+        if (fall) return this.fallInto(last.to, fall);
+        const facing = this.directionOf(last);
+        this.squash(facing);
+        if (board.cells[last.to.y][last.to.x] === 'snow') {
+          sfx.snow();
+          this.puff(this.penguin.x, this.penguin.y, facing);
+        } else sfx.land();
         this.settle();
       },
     });
+  }
+
+  /** Dirección en la que avanza un tramo. */
+  private directionOf(seg: Segment): Direction {
+    if (seg.to.x > seg.from.x) return 'right';
+    if (seg.to.x < seg.from.x) return 'left';
+    return seg.to.y > seg.from.y ? 'down' : 'up';
+  }
+
+  /** Destellos en la entrada y la salida de un teletransporte. */
+  private teleportFx(entry: Pos, exit: Pos): void {
+    sfx.teleport();
+    for (const p of [entry, exit]) {
+      const { x, y } = this.center(p.x, p.y);
+      this.sparkle(x, y);
+    }
+    this.penguin.setScale(0.6);
+    this.tweens.add({ targets: this.penguin, scale: 1, duration: 200, ease: 'Back.easeOut' });
+  }
+
+  /** Cae al agua en `hole`, salpica y reaparece en `start`. */
+  private fallInto(hole: Pos, start: Pos): void {
+    sfx.splash();
+    const { x, y } = this.center(hole.x, hole.y);
+    this.splash(x, y);
+    this.tweens.add({
+      targets: this.penguin,
+      scale: 0,
+      angle: 180,
+      duration: 260,
+      ease: 'Quad.easeIn',
+      onComplete: () => {
+        const back = this.center(start.x, start.y);
+        this.penguin.setPosition(back.x, back.y).setAngle(0);
+        this.look('down');
+        this.tweens.add({
+          targets: this.penguin,
+          scale: 1,
+          duration: 320,
+          delay: 120,
+          ease: 'Back.easeOut',
+          onComplete: () => this.settle(),
+        });
+      },
+    });
+  }
+
+  /** Ondas y gotas al caer al agua. */
+  private splash(x: number, y: number): void {
+    for (let i = 0; i < 3; i++) {
+      const ring = this.add.ellipse(x, y, TILE * 0.3, TILE * 0.2).setStrokeStyle(TILE * 0.03, C.ripple, 0.9);
+      this.layer.add(ring);
+      this.tweens.add({
+        targets: ring,
+        scale: 2.4,
+        alpha: 0,
+        delay: i * 120,
+        duration: 600,
+        ease: 'Quad.easeOut',
+        onComplete: () => ring.destroy(),
+      });
+    }
+    for (let i = 0; i < 6; i++) {
+      const drop = this.add.circle(x, y, TILE * 0.04, C.ripple);
+      this.layer.add(drop);
+      const angle = -Math.PI * (0.15 + 0.7 * (i / 5));
+      this.tweens.add({
+        targets: drop,
+        x: x + Math.cos(angle) * TILE * 0.45,
+        y: y + Math.sin(angle) * TILE * 0.45,
+        alpha: 0,
+        duration: 420,
+        ease: 'Quad.easeOut',
+        onComplete: () => drop.destroy(),
+      });
+    }
   }
 
   private bump(dir: Direction): void {
@@ -356,7 +493,7 @@ export class BoardScene extends Phaser.Scene {
 
   private drawTiles(board: Board): void {
     const g = this.add.graphics();
-    const wallAt = (x: number, y: number) => board.cells[y]?.[x] !== 'ice';
+    const wallAt = (x: number, y: number) => (board.cells[y]?.[x] ?? 'wall') === 'wall';
     const front = Math.round(TILE * 0.22);
 
     for (let y = 0; y < board.height; y++) {
@@ -404,6 +541,80 @@ export class BoardScene extends Phaser.Scene {
     }
 
     this.layer.add(g);
+
+    // Elementos especiales, encima del hielo.
+    const e = this.add.graphics();
+    this.layer.add(e);
+    board.cells.forEach((row, y) =>
+      row.forEach((cell, x) => {
+        const { x: cx, y: cy } = this.center(x, y);
+        if (cell === 'snow') this.drawSnow(e, cx, cy);
+        else if (cell === 'hole') this.drawHole(e, cx, cy);
+        else if (cell.startsWith('arrow-')) this.drawArrow(e, cx, cy, cell.slice('arrow-'.length) as Direction);
+      }),
+    );
+    board.portals.forEach((pair, i) => {
+      for (const p of pair) this.createPortal(p, PORTAL_COLORS[i % PORTAL_COLORS.length]);
+    });
+  }
+
+  /** Montículo de nieve blanda. */
+  private drawSnow(g: Phaser.GameObjects.Graphics, cx: number, cy: number): void {
+    g.fillStyle(C.iceShadow, 0.18).fillEllipse(cx, cy + TILE * 0.22, TILE * 0.86, TILE * 0.3);
+    g.fillStyle(C.snowFront, 1);
+    g.fillCircle(cx - TILE * 0.2, cy + TILE * 0.1, TILE * 0.22).fillCircle(cx + TILE * 0.2, cy + TILE * 0.12, TILE * 0.2);
+    g.fillStyle(C.snowTop, 1);
+    g.fillCircle(cx - TILE * 0.2, cy + TILE * 0.06, TILE * 0.21).fillCircle(cx + TILE * 0.2, cy + TILE * 0.08, TILE * 0.19);
+    g.fillCircle(cx, cy - TILE * 0.06, TILE * 0.27);
+    g.fillStyle(C.snowSpeck, 1);
+    g.fillCircle(cx - TILE * 0.08, cy - TILE * 0.12, TILE * 0.04).fillCircle(cx + TILE * 0.14, cy + TILE * 0.02, TILE * 0.03);
+  }
+
+  /** Agujero de agua con el borde de hielo roto. */
+  private drawHole(g: Phaser.GameObjects.Graphics, cx: number, cy: number): void {
+    const edge: Phaser.Math.Vector2[] = [];
+    for (let i = 0; i < 12; i++) {
+      const a = (Math.PI * 2 * i) / 12;
+      const r = TILE * (i % 2 === 0 ? 0.42 : 0.36);
+      edge.push(new Phaser.Math.Vector2(cx + Math.cos(a) * r, cy + Math.sin(a) * r * 0.85));
+    }
+    g.fillStyle(C.iceEdge, 1).fillPoints(edge, true);
+    g.fillStyle(C.water, 1).fillEllipse(cx, cy, TILE * 0.62, TILE * 0.52);
+    g.fillStyle(C.waterDeep, 1).fillEllipse(cx, cy + TILE * 0.04, TILE * 0.42, TILE * 0.32);
+    g.lineStyle(TILE * 0.025, C.ripple, 0.55).strokeEllipse(cx - TILE * 0.06, cy - TILE * 0.06, TILE * 0.3, TILE * 0.14);
+  }
+
+  /** Flecha de corriente: dos «>» hacia `dir`. */
+  private drawArrow(g: Phaser.GameObjects.Graphics, cx: number, cy: number, dir: Direction): void {
+    // Puntos pensados hacia la derecha; se giran según la dirección.
+    const rot = (x: number, y: number) => {
+      const [rx, ry] = { right: [x, y], down: [-y, x], left: [-x, -y], up: [y, -x] }[dir];
+      return new Phaser.Math.Vector2(cx + rx * TILE, cy + ry * TILE);
+    };
+    const chevron = (dx: number) => [rot(dx - 0.2, -0.26), rot(dx, -0.26), rot(dx + 0.2, 0), rot(dx, 0.26), rot(dx - 0.2, 0.26), rot(dx, 0)];
+    g.fillStyle(C.iceShine, 0.35).fillCircle(cx, cy, TILE * 0.38);
+    g.fillStyle(C.arrow, 0.45).fillPoints(chevron(-0.14), true);
+    g.fillStyle(C.arrow, 1).fillPoints(chevron(0.12), true);
+  }
+
+  /** Teletransporte: remolino del color de su pareja que gira despacio. */
+  private createPortal(pos: Pos, color: number): void {
+    const { x, y } = this.center(pos.x, pos.y);
+    const g = this.add.graphics();
+    g.fillStyle(C.iceShadow, 0.2).fillCircle(0, TILE * 0.04, TILE * 0.4);
+    g.fillStyle(color, 1).fillCircle(0, 0, TILE * 0.38);
+    g.fillStyle(0x2a1f4f, 1).fillCircle(0, 0, TILE * 0.28);
+    g.lineStyle(TILE * 0.05, color, 0.9);
+    for (let i = 0; i < 3; i++) {
+      const a = (Math.PI * 2 * i) / 3;
+      g.beginPath();
+      g.arc(0, 0, TILE * 0.17, a, a + Math.PI * 0.8);
+      g.strokePath();
+    }
+    g.fillStyle(0xffffff, 0.9).fillCircle(0, 0, TILE * 0.05);
+    const portal = this.add.container(x, y, [g]);
+    this.layer.add(portal);
+    this.tweens.add({ targets: portal, angle: 360, duration: 4000, repeat: -1 });
   }
 
   private createPiece(piece: Piece): PieceView {

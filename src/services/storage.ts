@@ -106,6 +106,16 @@ export function claimWinCelebration(day: string): boolean {
   return true;
 }
 
+const ELEMENTS_SEEN_KEY = 'skid.elementsSeen.v1';
+
+/** Marca como presentado un elemento del tablero. Devuelve false si ya se había presentado. */
+export function claimElementIntro(id: string): boolean {
+  const seen = read<string[]>(ELEMENTS_SEEN_KEY) ?? [];
+  if (seen.includes(id)) return false;
+  write(ELEMENTS_SEEN_KEY, [...seen, id]);
+  return true;
+}
+
 const ACHIEVEMENTS_SEEN_KEY = 'skid.achievementsSeen.v1';
 
 /** Logros ya celebrados en este navegador (para celebrar solo los nuevos). */

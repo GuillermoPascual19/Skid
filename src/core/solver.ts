@@ -1,5 +1,5 @@
 import { initialState, type Board, type Direction, type GameState } from './board.ts';
-import { applyMove, isComplete } from './move.ts';
+import { applyMove, isComplete, traceMove } from './move.ts';
 
 const DIRECTIONS: readonly Direction[] = ['up', 'down', 'left', 'right'];
 
@@ -83,6 +83,30 @@ export function countDeadEnds(board: Board): number {
     }
   }
   return states.length - canFinish.reduce((sum, v) => sum + v, 0);
+}
+
+/**
+ * Si desde algún estado alcanzable hay un movimiento que entra en un bucle sin
+ * fin (solo pasa con corrientes que se mandan unas a otras).
+ */
+export function hasLoops(board: Board): boolean {
+  if (!board.cells.some((row) => row.some((c) => c.startsWith('arrow-')))) return false;
+  const start = initialState(board);
+  const seen = new Set<string>([stateKey(start)]);
+  const queue: GameState[] = [start];
+  for (let i = 0; i < queue.length; i++) {
+    if (isComplete(board, queue[i])) continue;
+    for (const dir of DIRECTIONS) {
+      const trace = traceMove(board, queue[i], dir);
+      if (!trace) continue;
+      if (trace.looped) return true;
+      const key = stateKey(trace.state);
+      if (seen.has(key)) continue;
+      seen.add(key);
+      queue.push(trace.state);
+    }
+  }
+  return false;
 }
 
 /** Dos estados son el mismo si el jugador está en la misma casilla y lleva las mismas piezas. */

@@ -104,6 +104,68 @@ export function thud(ctx: Ctx, out: AudioNode, t: number, strength = 1): void {
   src.stop(t + 0.1);
 }
 
+/** Ruido filtrado con envolvente: base de los efectos de nieve y agua. */
+function noiseBurst(ctx: Ctx, out: AudioNode, t: number, type: BiquadFilterType, freq: number, q: number, peak: number, decay: number): BiquadFilterNode {
+  const src = ctx.createBufferSource();
+  src.buffer = noise(ctx);
+  const filter = ctx.createBiquadFilter();
+  filter.type = type;
+  filter.frequency.setValueAtTime(freq, t);
+  filter.Q.value = q;
+  const env = envelope(ctx, t, peak, 0.005, decay);
+  src.connect(filter).connect(env).connect(out);
+  src.start(t, Math.random() * 0.5);
+  src.stop(t + decay + 0.05);
+  return filter;
+}
+
+/** «Cruj» al frenar en la nieve blanda: granos de ruido apagado. */
+export function snow(ctx: Ctx, out: AudioNode, t: number): void {
+  for (let i = 0; i < 4; i++) {
+    noiseBurst(ctx, out, t + i * 0.025 + Math.random() * 0.01, 'lowpass', 1400 - i * 200, 0.8, 0.16 - i * 0.025, 0.06);
+  }
+  thud(ctx, out, t, 0.5);
+}
+
+/** Silbido corto al girar en una corriente. */
+export function turn(ctx: Ctx, out: AudioNode, t: number): void {
+  const band = noiseBurst(ctx, out, t, 'bandpass', 900, 6, 0.12, 0.14);
+  band.frequency.exponentialRampToValueAtTime(3200, t + 0.12);
+  bell(ctx, out, t, midi(91), 0.035, 0.2);
+}
+
+/** «Fiuuu» mágico al teletransportarse: barrido ascendente y campanita. */
+export function teleport(ctx: Ctx, out: AudioNode, t: number): void {
+  const osc = ctx.createOscillator();
+  osc.type = 'sine';
+  osc.frequency.setValueAtTime(320, t);
+  osc.frequency.exponentialRampToValueAtTime(1800, t + 0.22);
+  const env = envelope(ctx, t, 0.12, 0.02, 0.25);
+  osc.connect(env).connect(out);
+  osc.start(t);
+  osc.stop(t + 0.3);
+  bell(ctx, out, t + 0.18, midi(88), 0.08, 0.6);
+  bell(ctx, out, t + 0.24, midi(95), 0.05, 0.5);
+}
+
+/** «¡Chof!» al caer al agua: chapoteo y burbujas que suben. */
+export function splash(ctx: Ctx, out: AudioNode, t: number): void {
+  const band = noiseBurst(ctx, out, t, 'lowpass', 2600, 0.7, 0.3, 0.45);
+  band.frequency.exponentialRampToValueAtTime(500, t + 0.4);
+  for (let i = 0; i < 5; i++) {
+    const at = t + 0.12 + i * 0.07 + Math.random() * 0.03;
+    const osc = ctx.createOscillator();
+    osc.type = 'sine';
+    const f = 380 + Math.random() * 260;
+    osc.frequency.setValueAtTime(f, at);
+    osc.frequency.exponentialRampToValueAtTime(f * 2.2, at + 0.06);
+    const env = envelope(ctx, at, 0.06, 0.005, 0.07);
+    osc.connect(env).connect(out);
+    osc.start(at);
+    osc.stop(at + 0.1);
+  }
+}
+
 /** Escala pentatónica (Do mayor) para las piezas: cada una suena más aguda que la anterior. */
 const PENTATONIC = [0, 2, 4, 7, 9];
 
