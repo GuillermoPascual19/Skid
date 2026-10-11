@@ -2,7 +2,9 @@
 // cada modo (contadores, reintentos, resultado); BoardScene solo dibuja.
 
 import { initialState, type Board, type Direction, type GameState } from '../core/board';
+import { elementSvg } from '../art/elements';
 import { dailyLevel, decodeRun, encodeRun, replayRun, type RunEvent } from '../core/daily';
+import { ELEMENTS } from '../core/elements';
 import { generateLevel } from '../core/generator';
 import { applyMove, isComplete } from '../core/move';
 import { solve } from '../core/solver';
@@ -11,6 +13,7 @@ import type { BoardHooks } from '../game/BoardScene';
 import type { MountedBoard } from '../game/mount';
 import * as online from '../services/online';
 import {
+  claimElementIntro,
   claimMilestone,
   MILESTONES,
   saveDaily,
@@ -289,6 +292,25 @@ export function levelsScreen(): Screen {
     saveProgress({ seed, level });
     restart(false);
     mounted?.scene.setBoard(board, state);
+    void introduceElements();
+  }
+
+  /** Presenta los elementos del tablero recién desbloqueados (una vez cada uno). */
+  async function introduceElements() {
+    const fresh = ELEMENTS.filter((e) => level >= e.level && claimElementIntro(e.id));
+    for (const e of fresh) {
+      celebrating = true;
+      await celebrate({
+        icon: '🧊',
+        iconSvg: elementSvg(e.id),
+        eyebrow: '¡Nuevo en el hielo!',
+        title: e.name,
+        text: e.description,
+        button: '¡A probarlo!',
+      });
+      celebrating = false;
+      if (disposed) return;
+    }
   }
 
   function restart(resetScene = true) {
@@ -355,6 +377,7 @@ export function levelsScreen(): Screen {
       mounted = m;
       m.scene.setBoard(board, state);
       wearHat(m);
+      void introduceElements();
     },
     dispose() {
       disposed = true;
