@@ -18,13 +18,36 @@ esté en marcha. Con `VITE_API_BASE=` vacía en `.env.local` el juego funciona s
 
 ## Estructura
 
-- `src/core/`: lógica pura sin Phaser (tablero, movimiento, solver, generador, reto diario y
-  puntuación). El servidor usa exactamente este código para verificar las partidas.
-- `src/game/`: vista del tablero en Phaser (solo dibuja y anima).
-- `src/ui/`: pantallas en HTML/CSS (portada, partida, resultado, ranking).
-- `src/services/`: guardado local y cliente de la API.
-- `worker/`: Worker de Cloudflare que sirve el juego y la API (`/api/*`).
-- `migrations/`: esquema de la base de datos D1.
+Organizado por apartados: para tocar algo, se va a la carpeta de ese apartado.
+
+```
+src/
+  main.ts              arranque y rutas
+  logic/               reglas puras, sin navegador; el servidor usa este mismo código
+    engine/            tablero, movimiento, solver, generador, elementos, aleatorio
+    daily/             reto diario, puntuación y rachas
+    achievements/      logros
+    community/         validación de niveles creados por jugadores
+  features/            un apartado por carpeta: pantallas, llamadas al servidor (api.ts)
+    home/              y lo que guarda en el navegador (storage.ts)
+    free-play/         modo libre
+    daily/             reto diario y estadísticas
+    ranking/           ligas
+    achievements/      logros y gorros
+    community/         multijugador: listado, editor, partida, valorar, denunciar
+    profile/           nombre, login con Google y perfil de otros jugadores
+  play/                pantalla de partida común a todos los modos (pausa, gestos, teclas)
+  game/                tablero en Phaser: escena, dibujo de casillas, efectos
+  audio/               música y efectos sintetizados, y sus controles
+  art/                 dibujos SVG (pingüino, gorros, elementos)
+  shared/              piezas comunes: dom, router, celebración, conexión y almacenamiento
+worker/
+  index.ts             solo enruta /api/*
+  http.ts, session.ts  utilidades comunes y sesiones (incluido login con Google)
+  routes/              un archivo por apartado (daily, leagues, levels, stats...)
+tests/                 mismo árbol que src/logic/ y worker/
+migrations/            esquema de la base de datos D1
+```
 
 ## Reto diario y puntuación
 
@@ -32,7 +55,7 @@ esté en marcha. Con `VITE_API_BASE=` vacía en `.env.local` el juego funciona s
 - Un solo intento por jugador y día. El reloj empieza al pulsar *Empezar* y no se para.
 - Puntuación: 1000 menos 25 por movimiento por encima del óptimo, 60 por reintento y 2 por segundo
   por encima del par (3 s por movimiento óptimo, máximo 400). Mínimo 100 por terminar.
-  Las constantes están en `src/core/score.ts`.
+  Las constantes están en `src/logic/daily/score.ts`.
 - El servidor no se fía del cliente: el navegador envía el registro de movimientos y el Worker
   lo reproduce para calcular movimientos, reintentos, tiempo (con su propio reloj) y puntos.
 - Los jugadores son anónimos: la primera vez el servidor da un token que se guarda en el

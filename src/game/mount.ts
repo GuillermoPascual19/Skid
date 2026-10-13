@@ -3,7 +3,8 @@
 
 import Phaser from 'phaser';
 import type { Board } from '../logic/engine/board';
-import { BoardScene, TILE, type BoardHooks } from './BoardScene';
+import { BoardScene, type BoardHooks } from './BoardScene';
+import { TILE } from './palette';
 
 export interface MountedBoard {
   readonly scene: BoardScene;
