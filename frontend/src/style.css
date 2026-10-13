@@ -932,7 +932,8 @@ p {
   transform: translateX(-50%);
   z-index: 20;
   background: var(--ink);
-  color: #fff;
+  /* Al revés que la página: fondo del color del texto y texto del color de las tarjetas. */
+  color: var(--card-solid);
   font-weight: 700;
   padding: 10px 18px;
   border-radius: 999px;
@@ -1428,7 +1429,8 @@ p {
   top: -8px;
   transform: translate(-50%, -100%);
   background: var(--ink);
-  color: #fff;
+  /* Al revés que la página: fondo del color del texto y texto del color de las tarjetas. */
+  color: var(--card-solid);
   border-radius: 10px;
   padding: 6px 10px;
   font-size: 13px;
@@ -2745,4 +2747,30 @@ input.switch:focus-visible {
   --coin-rim: #7891a8;
   --board-frame: #2c4560;
   --accent-ink: #7cc1f2;
+}
+
+/* Ranking de un nivel de la comunidad (en un modal: fondo suave sobre la tarjeta). */
+.level-ranking {
+  max-height: 50vh;
+  overflow-y: auto;
+  text-align: left;
+}
+
+.level-ranking li {
+  background: var(--surface-soft);
+  box-shadow: none;
+}
+
+.level-ranking li.empty,
+.level-ranking li.gap {
+  display: block;
+  text-align: center;
+  background: none;
+  padding: 2px;
+}
+
+.level-place {
+  margin: 0;
+  font-weight: 800;
+  color: var(--gold-dark);
 }

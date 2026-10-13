@@ -1,4 +1,4 @@
-// Niveles de la comunidad: listado, publicar, superar, valorar, denunciar y borrar.
+// Niveles de la comunidad: listado, publicar, superar, ranking, valorar, denunciar y borrar.
 
 import { isHatId } from '../../../common/art/hats';
 import { parseBoard } from '../../../common/logic/engine/board';
@@ -144,7 +144,7 @@ export async function createCustomLevel(env: Env, playerId: string, input: { nam
       checked.elements.join(','),
       now,
     ),
-    env.DB.prepare('INSERT INTO custom_level_runs (level_id, player_id, best_moves, finished_at) VALUES (?, ?, ?, ?)').bind(id, playerId, moves, now),
+    env.DB.prepare('INSERT INTO custom_level_runs (level_id, player_id, best_moves, finished_at, best_at) VALUES (?1, ?2, ?3, ?4, ?4)').bind(id, playerId, moves, now),
   ]);
   return getCustomLevel(env, playerId, id);
 }
@@ -156,12 +156,60 @@ export async function finishCustomLevel(env: Env, playerId: string, id: string, 
   const moves = movesToFinish(parseBoard(decodeRows(level.rows)), log);
   if (moves === null) throw new HttpError(400, 'El registro no completa el nivel');
   await env.DB.prepare(
-    `INSERT INTO custom_level_runs (level_id, player_id, best_moves, finished_at) VALUES (?1, ?2, ?3, ?4)
-     ON CONFLICT (level_id, player_id) DO UPDATE SET best_moves = MIN(best_moves, ?3), finished_at = ?4`,
+    `INSERT INTO custom_level_runs (level_id, player_id, best_moves, finished_at, best_at) VALUES (?1, ?2, ?3, ?4, ?4)
+     ON CONFLICT (level_id, player_id) DO UPDATE SET
+       best_at = CASE WHEN ?3 < best_moves THEN ?4 ELSE best_at END,
+       best_moves = MIN(best_moves, ?3),
+       finished_at = ?4`,
   )
     .bind(id, playerId, moves, Date.now())
     .run();
   return getCustomLevel(env, playerId, id);
+}
+
+/** Jugadores que se ven en el ranking de un nivel. */
+const LEVEL_RANKING_SIZE = 20;
+
+interface LevelRankingRow {
+  player_id: string;
+  name: string | null;
+  hat: string | null;
+  best_moves: number;
+  pos: number;
+}
+
+/**
+ * Ranking de un nivel, al estilo golf: menos movimientos y, a igualdad, quien
+ * consiguió antes su marca. Los mejores y, si no está entre ellos, tu puesto.
+ */
+export async function customLevelRanking(env: Env, playerId: string, id: string) {
+  const level = await getCustomLevel(env, playerId, id); // Comprueba que existe y se puede ver.
+  const ranked = `
+    SELECT r.player_id, p.name, p.hat, r.best_moves,
+           RANK() OVER (ORDER BY r.best_moves, r.best_at) AS pos
+    FROM custom_level_runs r JOIN players p ON p.id = r.player_id
+    WHERE r.level_id = ?1`;
+  const [{ results: top }, mine, total] = await Promise.all([
+    env.DB.prepare(`${ranked} ORDER BY pos, p.name LIMIT ?2`).bind(id, LEVEL_RANKING_SIZE).all<LevelRankingRow>(),
+    env.DB.prepare(`SELECT * FROM (${ranked}) WHERE player_id = ?2`).bind(id, playerId).first<LevelRankingRow>(),
+    env.DB.prepare('SELECT COUNT(*) AS n FROM custom_level_runs WHERE level_id = ?').bind(id).first<{ n: number }>(),
+  ]);
+  const entry = (r: LevelRankingRow) => ({
+    id: r.player_id,
+    name: r.name ?? 'Anónimo',
+    hat: isHatId(r.hat) ? r.hat : null,
+    position: r.pos,
+    moves: r.best_moves,
+    overPar: Math.max(0, r.best_moves - level.optimal),
+    isMe: r.player_id === playerId,
+    isAuthor: r.player_id === level.authorId,
+  });
+  return {
+    optimal: level.optimal,
+    total: total?.n ?? 0,
+    top: top.map(entry),
+    me: mine ? entry(mine) : null,
+  };
 }
 
 /** Valora un nivel de 1 a 5. Solo si lo has superado y no es tuyo. */
