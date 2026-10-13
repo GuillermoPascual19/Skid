@@ -60,12 +60,16 @@ fuera) y compila el juego a `dist/`.
 ## Reto diario y puntuación
 
 - El mismo tablero para todos, cambia a medianoche de Madrid.
-- Un solo intento por jugador y día. El reloj empieza al pulsar *Empezar* y no se para.
-- Puntuación: 1000 menos 25 por movimiento por encima del óptimo, 60 por reintento y 2 por segundo
-  por encima del par (3 s por movimiento óptimo, máximo 400). Mínimo 100 por terminar.
-  Las constantes están en `common/logic/daily/score.ts`.
+- Estilo golf: cada movimiento es un golpe y cada pista suma otro. El resultado es lo que te pasas
+  del óptimo («Par», «+2»). Volver a empezar es gratis y cuenta el mejor intento; se puede seguir
+  mejorando todo el día (salvo tras ver la solución). A igualdad de golpes, gana quien tarda menos:
+  el reloj empieza al pulsar *Empezar* y no se para.
+- Para las clasificaciones semanales y mensuales cada reto da puntos: 1000 al par y 100 menos por
+  golpe de más (mínimo 100). Las constantes están en `common/logic/daily/score.ts`. Los retos de
+  antes del golf conservan sus puntos.
+- Al terminar se puede ver la solución óptima, jugada por el pingüino.
 - El servidor no se fía del cliente: el navegador envía el registro de movimientos y el Worker
-  lo reproduce para calcular movimientos, reintentos, tiempo (con su propio reloj) y puntos.
+  lo reproduce para calcular el mejor intento, el tiempo (con su propio reloj) y los puntos.
 - Los jugadores son anónimos: la primera vez el servidor da un token que se guarda en el
   navegador (en la base de datos solo se guarda su hash). Cada uno elige su nombre.
 

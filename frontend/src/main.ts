@@ -3,6 +3,7 @@ import { installAudio } from './audio/sound';
 import { h } from './shared/dom';
 import { levelsScreen } from './features/free-play/free-play-screen';
 import { dailyScreen } from './features/daily/daily-screen';
+import { solutionScreen } from './features/daily/solution-screen';
 import { customLevelScreen } from './features/community/play-screen';
 import { communityScreen } from './features/community/community-screen';
 import { editorScreen } from './features/community/editor-screen';
@@ -48,6 +49,7 @@ setRoutes({
   home: () => homeScreen(),
   levels: () => levelsScreen(),
   daily: (route) => dailyScreen(route.record),
+  solution: (route) => solutionScreen(route.day),
   ranking: (route) => rankingScreen(route),
   stats: () => statsScreen(),
   achievements: () => achievementsScreen(),

@@ -5,6 +5,7 @@ import * as online from '../../shared/api';
 import { penguinSvg } from '../../../../common/art/hats';
 import { formatDay, formatTime, h, openModal, plural, previousDay, share, svg, toast } from '../../shared/dom';
 import { monthRange, weekRange, type DayRange } from '../../../../common/logic/daily/daily';
+import { golfLabel } from '../../../../common/logic/daily/score';
 import { today } from '../daily/daily';
 import { ensureName } from '../profile/profile';
 import { go, type Screen } from '../../shared/router';
@@ -232,14 +233,18 @@ export function rankingScreen(route: { join?: string }): Screen {
                 'small',
                 null,
                 row.status === 'finished'
-                  ? `${row.moves} mov. · ↺ ${row.retries}${row.hints ? ` · 💡 ${row.hints}` : ''} · ⏱ ${formatTime(row.timeMs ?? 0)}`
+                  ? row.overPar !== null
+                    ? `${row.moves} mov.${row.hints ? ` · 💡 ${row.hints}` : ''} · ⏱ ${formatTime(row.timeMs ?? 0)}`
+                    : `${row.moves} mov. · ↺ ${row.retries}${row.hints ? ` · 💡 ${row.hints}` : ''} · ⏱ ${formatTime(row.timeMs ?? 0)}`
                   : row.status === 'playing'
                     ? 'Jugando…'
                     : 'Sin jugar',
               ),
             ),
             row.status === 'finished'
-              ? h('span', { class: 'pts' }, String(row.score))
+              ? row.overPar !== null
+                ? h('span', { class: `pts golf${row.overPar === 0 ? ' par' : ''}`, title: `${row.score} puntos de liga` }, golfLabel(row.overPar))
+                : h('span', { class: 'pts' }, String(row.score))
               : h('span', { class: 'pts none' }, '—'),
           ),
         ),

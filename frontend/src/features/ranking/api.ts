@@ -34,6 +34,8 @@ export interface RankingRow {
   retries: number | null;
   hints: number | null;
   timeMs: number | null;
+  /** Golpes por encima del óptimo; null en retos de antes del golf (solo puntos). */
+  overPar: number | null;
 }
 
 export interface StandingRow {

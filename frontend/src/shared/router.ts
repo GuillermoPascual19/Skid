@@ -14,6 +14,7 @@ export type Route =
   | { name: 'home' }
   | { name: 'levels' }
   | { name: 'daily'; record: DailyRecord }
+  | { name: 'solution'; day: string }
   | { name: 'ranking'; join?: string }
   | { name: 'stats' }
   | { name: 'achievements' }

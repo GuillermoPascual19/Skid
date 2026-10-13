@@ -1,9 +1,10 @@
 // Portada: reto del día, modo niveles y acceso al ranking.
 
-import { DAILY_TIME_ZONE, dailyLevel } from '../../../../common/logic/daily/daily';
+import { DAILY_TIME_ZONE } from '../../../../common/logic/daily/daily';
 import * as online from '../../shared/api';
 import { celebrate } from '../../shared/celebrate';
-import { openDaily, resultFromServer, shareText, showDailyResult, today } from '../daily/daily';
+import { adoptServerResult, canImprove, improveDaily, openDaily, shareText, showDailyResult, today } from '../daily/daily';
+import { golfLabel } from '../../../../common/logic/daily/score';
 import { penguinSvg } from '../../../../common/art/hats';
 import { celebrateNewAchievements } from '../achievements/achievements-screen';
 import { audioToggles } from '../../audio/audio-controls';
@@ -15,6 +16,7 @@ import { dailyWins, getDaily, getStats } from '../daily/api';
 import { claimWinCelebration, loadDaily, saveDaily } from '../daily/storage';
 import { startingProgress } from '../free-play/storage';
 import type { Me } from '../profile/api';
+import { dismissGuideNews, guideStatus, openGuide } from '../guide/guide';
 
 export function homeScreen(): Screen {
   const day = today();
@@ -45,12 +47,14 @@ export function homeScreen(): Screen {
 
     if (result) {
       dailyCard.append(
-        h('div', { class: 'score-big' }, String(result.score), h('small', null, 'pts')),
+        result.overPar != null
+          ? h('div', { class: `score-big golf${result.overPar === 0 ? ' par' : ''}` }, golfLabel(result.overPar))
+          : h('div', { class: 'score-big' }, String(result.score), h('small', null, 'pts')),
         h(
           'div',
           { class: 'chips' },
           h('span', { class: 'chip' }, `🧊 ${result.moves} mov.`),
-          h('span', { class: 'chip' }, `↺ ${result.retries}`),
+          result.overPar == null ? h('span', { class: 'chip' }, `↺ ${result.retries}`) : null,
           result.hints ? h('span', { class: 'chip' }, `💡 ${result.hints}`) : null,
           h('span', { class: 'chip' }, `⏱ ${formatTime(result.timeMs)}`),
         ),
@@ -60,6 +64,7 @@ export function homeScreen(): Screen {
           h('button', { class: 'btn', onclick: () => share(shareText(day, result)) }, 'Compartir'),
           h('button', { class: 'btn ghost', onclick: () => showDailyResult(day, result) }, 'Detalle'),
         ),
+        ...(canImprove(day, result) ? [h('button', { class: 'btn secondary block', onclick: () => improveDaily(day) }, '↺ Mejorar resultado')] : []),
         h('p', { class: 'muted', 'data-countdown': '' }),
       );
     } else if (record) {
@@ -69,7 +74,7 @@ export function homeScreen(): Screen {
       );
     } else {
       dailyCard.append(
-        h('p', { class: 'muted' }, 'Un único intento. Tu puntuación sale de los movimientos, el tiempo y los reintentos.'),
+        h('p', { class: 'muted' }, 'Estilo golf: haz el tablero en los menos golpes posibles. Volver a empezar es gratis.'),
         h('button', { class: 'btn big block', onclick: openDaily }, 'Jugar el reto'),
       );
     }
@@ -101,9 +106,8 @@ export function homeScreen(): Screen {
       // El reto pudo jugarse en otro dispositivo.
       const server = await getDaily(day);
       const record = loadDaily(day);
-      if (server?.finishedAt && (!record?.result || record.pendingSubmit)) {
-        const result = resultFromServer(server, dailyLevel(day).solution.length);
-        saveDaily({ day, startedAt: server.startedAt, log: record?.log ?? '', result });
+      if (server?.finishedAt && !record?.pendingSubmit) {
+        adoptServerResult(day, server, record);
         renderDaily();
       } else if (server && !record) {
         saveDaily({ day, startedAt: server.startedAt, log: '' });
@@ -220,6 +224,45 @@ export function homeScreen(): Screen {
   }
 
   const level = startingProgress().level;
+  const guide = guideStatus(level === 1 && !loadDaily(day));
+  // Quien ya jugaba ve un aviso cuando cambian las reglas.
+  const news =
+    guide === 'news'
+      ? h(
+          'section',
+          { class: 'card news-card' },
+          h('span', { class: 'news-icon', 'aria-hidden': 'true' }, '⛳'),
+          h(
+            'div',
+            { class: 'info' },
+            h('p', { class: 'eyebrow' }, 'Novedad'),
+            h('p', null, h('strong', null, 'El reto diario ahora es estilo golf.'), ' Volver a empezar es gratis y cuenta tu mejor intento.'),
+            h(
+              'button',
+              {
+                class: 'link-btn',
+                onclick: () => {
+                  news?.remove();
+                  openGuide('daily');
+                },
+              },
+              'Ver cómo funciona',
+            ),
+          ),
+          h(
+            'button',
+            {
+              class: 'icon-btn small',
+              'aria-label': 'Cerrar',
+              onclick: () => {
+                dismissGuideNews();
+                news?.remove();
+              },
+            },
+            '✕',
+          ),
+        )
+      : null;
   const audio = audioToggles();
   const el = h(
     'div',
@@ -232,6 +275,7 @@ export function homeScreen(): Screen {
       h('h1', null, 'Skid'),
       h('p', null, 'Desliza sobre el hielo. Recoge en orden.'),
     ),
+    news,
     dailyCard,
     h(
       'section',
@@ -243,6 +287,7 @@ export function homeScreen(): Screen {
       'nav',
       { class: 'nav-tiles' },
       navTile('🏆', 'Ranking', () => go({ name: 'ranking' })),
+      navTile('❓', 'Reglas', () => openGuide()),
       online.onlineEnabled ? navTile('📊', 'Estadísticas', () => go({ name: 'stats' })) : null,
       online.onlineEnabled ? navTile('🎩', 'Logros', () => go({ name: 'achievements' })) : null,
     ),
@@ -267,6 +312,7 @@ export function homeScreen(): Screen {
     el,
     mount() {
       renderDaily();
+      if (guide === 'first') openGuide(); // Primera vez: las reglas antes de nada.
       ticker = window.setInterval(tick, 1000);
       void syncWithServer();
     },

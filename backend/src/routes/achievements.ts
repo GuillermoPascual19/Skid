@@ -7,9 +7,9 @@ import { wonDays } from './stats';
 
 export async function playerAchievements(env: Env, playerId: string) {
   const [{ results: runs }, wins, { results: leagueRuns }] = await Promise.all([
-    env.DB.prepare('SELECT day, score, retries, hints FROM daily_runs WHERE player_id = ? AND finished_at IS NOT NULL')
+    env.DB.prepare('SELECT day, score, retries, hints, over_par AS overPar FROM daily_runs WHERE player_id = ? AND finished_at IS NOT NULL')
       .bind(playerId)
-      .all<{ day: string; score: number; retries: number; hints: number }>(),
+      .all<{ day: string; score: number; retries: number; hints: number; overPar: number | null }>(),
     wonDays(env, playerId),
     env.DB.prepare(
       `SELECT lm.league_id AS leagueId, r.player_id AS playerId, r.day, r.score
