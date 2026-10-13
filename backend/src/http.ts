@@ -5,6 +5,8 @@ export interface Env {
   ASSETS: Fetcher;
   SESSION_RATE_LIMITER: RateLimit;
   JOIN_RATE_LIMITER: RateLimit;
+  /** Peticiones por jugador y minuto a toda la API (contra abusos y scripts). */
+  API_RATE_LIMITER: RateLimit;
   /** ID de cliente OAuth de Google (público). Sin él, el login con Google está desactivado. */
   GOOGLE_CLIENT_ID?: string;
   /** Solo para pruebas en local: de dónde descargar las claves de firma. */
@@ -28,13 +30,26 @@ export class HttpError extends Error {
 export function json(body: unknown, status = 200): Response {
   return new Response(JSON.stringify(body), {
     status,
-    headers: { 'Content-Type': 'application/json', 'Cache-Control': 'no-store' },
+    headers: {
+      'Content-Type': 'application/json',
+      'Cache-Control': 'no-store',
+      // Que el navegador no interprete la respuesta como otra cosa ni se pueda incrustar.
+      'X-Content-Type-Options': 'nosniff',
+      'Content-Security-Policy': "default-src 'none'; frame-ancestors 'none'",
+    },
   });
 }
 
+/** Tamaño máximo del cuerpo de una petición: lo más grande que se manda es un registro de partida. */
+const MAX_BODY_BYTES = 32 * 1024;
+
 export async function body<T>(req: Request): Promise<T> {
+  // Se corta antes de leerlo entero: un cuerpo enorme gastaría memoria y CPU del Worker.
+  if (Number(req.headers.get('Content-Length') ?? 0) > MAX_BODY_BYTES) throw new HttpError(413, 'Petición demasiado grande');
+  const text = await req.text();
+  if (text.length > MAX_BODY_BYTES) throw new HttpError(413, 'Petición demasiado grande');
   try {
-    return (await req.json()) as T;
+    return JSON.parse(text) as T;
   } catch {
     throw new HttpError(400, 'Cuerpo no válido');
   }

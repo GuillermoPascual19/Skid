@@ -19,14 +19,16 @@ function randomToken(): string {
 
 export async function createSession(req: Request, env: Env): Promise<{ token: string }> {
   const ip = req.headers.get('CF-Connecting-IP') ?? 'desconocida';
-  const ipHash = await sha256(`skid-ip:${ip}`);
+  // Solo se guarda el hash, y con el día dentro: no sirve para seguir a una IP de un día a otro
+  // (y la tabla se vacía a diario).
+  const day = dayKey(new Date());
+  const ipHash = await sha256(`skid-ip:${day}:${ip}`);
 
   // Ráfagas: el limitador de Cloudflare, en memoria (no gasta base de datos).
   const { success } = await env.SESSION_RATE_LIMITER.limit({ key: ipHash });
   if (!success) throw new HttpError(429, 'Demasiadas cuentas nuevas seguidas. Espera un minuto.');
 
   // Total diario, en D1. Los días anteriores se borran sobre la marcha.
-  const day = dayKey(new Date());
   const [, counter] = await env.DB.batch([
     env.DB.prepare('DELETE FROM session_limits WHERE day < ?').bind(day),
     env.DB.prepare(
@@ -63,6 +65,17 @@ export async function authenticate(req: Request, env: Env): Promise<Session> {
 
 let googleKeys: ReturnType<typeof googleKeyProvider> | null = null;
 
+/**
+ * De dónde se descargan las claves de Google. GOOGLE_CERTS_URL es solo para
+ * pruebas en local: se ignora si no apunta a esta máquina, para que una
+ * configuración equivocada no permita firmar tokens con otras claves.
+ */
+function certsUrl(env: Env): string {
+  const override = env.GOOGLE_CERTS_URL;
+  if (override && /^http:\/\/(localhost|127\.0\.0\.1)(:\d+)?\//.test(override)) return override;
+  return GOOGLE_CERTS_URL;
+}
+
 interface GoogleLoginResult {
   /** Token nuevo si este dispositivo pasa a ser otro jugador; null si sigue siendo el mismo. */
   token: string | null;
@@ -82,7 +95,7 @@ export async function googleLogin(env: Env, session: Session, credential: unknow
   if (!env.GOOGLE_CLIENT_ID) throw new HttpError(503, 'El login con Google no está configurado');
   if (typeof credential !== 'string' || credential.length > 4096) throw new HttpError(400, 'Credencial no válida');
 
-  googleKeys ??= googleKeyProvider(env.GOOGLE_CERTS_URL || GOOGLE_CERTS_URL);
+  googleKeys ??= googleKeyProvider(certsUrl(env));
   let claims;
   try {
     claims = await verifyGoogleIdToken(credential, env.GOOGLE_CLIENT_ID, googleKeys);

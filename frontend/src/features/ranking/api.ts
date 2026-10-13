@@ -22,6 +22,15 @@ export function joinLeague(code: string): Promise<League> {
   return api<League>('POST', '/leagues/join', { code });
 }
 
+/** Nombre y miembros de la liga de un código, para confirmar antes de unirse. */
+export function leagueInvite(code: string): Promise<{ name: string; members: number; alreadyMember: boolean }> {
+  return api('GET', `/leagues/invite/${encodeURIComponent(code.trim())}`);
+}
+
+export async function leaveLeague(id: string): Promise<void> {
+  await api('POST', `/leagues/${encodeURIComponent(id)}/leave`);
+}
+
 export interface RankingRow {
   /** Para abrir su perfil. */
   id: string;

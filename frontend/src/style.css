@@ -2798,3 +2798,10 @@ input.switch:focus-visible {
 .weekly-best .score-big {
   font-size: 44px;
 }
+
+.leave-league {
+  display: block;
+  margin: 4px auto 0;
+  color: var(--ink-faint);
+  font-size: 14px;
+}

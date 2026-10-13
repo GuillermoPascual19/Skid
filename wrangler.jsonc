@@ -32,6 +32,11 @@
       "name": "JOIN_RATE_LIMITER",
       "namespace_id": "1002",
       "simple": { "limit": 10, "period": 60 }
+    },
+    {
+      "name": "API_RATE_LIMITER",
+      "namespace_id": "1003",
+      "simple": { "limit": 120, "period": 60 }
     }
   ],
   // ID de cliente OAuth de Google (público). Sin él no aparece el botón de Google.

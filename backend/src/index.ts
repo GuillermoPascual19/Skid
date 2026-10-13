@@ -12,7 +12,7 @@ import { type Env, HttpError, body, cleanText, json } from './http';
 import { playerAchievements } from './routes/achievements';
 import { finishRun, getRun, ghostRuns, startRun } from './routes/daily';
 import { finishWeekly, getWeekly, startWeekly, weeklyRanking } from './routes/weekly';
-import { createLeague, dailyWins, joinLeague, leagueRanking, leagueStandings, myLeagues } from './routes/leagues';
+import { createLeague, dailyWins, joinLeague, leagueInvite, leagueRanking, leagueStandings, leaveLeague, myLeagues } from './routes/leagues';
 import {
   createCustomLevel,
   customLevelRanking,
@@ -50,6 +50,8 @@ async function handleApi(req: Request, url: URL, env: Env): Promise<Response> {
 
   const session = await authenticate(req, env);
   const { playerId } = session;
+  // Límite general por jugador: de sobra para jugar, corta los scripts que machacan la API.
+  if (!(await env.API_RATE_LIMITER.limit({ key: playerId })).success) throw new HttpError(429, 'Demasiadas peticiones. Espera un minuto.');
 
   if (route === 'POST /auth/google') {
     const { credential } = await body<{ credential?: unknown }>(req);
@@ -125,6 +127,13 @@ async function handleApi(req: Request, url: URL, env: Env): Promise<Response> {
     const { code } = await body<{ code?: unknown }>(req);
     return json(await joinLeague(env, playerId, code));
   }
+  if ((m = route.match(/^GET \/leagues\/invite\/([A-Za-z0-9]{1,12})$/))) {
+    // Comparte límite con unirse: si no, se podrían probar códigos por aquí.
+    const { success } = await env.JOIN_RATE_LIMITER.limit({ key: playerId });
+    if (!success) throw new HttpError(429, 'Demasiados intentos. Espera un minuto.');
+    return json(await leagueInvite(env, playerId, m[1]));
+  }
+  if ((m = route.match(/^POST \/leagues\/([\w-]+)\/leave$/))) return json(await leaveLeague(env, playerId, m[1]));
   if ((m = route.match(/^GET \/leagues\/([\w-]+)\/ranking$/))) {
     const day = url.searchParams.get('day') ?? '';
     if (!/^\d{4}-\d{2}-\d{2}$/.test(day)) throw new HttpError(400, 'Día no válido');

@@ -86,6 +86,20 @@ fuera) y compila el juego a `dist/`.
 - Lógica en `common/logic/weekly/`, servidor en `backend/src/routes/weekly.ts` y el juego en
   `frontend/src/features/weekly/`.
 
+## Seguridad
+
+- Sesiones: token aleatorio de 256 bits en el navegador; en la base de datos solo su hash. Google se
+  verifica con su firma, emisor, destinatario y caducidad (`backend/src/google.ts`).
+- Todas las consultas SQL van con parámetros. Lo de otros jugadores (nombres, niveles, ligas) se pinta
+  siempre como texto, nunca como HTML.
+- Permisos: perfiles, partidas (fantasma) y rankings de liga solo entre quienes comparten liga. Unirse
+  con un enlace pide confirmación y se puede salir de una liga.
+- Límites: 120 peticiones por minuto y jugador a toda la API, cuerpos de 32 KB como mucho, y límites
+  propios para crear cuentas, unirse a ligas y publicar niveles (`wrangler.jsonc`).
+- Cabeceras: CSP estricta y el resto de cabeceras de seguridad en `frontend/public/_headers`; la API
+  pone las suyas en `backend/src/http.ts`.
+- Las IP solo se guardan como hash con el día dentro, para contar cuentas nuevas, y se borran a diario.
+
 ## Publicar en Cloudflare
 
 Todo vive en un Worker: el juego (archivos estáticos) y la API, con una base de datos D1.
