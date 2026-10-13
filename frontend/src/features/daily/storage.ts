@@ -7,10 +7,18 @@ const DAILY_KEY = 'skid.daily.v1';
 const WIN_SEEN_KEY = 'skid.winSeen.v1';
 
 export interface DailyResult {
+  /** Movimientos del mejor intento (antes del golf, los de todos los intentos). */
   readonly moves: number;
   readonly retries: number;
-  /** Pistas pedidas (no existe en resultados anteriores a las pistas). */
+  /** Pistas pedidas hasta el mejor intento (no existe en resultados anteriores a las pistas). */
   readonly hints?: number;
+  /**
+   * Golpes del mejor intento por encima del óptimo. Falta (o es null) en los
+   * retos de antes del golf, que solo tienen puntos.
+   */
+  readonly overPar?: number | null;
+  /** Resultado del último intento enviado, si no mejoró el mejor. */
+  readonly attemptOverPar?: number;
   /** Racha tras terminar este reto (la calcula el servidor). */
   readonly streak?: number;
   /** Protectores de racha que le quedan tras este reto. */
@@ -30,8 +38,10 @@ export interface DailyRecord {
   /** Registro de la partida (ver encodeRun). */
   readonly log: string;
   readonly result?: DailyResult;
-  /** El resultado se calculó aquí y aún no lo ha aceptado el servidor. */
+  /** Hay un intento terminado que aún no ha aceptado el servidor. */
   readonly pendingSubmit?: boolean;
+  /** Vio la solución óptima: ya no puede mejorar su resultado. */
+  readonly solutionSeen?: boolean;
 }
 
 export function loadDaily(day: string): DailyRecord | null {

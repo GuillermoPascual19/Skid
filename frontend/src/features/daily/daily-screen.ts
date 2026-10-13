@@ -1,20 +1,21 @@
-// Partida del reto diario: un intento con el reloj del servidor, reintentos y pistas que restan puntos.
+// Partida del reto diario al estilo golf: el reloj del servidor no se para,
+// volver a empezar es gratis (cuenta el mejor intento) y cada pista suma un golpe.
 
 import { initialState, type GameState } from '../../../../common/logic/engine/board';
 import { dailyLevel, decodeRun, encodeRun, replayRun, type RunEvent } from '../../../../common/logic/daily/daily';
 import { applyMove, isComplete } from '../../../../common/logic/engine/move';
 import { solve } from '../../../../common/logic/engine/solver';
-import { dailyScore, SCORING } from '../../../../common/logic/daily/score';
+import { golfLabel, golfPoints, overPar } from '../../../../common/logic/daily/score';
 import type { BoardHooks } from '../../game/BoardScene';
 import type { MountedBoard } from '../../game/mount';
 import * as online from '../../shared/api';
-import { celebrateStreak, showDailyResult } from './daily';
+import { canImprove, celebrateStreak, showDailyResult } from './daily';
 import { formatDay, formatTime, h, haptic, openModal } from '../../shared/dom';
 import { sfx } from '../../audio/sound';
 import { go, type Screen } from '../../shared/router';
 import { loadBoard, onKey, openPauseMenu, playLayout, wearHat } from '../../play/play';
 import { finishDaily } from './api';
-import { type DailyRecord, type DailyResult, saveDaily } from './storage';
+import { type DailyRecord, type DailyResult, loadDaily, saveDaily } from './storage';
 
 export function dailyScreen(record: DailyRecord): Screen {
   const { day } = record;
@@ -31,9 +32,11 @@ export function dailyScreen(record: DailyRecord): Screen {
   const replay = replayRun(board, events);
   let state: GameState = replay.state;
   let moves = replay.moves;
-  let retries = replay.retries;
   let hints = replay.hints;
   let finished = replay.completed;
+  /** Mejor resultado ya aceptado (o calculado aquí), para el contador y para saber si se ha mejorado. */
+  let result: DailyResult | undefined = record.result;
+  let pendingSubmit = record.pendingSubmit ?? false;
   let submitting = false;
   let mounted: MountedBoard | null = null;
   let disposed = false;
@@ -41,39 +44,43 @@ export function dailyScreen(record: DailyRecord): Screen {
 
   const ui = playLayout({
     stats: [
-      { key: 'moves', label: 'Movimientos' },
+      { key: 'moves', label: 'Golpes' },
       { key: 'optimal', label: 'Óptimo', tone: 'gold' },
-      { key: 'retries', label: 'Reintentos' },
+      { key: 'best', label: 'Mejor' },
       { key: 'time', label: 'Tiempo' },
     ],
     hint: {
-      keys: 'Flechas o WASD para moverte · R reintenta (resta puntos)',
-      touch: 'Desliza el dedo en cualquier parte · ↺ reintenta (resta puntos)',
+      keys: 'Flechas o WASD para moverte · R vuelve a empezar (gratis)',
+      touch: 'Desliza el dedo en cualquier parte · ↺ vuelve a empezar (gratis)',
     },
     onMenu: () =>
       openPauseMenu(mounted, {
-        note: finished ? null : '⏱ El reloj del reto sigue corriendo: la pausa no lo para.',
-        restartLabel: `Reintentar (−${SCORING.perRetry})`,
-        onRestart: finished ? null : () => confirmRetry(),
+        note: finished ? null : '⏱ El reloj sigue corriendo: a igualdad de golpes, gana quien tarda menos.',
+        restartLabel: 'Volver a empezar',
+        onRestart: restartAllowed() ? () => restart() : null,
         onExit: () => go({ name: 'home' }),
       }),
-    onRestart: () => confirmRetry(),
+    onRestart: () => restart(),
     onSwipe: (dir) => mounted?.scene.requestMove(dir),
-    restartLabel: 'Reintentar',
+    restartLabel: 'Volver a empezar',
     onHint: () => confirmHint(),
   });
   ui.setTitle('Reto diario', formatDay(day));
 
   const elapsed = () => Date.now() - record.startedAt;
+  /** Golpes del intento en curso: sus movimientos más todas las pistas pedidas. */
+  const strokes = () => moves + hints;
   const hud = () => {
-    ui.setStat('moves', moves, moves > optimal ? 'warn' : undefined);
+    ui.setStat('moves', strokes(), strokes() > optimal ? 'warn' : undefined);
     ui.setStat('optimal', optimal);
-    ui.setStat('retries', retries, retries > 0 ? 'warn' : undefined);
+    ui.setStat('best', result?.overPar != null ? golfLabel(result.overPar) : '—');
     ui.setHintCount(hints);
-    ui.setStat('time', formatTime(elapsed()), Math.floor(elapsed() / 1000) > optimal * SCORING.parSecondsPerOptimalMove ? 'warn' : undefined);
+    // Terminado, se queda el tiempo del mejor intento; mientras se juega, corre el reloj.
+    ui.setStat('time', formatTime(finished && result?.overPar != null ? result.timeMs : elapsed()));
   };
 
-  const persist = () => saveDaily({ day, startedAt: record.startedAt, log: encodeRun(events) });
+  const persist = () =>
+    saveDaily({ ...(loadDaily(day) ?? record), day, startedAt: record.startedAt, log: encodeRun(events), result, pendingSubmit });
 
   const hooks: BoardHooks = {
     onMove(dir) {
@@ -87,7 +94,7 @@ export function dailyScreen(record: DailyRecord): Screen {
       state = next;
       moves++;
       finished = isComplete(board, state);
-      if (finished) clearInterval(timer);
+      if (finished) pendingSubmit = true; // Se envía al terminar la animación.
       haptic(finished ? [30, 60, 30] : 8);
       persist();
       hud();
@@ -99,40 +106,25 @@ export function dailyScreen(record: DailyRecord): Screen {
     },
   };
 
-  function confirmRetry() {
-    if (finished) return;
-    const modal = openModal(
-      [
-        h('h2', null, '¿Reintentar?'),
-        h('p', { class: 'lead' }, `Vuelves al principio. Los movimientos que llevas se mantienen y el reintento resta ${SCORING.perRetry} puntos.`),
-        h(
-          'div',
-          { class: 'row' },
-          h('button', { class: 'btn ghost', onclick: () => modal.close() }, 'Cancelar'),
-          h(
-            'button',
-            {
-              class: 'btn',
-              onclick: () => {
-                modal.close();
-                events.push('restart');
-                retries++;
-                state = initialState(board);
-                ui.setStuck(false);
-                persist();
-                hud();
-                mounted?.scene.reset(state);
-              },
-            },
-            'Reintentar',
-          ),
-        ),
-      ],
-      { dismissable: true },
-    );
+  /** Tras terminar solo se puede volver a empezar para mejorar (no al par ni tras ver la solución). */
+  function restartAllowed(): boolean {
+    return !submitting && (!finished || (!!result && canImprove(day, result)));
   }
 
-  /** Pista en el reto: el siguiente movimiento óptimo, a cambio de puntos. Se apunta en el registro. */
+  /** Volver a empezar es gratis: el intento nuevo empieza de cero (las pistas pedidas siguen contando). */
+  function restart() {
+    if (!restartAllowed()) return;
+    events.push('restart');
+    moves = 0;
+    finished = false;
+    state = initialState(board);
+    ui.setStuck(false);
+    persist();
+    hud();
+    mounted?.scene.reset(state);
+  }
+
+  /** Pista: el siguiente movimiento óptimo, a cambio de un golpe. Se apunta en el registro. */
   function confirmHint() {
     if (finished || !mounted) return;
     const [next] = solve(board, state) ?? [];
@@ -140,7 +132,7 @@ export function dailyScreen(record: DailyRecord): Screen {
     const modal = openModal(
       [
         h('h2', null, '¿Usar una pista?'),
-        h('p', { class: 'lead' }, `Te enseña el siguiente movimiento, pero resta ${SCORING.perHint} puntos a tu resultado.`),
+        h('p', { class: 'lead' }, 'Te enseña el siguiente movimiento, pero suma un golpe a este intento y a los siguientes.'),
         h(
           'div',
           { class: 'row' },
@@ -159,7 +151,7 @@ export function dailyScreen(record: DailyRecord): Screen {
                 sfx.hint();
               },
             },
-            `Pista (−${SCORING.perHint})`,
+            'Pista (+1 golpe)',
           ),
         ),
       ],
@@ -167,35 +159,54 @@ export function dailyScreen(record: DailyRecord): Screen {
     );
   }
 
+  /** Mensaje bajo el resultado según cómo ha ido este intento frente al mejor anterior. */
+  function attemptNote(previous: DailyResult | undefined, next: DailyResult, attemptOverPar: number): string | undefined {
+    if (previous?.overPar == null) return undefined; // Primer intento terminado.
+    if (next.overPar! < previous.overPar) return `¡Has mejorado! Antes tenías ${golfLabel(previous.overPar)}.`;
+    return `Este intento: ${golfLabel(attemptOverPar)}. Te quedas con tu ${golfLabel(next.overPar!)}.`;
+  }
+
   async function submit() {
-    if (submitting) return;
+    if (submitting || !pendingSubmit) return;
     submitting = true;
     const log = encodeRun(events);
-    const timeMs = elapsed();
+    const previous = result;
+    const attempt = replayRun(board, events);
+    const attemptOverPar = overPar(attempt.last!.strokes, optimal);
+    // Sin conexión, el resultado se calcula aquí con las mismas reglas.
+    const bestOverPar = overPar(attempt.best!.strokes, optimal);
     const local: DailyResult = {
-      moves,
-      retries,
-      hints,
-      timeMs,
+      moves: attempt.best!.moves,
+      hints: attempt.best!.hints,
+      retries: attempt.retries,
+      timeMs: previous?.overPar != null && previous.overPar <= bestOverPar ? previous.timeMs : elapsed(),
       optimal,
-      score: dailyScore({ moves, optimal, retries, hints, timeMs }).total,
+      overPar: bestOverPar,
+      score: golfPoints(bestOverPar),
+      streak: previous?.streak,
     };
 
     sfx.win();
     if (!online.onlineEnabled) {
-      saveDaily({ day, startedAt: record.startedAt, log, result: local });
-      return showDailyResult(day, local);
+      result = local;
+      pendingSubmit = false;
+      submitting = false;
+      persist();
+      hud();
+      return showDailyResult(day, local, { note: attemptNote(previous, local, attemptOverPar) });
     }
 
     const sending = openModal([h('h2', null, '¡Conseguido!'), h('p', { class: 'lead' }, 'Enviando tu resultado…')]);
     try {
-      const result = await finishDaily(day, log);
-      saveDaily({ day, startedAt: record.startedAt, log, result });
+      const sent = await finishDaily(day, log);
+      result = sent;
+      pendingSubmit = false;
+      persist();
+      hud();
       sending.close();
-      await celebrateStreak(result);
-      showDailyResult(day, result);
+      if (!previous) await celebrateStreak(sent);
+      showDailyResult(day, sent, { note: attemptNote(previous, sent, sent.attemptOverPar ?? attemptOverPar) });
     } catch (err) {
-      saveDaily({ day, startedAt: record.startedAt, log, result: local, pendingSubmit: true });
       sending.close();
       showDailyResult(day, local, {
         error: `No se pudo enviar al ranking: ${(err as Error).message}`,
@@ -204,6 +215,8 @@ export function dailyScreen(record: DailyRecord): Screen {
           void submit();
         },
       });
+    } finally {
+      submitting = false;
     }
   }
 
@@ -212,9 +225,9 @@ export function dailyScreen(record: DailyRecord): Screen {
     el: ui.el,
     async mount() {
       hud();
-      if (!finished) timer = window.setInterval(hud, 250);
+      timer = window.setInterval(hud, 250);
       removeKeys = onKey((e) => {
-        if (e.key === 'r' || e.key === 'R') confirmRetry();
+        if (e.key === 'r' || e.key === 'R') restart();
         if (e.key === 'Escape') ui.el.querySelector<HTMLButtonElement>('[aria-label=Pausa]')?.click();
       });
       const m = await loadBoard(ui.boardWrap, board, hooks);
@@ -222,8 +235,8 @@ export function dailyScreen(record: DailyRecord): Screen {
       mounted = m;
       m.scene.setBoard(board, state);
       wearHat(m);
-      if (finished) void submit(); // Terminado pero sin enviar (p. ej. se cerró la página).
-      else ui.setStuck(solve(board, state) === null); // Al reanudar, por si se quedó atascado.
+      if (pendingSubmit) void submit(); // Terminado pero sin enviar (p. ej. se cerró la página).
+      else if (!finished) ui.setStuck(solve(board, state) === null); // Al reanudar, por si se quedó atascado.
     },
     dispose() {
       disposed = true;

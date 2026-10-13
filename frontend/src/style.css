@@ -347,6 +347,21 @@ p {
   margin-left: 4px;
 }
 
+/* Resultado del reto al estilo golf: "+2" en dorado; "Par" en verde. */
+.score-big.golf {
+  font-variant-numeric: tabular-nums;
+}
+
+.score-big.golf.par {
+  color: var(--good);
+}
+
+.golf-note {
+  margin: 0;
+  font-weight: 700;
+  color: var(--ink-soft);
+}
+
 .chips {
   display: flex;
   flex-wrap: wrap;
@@ -824,6 +839,10 @@ p {
   font-size: 22px;
   font-weight: 800;
   font-variant-numeric: tabular-nums;
+}
+
+.ranking .pts.golf.par {
+  color: var(--good);
 }
 
 .ranking .pts.none {
@@ -2324,3 +2343,4 @@ input.switch:focus-visible {
   font-weight: 700;
   color: var(--bad);
 }
+

@@ -14,7 +14,7 @@ import {
 } from '../../../../common/logic/daily/daily';
 import { generateLevel } from '../../../../common/logic/engine/generator';
 import { hashSeed } from '../../../../common/logic/engine/rng';
-import { dailyScore } from '../../../../common/logic/daily/score';
+import { golfLabel, golfPoints, overPar } from '../../../../common/logic/daily/score';
 import { countDeadEnds } from '../../../../common/logic/engine/solver';
 
 describe('dayKey', () => {
@@ -55,28 +55,53 @@ describe('registro de la partida', () => {
     expect(() => decodeRun('UZ')).toThrow();
   });
 
-  it('suma movimientos de todos los intentos, cuenta reintentos e ignora los que no desplazan', () => {
+  it('cada intento empieza de cero; los que no desplazan no cuentan', () => {
     const board = parseBoard(['#####', '#@.1#', '#..2#', '#####']);
     // R recoge la 1; X reintenta; L no se mueve; R recoge la 1; D recoge la 2.
-    expect(replayRun(board, decodeRun('RXLRD'))).toMatchObject({ moves: 3, retries: 1, hints: 0, completed: true });
+    expect(replayRun(board, decodeRun('RXLRD'))).toMatchObject({
+      moves: 2,
+      totalMoves: 3,
+      retries: 1,
+      hints: 0,
+      completed: true,
+      best: { moves: 2, hints: 0, strokes: 2 },
+    });
   });
 
   it('cuenta las casillas recorridas y el tiempo mínimo de las animaciones', () => {
     const board = parseBoard(['#####', '#@.1#', '#..2#', '#####']);
     // R: 2 casillas; D: 1 casilla.
     const run = replayRun(board, decodeRun('RD'));
-    expect(run).toMatchObject({ moves: 2, cells: 3 });
+    expect(run).toMatchObject({ totalMoves: 2, cells: 3 });
     expect(minPlayTimeMs(run)).toBe(2 * 80 + 3 * 42);
   });
 
-  it('cuenta las pistas sin que muevan al jugador', () => {
+  it('cada pista suma un golpe, también en los intentos siguientes', () => {
     const board = parseBoard(['#####', '#@.1#', '#..2#', '#####']);
-    expect(replayRun(board, decodeRun('HRHD'))).toMatchObject({ moves: 2, retries: 0, hints: 2, completed: true });
+    expect(replayRun(board, decodeRun('HRD')).best).toEqual({ moves: 2, hints: 1, strokes: 3 });
+    expect(replayRun(board, decodeRun('HRDXRD')).last).toEqual({ moves: 2, hints: 1, strokes: 3 });
   });
 
-  it('rechaza eventos después de completar', () => {
+  it('tras completar se puede volver a empezar para mejorar; cuenta el mejor intento', () => {
+    const board = parseBoard(['#####', '#@.1#', '#..2#', '#####']);
+    // Un primer intento más largo y luego el óptimo.
+    const run = replayRun(board, decodeRun('DRURDXRD'));
+    expect(run.completed).toBe(true);
+    expect(run.best).toEqual({ moves: 2, hints: 0, strokes: 2 });
+    // Un intento peor después no cambia el mejor.
+    expect(replayRun(board, decodeRun('RDXDRURD')).best).toEqual({ moves: 2, hints: 0, strokes: 2 });
+  });
+
+  it('a medias no hay intento terminado', () => {
+    const board = parseBoard(['#####', '#@.1#', '#..2#', '#####']);
+    expect(replayRun(board, decodeRun('RDXR'))).toMatchObject({ completed: false, moves: 1, best: { strokes: 2 } });
+    expect(replayRun(board, decodeRun('R'))).toMatchObject({ completed: false, best: null, last: null });
+  });
+
+  it('rechaza movimientos o pistas después de completar sin volver a empezar', () => {
     const board = parseBoard(['@.1']);
     expect(() => replayRun(board, decodeRun('RL'))).toThrow();
+    expect(() => replayRun(board, decodeRun('RH'))).toThrow();
   });
 
   it('la solución óptima del reto lo completa', () => {
@@ -85,25 +110,18 @@ describe('registro de la partida', () => {
   });
 });
 
-describe('dailyScore', () => {
-  it('1000 si se iguala el óptimo dentro del par', () => {
-    expect(dailyScore({ moves: 15, optimal: 15, retries: 0, timeMs: 30_000 }).total).toBe(1000);
+describe('golf', () => {
+  it('el resultado es lo que te pasas del óptimo', () => {
+    expect(overPar(15, 15)).toBe(0);
+    expect(overPar(17, 15)).toBe(2);
+    expect(golfLabel(0)).toBe('Par');
+    expect(golfLabel(2)).toBe('+2');
   });
 
-  it('resta por movimientos extra, reintentos y tiempo sobre el par', () => {
-    // Par = 45 s. 60 s => 15 s de más => -30. 2 extra => -50. 1 reintento => -60.
-    const score = dailyScore({ moves: 17, optimal: 15, retries: 1, timeMs: 60_000 });
-    expect(score).toMatchObject({ movePenalty: 50, retryPenalty: 60, timePenalty: 30, parSeconds: 45, total: 860 });
-  });
-
-  it('resta 100 por pista', () => {
-    const score = dailyScore({ moves: 15, optimal: 15, retries: 0, hints: 2, timeMs: 30_000 });
-    expect(score).toMatchObject({ hintPenalty: 200, total: 800 });
-  });
-
-  it('limita la penalización por tiempo y garantiza un mínimo', () => {
-    expect(dailyScore({ moves: 15, optimal: 15, retries: 0, timeMs: 3_600_000 }).timePenalty).toBe(400);
-    expect(dailyScore({ moves: 200, optimal: 15, retries: 20, timeMs: 3_600_000 }).total).toBe(100);
+  it('puntos de liga: 1000 al par, 100 menos por golpe, mínimo 100', () => {
+    expect(golfPoints(0)).toBe(1000);
+    expect(golfPoints(3)).toBe(700);
+    expect(golfPoints(20)).toBe(100);
   });
 });
 

@@ -78,6 +78,7 @@ interface RankingDbRow {
   retries: number | null;
   hints: number;
   time_ms: number | null;
+  over_par: number | null;
 }
 
 /** Ranking de una liga para un día. La puntuación de quien aún juega no se muestra. */
@@ -85,7 +86,7 @@ export async function leagueRanking(env: Env, playerId: string, leagueId: string
   await requireMember(env, playerId, leagueId);
 
   const { results } = await env.DB.prepare(
-    `SELECT p.id, p.name, p.hat, p.id = ?1 AS is_me, r.started_at, r.finished_at, r.score, r.moves, r.retries, r.hints, r.time_ms
+    `SELECT p.id, p.name, p.hat, p.id = ?1 AS is_me, r.started_at, r.finished_at, r.score, r.moves, r.retries, r.hints, r.time_ms, r.over_par
      FROM league_members m
      JOIN players p ON p.id = m.player_id
      LEFT JOIN daily_runs r ON r.player_id = m.player_id AND r.day = ?2
@@ -108,6 +109,7 @@ export async function leagueRanking(env: Env, playerId: string, leagueId: string
       retries: finished ? r.retries : null,
       hints: finished ? r.hints : null,
       timeMs: finished ? r.time_ms : null,
+      overPar: finished ? r.over_par : null,
     };
   });
 }

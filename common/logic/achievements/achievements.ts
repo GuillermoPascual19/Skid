@@ -31,9 +31,9 @@ export const ACHIEVEMENTS: readonly AchievementDef[] = [
   { id: 'first', name: 'Primer reto', description: 'Termina tu primer reto diario.', hat: 'beanie', target: 1 },
   { id: 'streak3', name: 'Racha de 3', description: 'Juega el reto 3 días seguidos.', hat: 'earmuffs', target: 3 },
   { id: 'firstWin', name: 'Primera victoria', description: 'Queda 1.º un día en tu liga.', hat: 'party', target: 1 },
-  { id: 'clean5', name: 'Sin ayuda', description: 'Termina 5 retos sin reintentos ni pistas.', hat: 'viking', target: 5 },
+  { id: 'clean5', name: 'Sin ayuda', description: 'Termina 5 retos sin pistas.', hat: 'viking', target: 5 },
   { id: 'streak7', name: 'Semana de hielo', description: 'Juega el reto 7 días seguidos.', hat: 'cap', target: 7 },
-  { id: 'perfect', name: 'Perfección', description: 'Consigue 1000 puntos en un reto.', hat: 'tophat', target: 1 },
+  { id: 'perfect', name: 'Perfección', description: 'Haz un reto al par: con los movimientos justos.', hat: 'tophat', target: 1 },
   { id: 'streak14', name: 'Quincena polar', description: 'Juega el reto 14 días seguidos.', hat: 'ushanka', target: 14 },
   { id: 'veteran', name: 'Veterano', description: 'Termina 30 retos.', hat: 'santa', target: 30 },
   { id: 'streak30', name: 'Mago del hielo', description: 'Juega el reto 30 días seguidos.', hat: 'wizard', target: 30 },
@@ -45,6 +45,11 @@ export interface FinishedRun {
   readonly score: number;
   readonly retries: number;
   readonly hints: number;
+  /**
+   * Golpes por encima del óptimo; null en los retos de antes del golf, cuando
+   * reintentar restaba puntos (entonces "sin ayuda" era también sin reintentos).
+   */
+  readonly overPar: number | null;
 }
 
 export interface AchievementInput {
@@ -76,7 +81,7 @@ export function computeAchievements(input: AchievementInput): AchievementProgres
     streak14: best,
     streak30: best,
     perfect: input.runs.filter((r) => r.score >= 1000).length,
-    clean5: input.runs.filter((r) => r.retries === 0 && r.hints === 0).length,
+    clean5: input.runs.filter((r) => r.hints === 0 && (r.overPar !== null || r.retries === 0)).length,
     firstWin: input.wonDays,
     veteran: input.runs.length,
     weekChampion: input.weekTitles,

@@ -1,8 +1,9 @@
 // Flujo del reto diario: comprobar si ya se jugó, presentar las reglas,
-// empezar (con la hora del servidor si hay ranking online) y mostrar el resultado.
+// empezar (con la hora del servidor si hay ranking online), mostrar el resultado
+// y seguir mejorándolo.
 
-import { dailyLevel, dayKey } from '../../../../common/logic/daily/daily';
-import { dailyScore, SCORING } from '../../../../common/logic/daily/score';
+import { dailyLevel, dayKey, decodeRun, replayRun } from '../../../../common/logic/daily/daily';
+import { golfLabel } from '../../../../common/logic/daily/score';
 import * as online from '../../shared/api';
 import { formatDay, formatTime, h, openModal, plural, share, toast } from '../../shared/dom';
 import { celebrate } from '../../shared/celebrate';
@@ -22,24 +23,34 @@ export function resultFromServer(run: ServerRun, optimal: number): DailyResult {
     hints: run.hints ?? 0,
     timeMs: run.timeMs ?? 0,
     score: run.score ?? 0,
+    overPar: run.overPar,
     optimal,
   };
+}
+
+/** Guarda aquí el resultado del servidor: pudo jugarse (o mejorarse) en otro dispositivo. */
+export function adoptServerResult(day: string, server: ServerRun, record: DailyRecord | null): DailyResult {
+  const result = resultFromServer(server, dailyLevel(day).solution.length);
+  // Para seguir mejorando, el registro tiene que continuar el que tiene el servidor.
+  const log = server.log !== null && !record?.log.startsWith(server.log) ? server.log : (record?.log ?? '');
+  saveDaily({ ...record, day, startedAt: server.startedAt, log, result, pendingSubmit: false });
+  return result;
 }
 
 /** Punto de entrada del botón "Jugar el reto". */
 export async function openDaily(): Promise<void> {
   const day = today();
   const record = loadDaily(day);
-  if (record?.result && !record.pendingSubmit) return showDailyResult(day, record.result);
+  // Un intento terminado sin enviar (p. ej. se cerró la página): la partida lo envía al abrirse.
+  if (record?.pendingSubmit) return go({ name: 'daily', record });
+  if (record?.result) return showDailyResult(day, record.result);
 
   if (online.onlineEnabled) {
     try {
       if (!(await ensureName())) return;
       const server = await getDaily(day);
       if (server?.finishedAt) {
-        const result = resultFromServer(server, dailyLevel(day).solution.length);
-        saveDaily({ day, startedAt: server.startedAt, log: record?.log ?? '', result });
-        return showDailyResult(day, result);
+        return showDailyResult(day, adoptServerResult(day, server, record));
       }
       if (server) {
         // Empezado (en este u otro dispositivo): se continúa con el reloj del servidor.
@@ -67,11 +78,11 @@ function showIntro(day: string): void {
       h(
         'ul',
         { class: 'rules' },
-        h('li', null, h('b', null, '🎯'), h('span', null, 'Un solo intento. El mismo tablero para todos tus amigos.')),
-        h('li', null, h('b', null, '⏱'), h('span', null, 'El reloj empieza al pulsar Empezar y no se para, aunque salgas.')),
-        h('li', null, h('b', null, '🧊'), h('span', null, `Cada movimiento por encima del óptimo resta ${SCORING.perExtraMove} puntos.`)),
-        h('li', null, h('b', null, '↺'), h('span', null, `Puedes reintentar, pero cada reintento resta ${SCORING.perRetry} y los movimientos se siguen sumando.`)),
-        h('li', null, h('b', null, '💡'), h('span', null, `Si te atascas, pide una pista: te dice el siguiente movimiento, pero resta ${SCORING.perHint} puntos.`)),
+        h('li', null, h('b', null, '⛳'), h('span', null, 'Cada movimiento es un golpe. Tu resultado es lo que te pasas del óptimo: «Par» si lo clavas, «+2» con dos de más.')),
+        h('li', null, h('b', null, '↺'), h('span', null, 'Volver a empezar es gratis y cuenta tu mejor intento. Puedes seguir mejorándolo durante todo el día.')),
+        h('li', null, h('b', null, '💡'), h('span', null, 'Si te atascas, pide una pista: te dice el siguiente movimiento y suma un golpe.')),
+        h('li', null, h('b', null, '⏱'), h('span', null, 'El reloj empieza al pulsar Empezar y no se para. A igualdad de golpes, gana quien tarda menos.')),
+        h('li', null, h('b', null, '🎯'), h('span', null, 'El mismo tablero para todos tus amigos.')),
       ),
       error,
       start,
@@ -99,10 +110,13 @@ function showIntro(day: string): void {
 
 export function shareText(day: string, r: DailyResult): string {
   const link = `${location.origin}${location.pathname}`;
+  const golf = r.overPar ?? null;
   return [
     `🐧 Skid · reto del ${formatDay(day)}`,
-    `⭐ ${r.score} puntos`,
-    `🧊 ${r.moves} mov. (óptimo ${r.optimal}) · ↺ ${r.retries}${r.hints ? ` · 💡 ${r.hints}` : ''} · ⏱ ${formatTime(r.timeMs)}`,
+    golf !== null ? `⛳ ${golfLabel(golf)}${golf === 0 ? ' 🎯' : ''}` : `⭐ ${r.score} puntos`,
+    golf !== null
+      ? `🧊 ${r.moves} mov. (óptimo ${r.optimal})${r.hints ? ` · 💡 ${r.hints}` : ''} · ⏱ ${formatTime(r.timeMs)}`
+      : `🧊 ${r.moves} mov. (óptimo ${r.optimal}) · ↺ ${r.retries}${r.hints ? ` · 💡 ${r.hints}` : ''} · ⏱ ${formatTime(r.timeMs)}`,
     r.streak && r.streak > 1 ? `🔥 Racha de ${r.streak} días` : null,
     link,
   ]
@@ -132,29 +146,82 @@ export async function celebrateStreak(r: DailyResult): Promise<void> {
   });
 }
 
-/** Penalización del desglose: en rojo solo si resta algo. */
-const penalty = (n: number) => h('span', { class: n > 0 ? 'minus' : 'muted' }, n > 0 ? `−${n}` : '0');
+/** Se puede seguir mejorando: es el reto de hoy, no está al par y no ha visto la solución. */
+export function canImprove(day: string, r: DailyResult): boolean {
+  const record = loadDaily(day);
+  return day === today() && r.overPar != null && r.overPar > 0 && !!record && !record.solutionSeen;
+}
 
-export function showDailyResult(day: string, r: DailyResult, opts: { error?: string; retry?: () => void } = {}): void {
-  const s = dailyScore({ moves: r.moves, optimal: r.optimal, retries: r.retries, hints: r.hints, timeMs: r.timeMs });
-  const scoreEl = h('div', { class: 'score-big' }, '0', h('small', null, 'pts'));
+/** Vuelve a la partida para intentarlo otra vez (si el último intento está terminado, empieza otro). */
+export function improveDaily(day: string): void {
+  const record = loadDaily(day);
+  if (!record) return;
+  let finished = false;
+  try {
+    finished = replayRun(dailyLevel(day).board, decodeRun(record.log)).completed;
+  } catch {
+    // Registro dañado: la partida empezará de cero.
+  }
+  const next: DailyRecord = { ...record, log: finished ? `${record.log}X` : record.log };
+  saveDaily(next);
+  go({ name: 'daily', record: next });
+}
+
+function golfHeadline(over: number): string {
+  if (over === 0) return '¡Al par!';
+  if (over === 1) return '¡Casi perfecto!';
+  if (over <= 3) return '¡Muy bien!';
+  return '¡Completado!';
+}
+
+export function showDailyResult(day: string, r: DailyResult, opts: { error?: string; retry?: () => void; note?: string } = {}): void {
+  if (r.overPar == null) return showPointsResult(day, r, opts);
+  const over = r.overPar;
+  const strokes = r.optimal + over;
   const modal = openModal(
     [
       h('p', { class: 'eyebrow' }, `Reto · ${formatDay(day)}`),
-      h('h2', null, r.score >= 900 ? '¡Brutal!' : r.score >= 700 ? '¡Muy bien!' : '¡Completado!'),
-      scoreEl,
+      h('h2', null, golfHeadline(over)),
+      h('div', { class: `score-big golf${over === 0 ? ' par' : ''}` }, golfLabel(over)),
+      opts.note ? h('p', { class: 'golf-note' }, opts.note) : null,
       r.streak ? h('p', { class: 'streak-line' }, `🔥 Racha de ${plural(r.streak, 'día', 'días')}`) : null,
       r.freezeEarned ? h('p', { class: 'freeze-line' }, '🛡️ ¡Protector de racha ganado! Si un día no juegas, tu racha no se rompe.') : null,
       h(
         'div',
         { class: 'breakdown' },
-        h('div', null, h('span', null, 'Base'), h('span', null, String(SCORING.base))),
-        h('div', null, h('span', null, `${plural(r.moves, 'movimiento', 'movimientos')} (óptimo ${r.optimal})`), penalty(s.movePenalty)),
-        h('div', null, h('span', null, plural(r.retries, 'reintento', 'reintentos')), penalty(s.retryPenalty)),
-        h('div', null, h('span', null, plural(r.hints ?? 0, 'pista', 'pistas')), penalty(s.hintPenalty)),
-        h('div', null, h('span', null, `Tiempo ${formatTime(r.timeMs)} (par ${formatTime(s.parSeconds * 1000)})`), penalty(s.timePenalty)),
-        h('div', { class: 'total' }, h('span', null, 'Total'), h('span', null, `${r.score} pts`)),
+        h('div', null, h('span', null, 'Óptimo'), h('span', null, plural(r.optimal, 'golpe', 'golpes'))),
+        h(
+          'div',
+          null,
+          h('span', null, r.hints ? `Tu mejor intento (con ${plural(r.hints, 'pista', 'pistas')})` : 'Tu mejor intento'),
+          h('span', null, plural(strokes, 'golpe', 'golpes')),
+        ),
+        h('div', null, h('span', null, 'Tiempo'), h('span', null, formatTime(r.timeMs))),
+        h('div', { class: 'total' }, h('span', null, 'Puntos para la liga'), h('span', null, String(r.score))),
       ),
+      opts.error ? h('p', { class: 'error' }, opts.error) : null,
+      opts.retry ? h('button', { class: 'btn secondary block', onclick: () => (modal.close(), opts.retry!()) }, 'Reintentar envío') : null,
+      h(
+        'div',
+        { class: 'row' },
+        h('button', { class: 'btn', onclick: () => share(shareText(day, r)) }, 'Compartir'),
+        h('button', { class: 'btn secondary', onclick: () => go({ name: 'ranking' }) }, 'Ranking'),
+      ),
+      canImprove(day, r) ? h('button', { class: 'btn secondary block', onclick: () => improveDaily(day) }, '↺ Mejorar') : null,
+      h('button', { class: 'link-btn', onclick: () => go({ name: 'home' }) }, 'Volver al inicio'),
+    ],
+    { dismissable: true },
+  );
+}
+
+/** Resultado de un reto de antes del golf: solo sus puntos. */
+function showPointsResult(day: string, r: DailyResult, opts: { error?: string; retry?: () => void }): void {
+  const modal = openModal(
+    [
+      h('p', { class: 'eyebrow' }, `Reto · ${formatDay(day)}`),
+      h('h2', null, r.score >= 900 ? '¡Brutal!' : r.score >= 700 ? '¡Muy bien!' : '¡Completado!'),
+      h('div', { class: 'score-big' }, String(r.score), h('small', null, 'pts')),
+      r.streak ? h('p', { class: 'streak-line' }, `🔥 Racha de ${plural(r.streak, 'día', 'días')}`) : null,
       opts.error ? h('p', { class: 'error' }, opts.error) : null,
       opts.retry ? h('button', { class: 'btn secondary block', onclick: () => (modal.close(), opts.retry!()) }, 'Reintentar envío') : null,
       h(
@@ -167,13 +234,4 @@ export function showDailyResult(day: string, r: DailyResult, opts: { error?: str
     ],
     { dismissable: true },
   );
-
-  // La puntuación sube contando.
-  const start = performance.now();
-  const animate = (now: number) => {
-    const t = Math.min(1, (now - start) / 900);
-    scoreEl.firstChild!.textContent = String(Math.round(r.score * (1 - Math.pow(1 - t, 3))));
-    if (t < 1 && modal.el.isConnected) requestAnimationFrame(animate);
-  };
-  requestAnimationFrame(animate);
 }

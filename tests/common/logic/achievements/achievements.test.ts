@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { ACHIEVEMENTS, computeAchievements, unlockedHats, weekTitles, type FinishedRun } from '../../../../common/logic/achievements/achievements';
 
 const today = '2026-10-09'; // Viernes.
-const run = (day: string, score = 800, retries = 0, hints = 0): FinishedRun => ({ day, score, retries, hints });
+const run = (day: string, score = 800, retries = 0, hints = 0, overPar: number | null = null): FinishedRun => ({ day, score, retries, hints, overPar });
 const progress = (runs: FinishedRun[], wonDays = 0, titles = 0) =>
   Object.fromEntries(computeAchievements({ runs, wonDays, weekTitles: titles, today }).map((p) => [p.id, p]));
 
@@ -36,6 +36,11 @@ describe('computeAchievements', () => {
     expect(p.perfect.unlocked).toBe(true);
     expect(p.clean5).toMatchObject({ unlocked: true, current: 5 }); // Las dos con reintento o pista no cuentan.
     expect(p.veteran).toMatchObject({ unlocked: false, current: 7, target: 30 });
+  });
+
+  it('en los retos de golf reintentar no quita el "sin ayuda"; las pistas sí', () => {
+    const p = progress([run('2026-10-01', 900, 3, 0, 1), run('2026-10-02', 900, 0, 1, 1)]);
+    expect(p.clean5.current).toBe(1);
   });
 
   it('victorias y semanas ganadas vienen calculadas de fuera', () => {

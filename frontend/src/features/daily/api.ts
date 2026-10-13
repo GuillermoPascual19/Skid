@@ -12,6 +12,10 @@ export interface ServerRun {
   hints: number | null;
   timeMs: number | null;
   score: number | null;
+  /** Golpes por encima del óptimo; null si no ha terminado o es de antes del golf. */
+  overPar: number | null;
+  /** Registro ya enviado (solo si terminó): para seguir mejorando desde aquí. */
+  log: string | null;
 }
 
 export async function getDaily(day: string): Promise<ServerRun | null> {
@@ -25,7 +29,7 @@ export async function startDaily(day: string): Promise<ServerRun> {
   return run;
 }
 
-/** Envía el registro de la partida; el servidor lo verifica y calcula la puntuación. */
+/** Envía el registro de la partida; el servidor lo verifica y guarda el mejor intento. */
 export async function finishDaily(day: string, log: string): Promise<DailyResult> {
   return api<DailyResult>('POST', `/daily/${day}/finish`, { log });
 }

@@ -1,5 +1,5 @@
 // Reto diario: el mismo tablero para todos cada día, y el registro de la
-// partida (movimientos y reintentos) que el servidor reproduce para verificarla.
+// partida (movimientos, reintentos y pistas) que el servidor reproduce para verificarla.
 
 import { initialState, type Board, type Direction, type GameState } from '../engine/board.ts';
 import { generateLevel, type GeneratedLevel } from '../engine/generator.ts';
@@ -88,38 +88,61 @@ export function decodeRun(log: string): RunEvent[] {
   });
 }
 
+/** Un intento terminado: sus movimientos y las pistas pedidas hasta entonces. */
+export interface Attempt {
+  readonly moves: number;
+  /** Pistas pedidas desde el principio (las de intentos anteriores también ayudan). */
+  readonly hints: number;
+  /** Golpes: movimientos + pistas. */
+  readonly strokes: number;
+}
+
 export interface RunReplay {
   readonly state: GameState;
-  /** Movimientos que desplazaron al jugador, sumando todos los intentos. */
+  /** Movimientos del intento en curso (o del último, si acaba de terminarlo). */
   readonly moves: number;
-  /** Casillas recorridas en total (para el tiempo mínimo de las animaciones). */
+  /** Casillas recorridas en total, en todos los intentos (para el tiempo mínimo de las animaciones). */
   readonly cells: number;
+  /** Movimientos que desplazaron al jugador, sumando todos los intentos. */
+  readonly totalMoves: number;
   readonly retries: number;
   readonly hints: number;
+  /** El último evento completó el nivel (el intento en curso está terminado). */
   readonly completed: boolean;
+  /** El intento terminado con menos golpes (a igualdad, el primero), o null. */
+  readonly best: Attempt | null;
+  /** El último intento terminado, o null. */
+  readonly last: Attempt | null;
 }
 
 /**
  * Reproduce un registro sobre el tablero. Los movimientos que no desplazan no
- * cuentan. Lanza un Error si hay eventos después de completar el nivel.
+ * cuentan. Se puede volver a empezar en cualquier momento, también después de
+ * completar el nivel (para mejorar el resultado); cualquier otro evento tras
+ * completarlo lanza un Error.
  */
 export function replayRun(board: Board, events: readonly RunEvent[]): RunReplay {
   let state = initialState(board);
   let moves = 0;
+  let totalMoves = 0;
   let cells = 0;
   let retries = 0;
   let hints = 0;
   let completed = false;
+  let best: Attempt | null = null;
+  let last: Attempt | null = null;
 
   for (const event of events) {
-    if (completed) throw new Error('El registro sigue después de completar el nivel');
     if (event === 'restart') {
       state = initialState(board);
+      moves = 0;
       retries++;
+      completed = false;
       continue;
     }
+    if (completed) throw new Error('El registro sigue después de completar el nivel');
     if (event === 'hint') {
-      hints++; // La pista no mueve: solo cuenta (y resta puntos).
+      hints++; // La pista no mueve: solo cuenta (suma un golpe).
       continue;
     }
     const next = applyMove(board, state, event);
@@ -127,9 +150,14 @@ export function replayRun(board: Board, events: readonly RunEvent[]): RunReplay 
     cells += Math.abs(next.player.x - state.player.x) + Math.abs(next.player.y - state.player.y);
     state = next;
     moves++;
+    totalMoves++;
     completed = isComplete(board, state);
+    if (completed) {
+      last = { moves, hints, strokes: moves + hints };
+      if (!best || last.strokes < best.strokes) best = last;
+    }
   }
-  return { state, moves, cells, retries, hints, completed };
+  return { state, moves, cells, totalMoves, retries, hints, completed, best, last };
 }
 
 /**
@@ -137,6 +165,6 @@ export function replayRun(board: Board, events: readonly RunEvent[]): RunReplay 
  * todos sus deslizamientos (el juego no envía el resultado hasta que termina la
  * última). Una partida más rápida no se ha jugado en el juego.
  */
-export function minPlayTimeMs(replay: Pick<RunReplay, 'moves' | 'cells'>): number {
-  return replay.moves * SLIDE_BASE_MS + replay.cells * SLIDE_MS_PER_CELL;
+export function minPlayTimeMs(replay: Pick<RunReplay, 'totalMoves' | 'cells'>): number {
+  return replay.totalMoves * SLIDE_BASE_MS + replay.cells * SLIDE_MS_PER_CELL;
 }
