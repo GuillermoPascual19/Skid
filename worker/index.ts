@@ -5,13 +5,13 @@
 // registro de movimientos y aquí se reproduce con la misma lógica del juego
 // (src/core) para calcular movimientos, reintentos, tiempo y puntuación.
 
-import { dailyLevel, dayKey, decodeRun, minPlayTimeMs, replayRun, shiftDay } from '../src/core/daily';
-import { streaks } from '../src/core/stats';
-import { computeAchievements, unlockedHats, weekTitles, type LeagueRun } from '../src/core/achievements';
+import { dailyLevel, dayKey, decodeRun, minPlayTimeMs, replayRun, shiftDay } from '../src/logic/daily/daily';
+import { streaks } from '../src/logic/daily/streaks';
+import { computeAchievements, unlockedHats, weekTitles, type LeagueRun } from '../src/logic/achievements/achievements';
 import { isHatId } from '../src/art/hats';
-import { dailyScore } from '../src/core/score';
-import { parseBoard } from '../src/core/board';
-import { checkCustomLevel, CUSTOM_LIMITS, decodeRows, encodeRows, movesToFinish } from '../src/core/community';
+import { dailyScore } from '../src/logic/daily/score';
+import { parseBoard } from '../src/logic/engine/board';
+import { checkCustomLevel, CUSTOM_LIMITS, decodeRows, encodeRows, movesToFinish } from '../src/logic/community/community';
 import { GOOGLE_CERTS_URL, googleKeyProvider, InvalidTokenError, verifyGoogleIdToken } from './google';
 
 interface Env {

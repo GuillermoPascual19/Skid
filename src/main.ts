@@ -1,15 +1,15 @@
 import './style.css';
 import { installAudio } from './audio/sound';
-import { h } from './ui/dom';
-import { customLevelScreen, dailyScreen, levelsScreen } from './ui/play';
-import { communityScreen } from './ui/community';
-import { editorScreen } from './ui/editor';
-import { homeScreen } from './ui/home';
-import { rankingScreen } from './ui/ranking';
-import { statsScreen } from './ui/stats';
-import { achievementsScreen } from './ui/achievements';
-import { playerScreen } from './ui/player';
-import { go, setRoutes } from './ui/router';
+import { h } from './shared/dom';
+import { customLevelScreen, dailyScreen, levelsScreen } from './play/play';
+import { communityScreen } from './features/community/community-screen';
+import { editorScreen } from './features/community/editor-screen';
+import { homeScreen } from './features/home/home-screen';
+import { rankingScreen } from './features/ranking/ranking-screen';
+import { statsScreen } from './features/daily/stats-screen';
+import { achievementsScreen } from './features/achievements/achievements-screen';
+import { playerScreen } from './features/profile/player-screen';
+import { go, setRoutes } from './shared/router';
 
 const FONT_FAMILY = '"Baloo 2"';
 

@@ -2,7 +2,7 @@
 // demanda (import()) para que la portada no tenga que descargar Phaser.
 
 import Phaser from 'phaser';
-import type { Board } from '../core/board';
+import type { Board } from '../logic/engine/board';
 import { BoardScene, TILE, type BoardHooks } from './BoardScene';
 
 export interface MountedBoard {

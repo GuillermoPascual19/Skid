@@ -2,9 +2,9 @@
 // quien la usa (ver src/ui/play.ts) a través de BoardHooks.
 
 import Phaser from 'phaser';
-import { DIRECTION_DELTA, nextPiece, type Board, type Direction, type GameState, type Piece, type Pos } from '../core/board';
-import { slideDurationMs } from '../core/daily';
-import { traceMove, type MoveTrace } from '../core/move';
+import { DIRECTION_DELTA, nextPiece, type Board, type Direction, type GameState, type Piece, type Pos } from '../logic/engine/board';
+import { slideDurationMs } from '../logic/daily/daily';
+import { traceMove, type MoveTrace } from '../logic/engine/move';
 import { HAT_BOX, hatSvg, type HatId } from '../art/hats';
 import { sfx } from '../audio/sound';
 

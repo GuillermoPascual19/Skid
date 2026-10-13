@@ -2,7 +2,7 @@
 // presentarlos al desbloquearlos y para la paleta del editor. Imitan cómo los
 // dibuja el juego (BoardScene), en una caja de 100 × 100.
 
-import type { ElementId } from '../core/elements';
+import type { ElementId } from '../logic/engine/elements';
 
 const ICE = '<rect x="4" y="4" width="92" height="92" rx="18" fill="#a6e1f5"/><path d="M24 64 L46 40 M36 74 L52 58" stroke="#fff" stroke-width="5" stroke-linecap="round" opacity=".5"/>';
 
