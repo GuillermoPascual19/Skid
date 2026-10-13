@@ -2805,3 +2805,13 @@ input.switch:focus-visible {
   color: var(--ink-faint);
   font-size: 14px;
 }
+
+/* Acción que no se puede deshacer (borrar la cuenta…). */
+.btn.danger {
+  --bg: var(--bad);
+  --bg-dark: var(--bad-ink);
+}
+
+.account-actions {
+  margin-top: 6px;
+}

@@ -99,6 +99,13 @@ fuera) y compila el juego a `dist/`.
 - Cabeceras: CSP estricta y el resto de cabeceras de seguridad en `frontend/public/_headers`; la API
   pone las suyas en `backend/src/http.ts`.
 - Las IP solo se guardan como hash con el día dentro, para contar cuentas nuevas, y se borran a diario.
+- Las sesiones caducan tras un año sin usarse. Con la cuenta de Google se puede cerrar sesión en todos
+  los dispositivos, y cualquiera puede borrar su cuenta con todos sus datos (sus ligas pasan a otro miembro).
+- Nombres: solo alfabeto latino (con tildes y ñ), números y . _ ' -; y no puede haber dos con la misma
+  clave (sin tildes, mayúsculas ni separadores), para que nadie se haga pasar por otro
+  (`common/logic/players/names.ts`).
+- Trampas: el servidor reproduce cada partida y rechaza las imposibles o enviadas sin jugar, pero no
+  puede saber si alguien ha calculado la solución por su cuenta (el juego entero corre en el navegador).
 
 ## Publicar en Cloudflare
 
