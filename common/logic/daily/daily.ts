@@ -95,6 +95,8 @@ export interface Attempt {
   readonly hints: number;
   /** Golpes: movimientos + pistas. */
   readonly strokes: number;
+  /** Los movimientos que desplazaron al jugador, en orden (para verlo como fantasma). */
+  readonly path: readonly Direction[];
 }
 
 export interface RunReplay {
@@ -131,11 +133,13 @@ export function replayRun(board: Board, events: readonly RunEvent[]): RunReplay 
   let completed = false;
   let best: Attempt | null = null;
   let last: Attempt | null = null;
+  let path: Direction[] = [];
 
   for (const event of events) {
     if (event === 'restart') {
       state = initialState(board);
       moves = 0;
+      path = [];
       retries++;
       completed = false;
       continue;
@@ -151,9 +155,10 @@ export function replayRun(board: Board, events: readonly RunEvent[]): RunReplay 
     state = next;
     moves++;
     totalMoves++;
+    path.push(event);
     completed = isComplete(board, state);
     if (completed) {
-      last = { moves, hints, strokes: moves + hints };
+      last = { moves, hints, strokes: moves + hints, path };
       if (!best || last.strokes < best.strokes) best = last;
     }
   }

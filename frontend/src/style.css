@@ -2621,3 +2621,10 @@ input.switch:focus-visible {
 .news-card .link-btn {
   justify-self: start;
 }
+
+/* Enlace al fantasma de un amigo, en su fila del ranking. */
+.ranking .ghost-link {
+  display: block;
+  margin-top: 2px;
+  font-size: 14px;
+}

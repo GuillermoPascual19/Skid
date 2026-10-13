@@ -24,6 +24,26 @@ interface Segment {
   readonly teleport: Pos | null;
 }
 
+/** Tramos rectos de un movimiento ya calculado, y dónde reaparece si cae al agua. */
+function segmentsOf(before: GameState, trace: MoveTrace, dir: Direction): { segments: Segment[]; fall: Pos | null } {
+  const segments: Segment[] = [];
+  let at = before.player;
+  let moving = dir;
+  let fall: Pos | null = null;
+  for (const step of trace.steps) {
+    if (step.kind === 'slide') {
+      segments.push({ from: at, to: step.pos, collects: step.collects, turn: step.dir !== moving ? step.dir : null, teleport: null });
+      moving = step.dir;
+    } else if (step.kind === 'teleport') {
+      segments[segments.length - 1] = { ...segments[segments.length - 1], teleport: step.pos };
+    } else {
+      fall = step.pos;
+    }
+    at = step.pos;
+  }
+  return { segments, fall };
+}
+
 const KEY_TO_DIR: Record<string, Direction> = {
   UP: 'up',
   DOWN: 'down',
@@ -71,6 +91,13 @@ export class BoardScene extends Phaser.Scene {
   private hat: HatId | null = null;
   private paused = false;
   private hatImage: Phaser.GameObjects.Image | null = null;
+  /** Fantasma: el mejor intento de un amigo, que se mueve a la vez (solo se dibuja). */
+  private ghost: {
+    container: Phaser.GameObjects.Container;
+    face: Phaser.GameObjects.Container;
+    state: GameState;
+    tween: Phaser.Tweens.Tween | null;
+  } | null = null;
 
   constructor(private readonly hooks: BoardHooks) {
     super('board');
@@ -94,6 +121,7 @@ export class BoardScene extends Phaser.Scene {
     this.clearHint();
     this.layer.removeAll(true);
     this.pieceViews.clear();
+    this.ghost = null;
     drawBoard(this, this.layer, board);
     for (const piece of board.pieces) this.pieceViews.set(piece.order, this.createPiece(piece));
     this.createPenguin();
@@ -176,21 +204,7 @@ export class BoardScene extends Phaser.Scene {
    */
   private slide(before: GameState, trace: MoveTrace, dir: Direction): void {
     const board = this.board!;
-    const segments: Segment[] = [];
-    let at = before.player;
-    let moving = dir;
-    let fall: Pos | null = null;
-    for (const step of trace.steps) {
-      if (step.kind === 'slide') {
-        segments.push({ from: at, to: step.pos, collects: step.collects, turn: step.dir !== moving ? step.dir : null, teleport: null });
-        moving = step.dir;
-      } else if (step.kind === 'teleport') {
-        segments[segments.length - 1] = { ...segments[segments.length - 1], teleport: step.pos };
-      } else {
-        fall = step.pos;
-      }
-      at = step.pos;
-    }
+    const { segments, fall } = segmentsOf(before, trace, dir);
 
     const duration = slideDurationMs(segments.length);
     this.shown = trace.state;
@@ -434,6 +448,16 @@ export class BoardScene extends Phaser.Scene {
   }
 
   private createPenguin(): void {
+    const { container, face } = this.buildPenguin();
+    this.face = face;
+    this.penguin = container;
+    this.layer.add(this.penguin);
+    this.hatImage = null;
+    void this.applyHat();
+  }
+
+  /** Dibuja un pingüino (cuerpo y cara) centrado en 0,0. */
+  private buildPenguin(): { container: Phaser.GameObjects.Container; face: Phaser.GameObjects.Container } {
     const r = TILE * 0.33;
     const shadow = this.add.ellipse(0, r * 1.02, r * 1.7, r * 0.45, C.iceShadow, 0.25);
     const feet = [-1, 1].map((s) => this.add.ellipse(s * r * 0.42, r * 0.92, r * 0.55, r * 0.3, C.beak));
@@ -446,12 +470,8 @@ export class BoardScene extends Phaser.Scene {
     const glints = [-1, 1].map((s) => this.add.circle(s * r * 0.3 + r * 0.05, -r * 0.39, r * 0.05, 0xffffff));
     const cheeks = [-1, 1].map((s) => this.add.ellipse(s * r * 0.55, -r * 0.05, r * 0.25, r * 0.15, C.cheek, 0.7));
     const beak = this.add.triangle(0, -r * 0.08, -r * 0.18, 0, r * 0.18, 0, 0, r * 0.22, C.beak).setOrigin(0.5, 0);
-    this.face = this.add.container(0, 0, [belly, ...mask, ...cheeks, ...eyes, ...glints, beak]);
-
-    this.penguin = this.add.container(0, 0, [shadow, ...feet, ...flippers, body, this.face]);
-    this.layer.add(this.penguin);
-    this.hatImage = null;
-    void this.applyHat();
+    const face = this.add.container(0, 0, [belly, ...mask, ...cheeks, ...eyes, ...glints, beak]);
+    return { container: this.add.container(0, 0, [shadow, ...feet, ...flippers, body, face]), face };
   }
 
   // ------------------------------------------------------------------- Gorro
@@ -483,6 +503,11 @@ export class BoardScene extends Phaser.Scene {
     // Mientras se cargaba pudo cambiar el gorro o el tablero.
     if (!key || hat !== this.hat || penguin !== this.penguin || !penguin.active) return;
 
+    this.hatImage = this.putHat(penguin, key);
+  }
+
+  /** Pone la textura de un gorro sobre la cabeza de un pingüino. */
+  private putHat(penguin: Phaser.GameObjects.Container, key: string): Phaser.GameObjects.Image {
     // Coordenadas del SVG: el cuerpo mide 64 de ancho y la cabeza acaba en y = 14.
     // Aquí el cuerpo mide 2r y la cabeza acaba en -1.075r.
     const r = TILE * 0.33;
@@ -491,14 +516,104 @@ export class BoardScene extends Phaser.Scene {
     const image = this.add.image(0, -1.075 * r + (HAT_BOX.height / 2 - headTopInBox) * unit, key);
     image.setDisplaySize(100 * unit, HAT_BOX.height * unit);
     penguin.add(image);
-    this.hatImage = image;
+    return image;
   }
 
-  /** La cara del pingüino se gira hacia donde va. */
-  private look(dir: Direction): void {
+  // ---------------------------------------------------------------- Fantasma
+
+  /**
+   * Pone (o quita, con null) un pingüino fantasma: semitransparente, con el
+   * gorro y el nombre de un amigo. No recoge piezas ni cuenta: solo se mueve.
+   */
+  setGhost(ghost: { name: string; hat: HatId | null; state: GameState } | null): void {
+    this.ghost?.container.destroy();
+    this.ghost = null;
+    if (!ghost || !this.board) return;
+    const { container, face } = this.buildPenguin();
+    const r = TILE * 0.33;
+    const label = this.add
+      .text(0, -r * 2.05, ghost.name, { fontFamily: FONT, fontSize: `${Math.round(TILE * 0.27)}px`, fontStyle: '800', color: '#ffffff' })
+      .setOrigin(0.5, 1)
+      .setStroke('#15324f', Math.round(TILE * 0.06));
+    container.add(label);
+    container.setAlpha(0.55);
+    // Debajo del pingüino del jugador.
+    this.layer.addAt(container, this.layer.getIndex(this.penguin));
+    this.ghost = { container, face, state: ghost.state, tween: null };
+    this.placeGhost(ghost.state);
+    if (ghost.hat) {
+      const hat = ghost.hat;
+      void this.hatTexture(hat)
+        .then((key) => {
+          if (this.ghost?.container === container && container.active) this.putHat(container, key);
+        })
+        .catch(() => {});
+    }
+  }
+
+  /** Coloca el fantasma sin animar (al volver a empezar). */
+  placeGhost(state: GameState): void {
+    if (!this.ghost) return;
+    this.ghost.tween?.stop();
+    this.tweens.killTweensOf(this.ghost.container);
+    this.ghost.state = state;
+    const { x, y } = this.center(state.player.x, state.player.y);
+    this.ghost.container.setPosition(x, y).setScale(1).setAngle(0);
+    this.look('down', this.ghost.face);
+  }
+
+  /** Mueve el fantasma hacia `dir`; se resuelve al terminar la animación. */
+  moveGhost(dir: Direction): Promise<void> {
+    const ghost = this.ghost;
+    const trace = ghost && this.board ? traceMove(this.board, ghost.state, dir) : null;
+    if (!ghost || !trace) return Promise.resolve();
+    const { segments, fall } = segmentsOf(ghost.state, trace, dir);
+    ghost.state = trace.state;
+    const g = ghost.container;
+    this.look(dir, ghost.face);
+
+    return new Promise((resolve) => {
+      const progress = { v: 0 };
+      const place = () => {
+        const i = Math.min(Math.floor(progress.v), segments.length - 1);
+        const seg = segments[i];
+        const f = progress.v - i;
+        this.look(this.directionOf(seg), ghost.face);
+        const from = this.center(seg.from.x, seg.from.y);
+        const to = this.center(seg.to.x, seg.to.y);
+        g.setPosition(from.x + (to.x - from.x) * f, from.y + (to.y - from.y) * f);
+      };
+      ghost.tween = this.tweens.add({
+        targets: progress,
+        v: segments.length,
+        duration: slideDurationMs(segments.length),
+        ease: 'Cubic.easeOut',
+        onUpdate: place,
+        onComplete: () => {
+          place();
+          if (!fall) return resolve();
+          // Al agua: desaparece y vuelve a la salida.
+          this.tweens.add({
+            targets: g,
+            scale: 0,
+            duration: 260,
+            ease: 'Quad.easeIn',
+            onComplete: () => {
+              const back = this.center(fall.x, fall.y);
+              g.setPosition(back.x, back.y);
+              this.tweens.add({ targets: g, scale: 1, duration: 320, delay: 120, ease: 'Back.easeOut', onComplete: () => resolve() });
+            },
+          });
+        },
+      });
+    });
+  }
+
+  /** La cara del pingüino (o la del fantasma) se gira hacia donde va. */
+  private look(dir: Direction, face = this.face): void {
     const delta = DIRECTION_DELTA[dir];
     const r = TILE * 0.33;
-    this.face.setPosition(delta.x * r * 0.22, delta.y * r * 0.12);
-    this.face.setVisible(dir !== 'up');
+    face.setPosition(delta.x * r * 0.22, delta.y * r * 0.12);
+    face.setVisible(dir !== 'up');
   }
 }
