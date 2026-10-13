@@ -7,7 +7,7 @@
     "dev": "concurrently -k -n web,api -c cyan,magenta \"vite\" \"npm:dev:api\"",
     "dev:web": "vite",
     "dev:api": "vite build && wrangler d1 migrations apply skid --local && wrangler dev --port 8787",
-    "build": "tsc && tsc -p worker && vite build",
+    "build": "tsc && tsc -p backend && tsc -p common && vite build",
     "preview": "vite preview",
     "test": "vitest run",
     "test:watch": "vitest",
