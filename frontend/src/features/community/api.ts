@@ -3,6 +3,7 @@
 import { api } from '../../shared/api';
 import type { HatId } from '../../../../common/art/hats';
 import type { ElementId } from '../../../../common/logic/engine/elements';
+import type { GolfRanking } from '../ranking/golf-ranking';
 
 export interface CustomLevel {
   id: string;
@@ -63,26 +64,7 @@ export async function reportCustomLevel(id: string, reason: ReportReason): Promi
   await api('POST', `/levels/${encodeURIComponent(id)}/report`, { reason });
 }
 
-export interface LevelRankingEntry {
-  id: string;
-  name: string;
-  hat: HatId | null;
-  /** Puesto (los empatados comparten puesto). */
-  position: number;
-  moves: number;
-  overPar: number;
-  isMe: boolean;
-  isAuthor: boolean;
-}
-
-export interface LevelRanking {
-  optimal: number;
-  /** Jugadores que lo han superado (autor incluido). */
-  total: number;
-  top: LevelRankingEntry[];
-  /** Tu puesto, o null si no lo has superado. */
-  me: LevelRankingEntry | null;
-}
+export type LevelRanking = GolfRanking;
 
 export function getLevelRanking(id: string): Promise<LevelRanking> {
   return api('GET', `/levels/${encodeURIComponent(id)}/ranking`);

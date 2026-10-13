@@ -10,11 +10,19 @@ import * as online from '../../shared/api';
 import { h, openModal, starSvg, svg } from '../../shared/dom';
 import { read, write } from '../../shared/storage';
 
-/** Sube cuando cambian las reglas: quien ya jugaba ve el aviso de novedades. */
-export const GUIDE_VERSION = 2;
+/** Sube cuando cambian las reglas o hay algo nuevo (ver NEWS): quien ya jugaba ve el aviso. */
+export const GUIDE_VERSION = 3;
 const GUIDE_SEEN_KEY = 'skid.guide.v1';
 
-export type GuidePage = 'slide' | 'pieces' | 'free' | 'daily' | 'leagues' | 'elements' | 'community';
+export type GuidePage = 'slide' | 'pieces' | 'free' | 'daily' | 'weekly' | 'leagues' | 'elements' | 'community';
+
+/** Aviso de la portada para quien ya jugaba: lo último que ha cambiado (sube GUIDE_VERSION al cambiarlo). */
+export const NEWS = {
+  icon: '🗓️',
+  title: 'Nuevo: reto semanal.',
+  text: 'Un tablero grande y difícil para toda la semana, con ranking entre tus amigos.',
+  page: 'weekly' as GuidePage,
+};
 
 interface Page {
   readonly id: GuidePage;
@@ -120,6 +128,18 @@ const PAGES: Page[] = [
     ],
   },
   {
+    id: 'weekly',
+    title: 'Reto semanal',
+    body: () => [
+      rules(
+        ['🗺️', 'Un tablero más grande y difícil, de lunes a domingo, el mismo para todos.'],
+        ['↺', 'Juega cuantas veces quieras durante la semana: cuenta tu mejor intento.'],
+        ['🚫', 'Sin pistas.'],
+        ['🏆', 'Ranking con tus amigos de todas tus ligas. A igualdad de golpes, gana quien lo consiguió antes.'],
+      ),
+    ],
+  },
+  {
     id: 'leagues',
     title: 'Ligas, rachas y gorros',
     body: () => [
@@ -146,9 +166,9 @@ const PAGES: Page[] = [
   },
 ];
 
-/** Las páginas que tienen sentido aquí (sin servidor no hay ligas ni niveles de jugadores). */
+/** Las páginas que tienen sentido aquí (sin servidor no hay reto semanal, ligas ni niveles de jugadores). */
 function pages(): Page[] {
-  return PAGES.filter((p) => online.onlineEnabled || (p.id !== 'leagues' && p.id !== 'community'));
+  return PAGES.filter((p) => online.onlineEnabled || !['weekly', 'leagues', 'community'].includes(p.id));
 }
 
 /** Abre la guía, en la página indicada. */

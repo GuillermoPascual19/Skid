@@ -3,6 +3,7 @@
 
 import type { CustomLevel, CustomLevelSort } from '../features/community/api';
 import type { DailyRecord } from '../features/daily/storage';
+import type { WeeklyInfo } from '../features/weekly/api';
 
 export interface Screen {
   readonly el: HTMLElement;
@@ -16,6 +17,7 @@ export type Route =
   | { name: 'daily'; record: DailyRecord }
   | { name: 'solution'; day: string }
   | { name: 'ghost'; day: string; friendId: string }
+  | { name: 'weekly'; info: WeeklyInfo }
   | { name: 'ranking'; join?: string }
   | { name: 'stats' }
   | { name: 'achievements' }
