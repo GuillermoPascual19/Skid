@@ -1,0 +1,11 @@
+{
+  // Lo común lo usan el navegador y el Worker: sin APIs del navegador (lib sin
+  // DOM) y sin importar nada de frontend/ ni de backend/ (rootDir).
+  "extends": "../tsconfig.json",
+  "compilerOptions": {
+    "lib": ["ES2022"],
+    "types": [],
+    "rootDir": "."
+  },
+  "include": ["./**/*.ts"]
+}

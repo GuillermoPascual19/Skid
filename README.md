@@ -18,36 +18,44 @@ esté en marcha. Con `VITE_API_BASE=` vacía en `.env.local` el juego funciona s
 
 ## Estructura
 
-Organizado por apartados: para tocar algo, se va a la carpeta de ese apartado.
+Tres partes: el juego (`frontend/`), el servidor (`backend/`) y lo que usan los dos
+(`common/`). Dentro, organizado por apartados: para tocar algo, se va a su carpeta.
 
 ```
-src/
-  main.ts              arranque y rutas
-  logic/               reglas puras, sin navegador; el servidor usa este mismo código
+frontend/              el juego en el navegador (Vite)
+  index.html, public/
+  src/
+    main.ts            arranque y rutas
+    features/          un apartado por carpeta: pantallas, llamadas al servidor (api.ts)
+      home/            y lo que guarda en el navegador (storage.ts)
+      free-play/       modo libre
+      daily/           reto diario y estadísticas
+      ranking/         ligas
+      achievements/    logros y gorros
+      community/       multijugador: listado, editor, partida, valorar, denunciar
+      profile/         nombre, login con Google y perfil de otros jugadores
+    play/              pantalla de partida común a todos los modos (pausa, gestos, teclas)
+    game/              tablero en Phaser: escena, dibujo de casillas, efectos
+    audio/             música y efectos sintetizados, y sus controles
+    shared/            piezas comunes: dom, router, celebración, conexión y almacenamiento
+backend/               el Worker de Cloudflare: sirve el juego (dist/) y la API /api/*
+  src/
+    index.ts           solo enruta
+    http.ts, session.ts, google.ts
+    routes/            un archivo por apartado (daily, leagues, levels, stats...)
+  migrations/          esquema de la base de datos D1
+common/                lo que usan los dos; sin APIs del navegador ni imports de fuera
+  logic/               reglas puras: el servidor reproduce las partidas con este mismo código
     engine/            tablero, movimiento, solver, generador, elementos, aleatorio
     daily/             reto diario, puntuación y rachas
     achievements/      logros
     community/         validación de niveles creados por jugadores
-  features/            un apartado por carpeta: pantallas, llamadas al servidor (api.ts)
-    home/              y lo que guarda en el navegador (storage.ts)
-    free-play/         modo libre
-    daily/             reto diario y estadísticas
-    ranking/           ligas
-    achievements/      logros y gorros
-    community/         multijugador: listado, editor, partida, valorar, denunciar
-    profile/           nombre, login con Google y perfil de otros jugadores
-  play/                pantalla de partida común a todos los modos (pausa, gestos, teclas)
-  game/                tablero en Phaser: escena, dibujo de casillas, efectos
-  audio/               música y efectos sintetizados, y sus controles
   art/                 dibujos SVG (pingüino, gorros, elementos)
-  shared/              piezas comunes: dom, router, celebración, conexión y almacenamiento
-worker/
-  index.ts             solo enruta /api/*
-  http.ts, session.ts  utilidades comunes y sesiones (incluido login con Google)
-  routes/              un archivo por apartado (daily, leagues, levels, stats...)
-tests/                 mismo árbol que src/logic/ y worker/
-migrations/            esquema de la base de datos D1
+tests/                 backend/ y common/, con el mismo árbol que el código
 ```
+
+`npm run build` comprueba los tipos de las tres partes (`common/` sin DOM y sin importar nada de
+fuera) y compila el juego a `dist/`.
 
 ## Reto diario y puntuación
 
@@ -55,7 +63,7 @@ migrations/            esquema de la base de datos D1
 - Un solo intento por jugador y día. El reloj empieza al pulsar *Empezar* y no se para.
 - Puntuación: 1000 menos 25 por movimiento por encima del óptimo, 60 por reintento y 2 por segundo
   por encima del par (3 s por movimiento óptimo, máximo 400). Mínimo 100 por terminar.
-  Las constantes están en `src/logic/daily/score.ts`.
+  Las constantes están en `common/logic/daily/score.ts`.
 - El servidor no se fía del cliente: el navegador envía el registro de movimientos y el Worker
   lo reproduce para calcular movimientos, reintentos, tiempo (con su propio reloj) y puntos.
 - Los jugadores son anónimos: la primera vez el servidor da un token que se guarda en el
