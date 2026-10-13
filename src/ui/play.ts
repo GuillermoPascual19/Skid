@@ -26,6 +26,7 @@ import {
   type DailyResult,
 } from '../services/storage';
 import { celebrate } from './celebrate';
+import { shareLevel } from './community';
 import { celebrateStreak, showDailyResult } from './daily';
 import { formatDay, formatTime, h, haptic, isTouch, openModal, starSvg, toast, type Modal } from './dom';
 import { sfx } from '../audio/sound';
@@ -729,14 +730,18 @@ export function customLevelScreen(source: { level: online.CustomLevel } | { test
       return;
     }
 
+    // El voto va en su propio recuadro: que no se confunda con las estrellas del resultado.
     const rating = h('div', { class: 'rate' });
-    const status = h('p', { class: 'muted rate-status' }, 'Guardando…');
+    const status = h('p', { class: 'rate-status' }, 'Guardando tu marca…');
+    const boxTitle = h('p', { class: 'eyebrow' }, 'Valora este nivel');
+    const rateBox = h('section', { class: 'rate-box' }, boxTitle, status, rating);
     const showRating = (lvl: online.CustomLevel) => {
       if (lvl.mine) {
-        status.textContent = 'Es tu nivel: lo valoran los demás.';
+        boxTitle.textContent = 'Tu nivel';
+        status.textContent = 'Lo valoran los demás jugadores al superarlo.';
         return rating.replaceChildren();
       }
-      status.textContent = lvl.myRating ? '¡Gracias por valorarlo!' : '¿Qué te ha parecido?';
+      status.textContent = lvl.myRating ? '¡Gracias! Puedes cambiar tu voto.' : '¿Qué te ha parecido?';
       rating.replaceChildren(
         ...[1, 2, 3, 4, 5].map((n) =>
           h(
@@ -761,14 +766,14 @@ export function customLevelScreen(source: { level: online.CustomLevel } | { test
 
     result = openModal([
       ...header,
-      status,
-      rating,
+      rateBox,
       h(
         'div',
         { class: 'row' },
         h('button', { class: 'btn ghost', onclick: () => restart() }, 'Repetir'),
         h('button', { class: 'btn', onclick: back }, 'Más niveles'),
       ),
+      h('button', { class: 'link-btn', onclick: () => shareLevel(level!) }, 'Compartir nivel'),
     ]);
 
     online

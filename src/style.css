@@ -2278,3 +2278,49 @@ input.switch:focus-visible {
 .rate-star:hover {
   transform: scale(1.15);
 }
+
+.rate-box {
+  background: #fff8e6;
+  border: 2px solid #ffe7a8;
+  border-radius: 16px;
+  padding: 10px 12px 8px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+}
+
+.rate-box .eyebrow {
+  color: var(--gold-dark);
+}
+
+.rate-box .rate-status {
+  margin: 0;
+  font-weight: 600;
+  color: var(--ink-soft);
+}
+
+.level-actions {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 14px;
+  padding-top: 4px;
+}
+
+.level-actions .link-btn {
+  font-size: 14px;
+  padding: 4px 2px 0;
+}
+
+.level-actions .reported {
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.hidden-note {
+  margin: 8px 0 0;
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--bad);
+}
