@@ -12,7 +12,16 @@ import { type Env, HttpError, body, cleanText, json } from './http';
 import { playerAchievements } from './routes/achievements';
 import { finishRun, getRun, ghostRuns, startRun } from './routes/daily';
 import { createLeague, dailyWins, joinLeague, leagueRanking, leagueStandings, myLeagues } from './routes/leagues';
-import { createCustomLevel, deleteCustomLevel, finishCustomLevel, getCustomLevel, listCustomLevels, rateCustomLevel, reportCustomLevel } from './routes/levels';
+import {
+  createCustomLevel,
+  customLevelRanking,
+  deleteCustomLevel,
+  finishCustomLevel,
+  getCustomLevel,
+  listCustomLevels,
+  rateCustomLevel,
+  reportCustomLevel,
+} from './routes/levels';
 import { playerProfile } from './routes/players';
 import { playerStats } from './routes/stats';
 import { authenticate, createSession, googleLogin } from './session';
@@ -132,6 +141,7 @@ async function handleApi(req: Request, url: URL, env: Env): Promise<Response> {
   }
   if ((m = route.match(/^GET \/levels\/([\w-]+)$/))) return json(await getCustomLevel(env, playerId, m[1]));
   if ((m = route.match(/^DELETE \/levels\/([\w-]+)$/))) return json(await deleteCustomLevel(env, playerId, m[1]));
+  if ((m = route.match(/^GET \/levels\/([\w-]+)\/ranking$/))) return json(await customLevelRanking(env, playerId, m[1]));
   if ((m = route.match(/^POST \/levels\/([\w-]+)\/finish$/))) {
     const { log } = await body<{ log?: unknown }>(req);
     return json(await finishCustomLevel(env, playerId, m[1], log));

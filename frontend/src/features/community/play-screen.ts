@@ -13,7 +13,8 @@ import { h, haptic, openModal, starSvg, toast, type Modal } from '../../shared/d
 import { sfx } from '../../audio/sound';
 import { go, type Screen } from '../../shared/router';
 import { loadBoard, onKey, openPauseMenu, playLayout, wearHat } from '../../play/play';
-import { finishCustomLevel, rateCustomLevel, type CustomLevel } from './api';
+import { finishCustomLevel, getLevelRanking, rateCustomLevel, type CustomLevel } from './api';
+import { openLevelRanking } from './level-ranking';
 import { loadEditorDraft, saveEditorDraft } from './storage';
 
 /**
@@ -157,8 +158,11 @@ export function customLevelScreen(source: { level: CustomLevel } | { testRows: s
       );
     };
 
+    // Tu puesto en el ranking del nivel, cuando el servidor ha guardado la marca.
+    const place = h('p', { class: 'level-place', hidden: true });
     result = openModal([
       ...header,
+      place,
       rateBox,
       h(
         'div',
@@ -166,13 +170,25 @@ export function customLevelScreen(source: { level: CustomLevel } | { testRows: s
         h('button', { class: 'btn ghost', onclick: () => restart() }, 'Repetir'),
         h('button', { class: 'btn', onclick: back }, 'Más niveles'),
       ),
-      h('button', { class: 'link-btn', onclick: () => shareLevel(level!) }, 'Compartir nivel'),
+      h(
+        'div',
+        { class: 'row' },
+        h('button', { class: 'link-btn', onclick: () => void openLevelRanking(level!.id, level!.name) }, '🏆 Ver ranking'),
+        h('button', { class: 'link-btn', onclick: () => shareLevel(level!) }, 'Compartir nivel'),
+      ),
     ]);
 
     finishCustomLevel(level!.id, log)
-      .then((saved) => {
+      .then(async (saved) => {
         level = saved;
-        if (!disposed) showRating(saved);
+        if (disposed) return;
+        showRating(saved);
+        // Si falla, la marca ya está guardada: solo no se muestra el puesto.
+        const ranking = await getLevelRanking(saved.id).catch(() => null);
+        if (!ranking?.me || disposed) return;
+        const { me, total } = ranking;
+        place.textContent = `🏆 Puesto ${me.position} de ${total}${me.moves < moves ? ` · tu mejor marca: ${me.moves}` : ''}`;
+        place.hidden = false;
       })
       .catch((err) => (status.textContent = `No se pudo guardar: ${(err as Error).message}`));
   }

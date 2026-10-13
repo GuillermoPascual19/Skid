@@ -2749,3 +2749,28 @@ input.switch:focus-visible {
   --accent-ink: #7cc1f2;
 }
 
+/* Ranking de un nivel de la comunidad (en un modal: fondo suave sobre la tarjeta). */
+.level-ranking {
+  max-height: 50vh;
+  overflow-y: auto;
+  text-align: left;
+}
+
+.level-ranking li {
+  background: var(--surface-soft);
+  box-shadow: none;
+}
+
+.level-ranking li.empty,
+.level-ranking li.gap {
+  display: block;
+  text-align: center;
+  background: none;
+  padding: 2px;
+}
+
+.level-place {
+  margin: 0;
+  font-weight: 800;
+  color: var(--gold-dark);
+}

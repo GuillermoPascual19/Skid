@@ -10,6 +10,7 @@ import { h, openModal, plural, share, svg, toast } from '../../shared/dom';
 import { go, type Screen } from '../../shared/router';
 import { type CustomLevel, type CustomLevelSort, type ReportReason, deleteCustomLevel, getCustomLevel, listCustomLevels, reportCustomLevel } from './api';
 import { loadEditorDraft } from './storage';
+import { openLevelRanking } from './level-ranking';
 
 const TABS: { id: CustomLevelSort; label: string }[] = [
   { id: 'top', label: 'Mejor valorados' },
@@ -194,6 +195,7 @@ export function communityScreen(tab?: CustomLevelSort, open?: string): Screen {
       h(
         'div',
         { class: 'level-actions' },
+        h('button', { class: 'link-btn', onclick: () => void openLevelRanking(level.id, level.name) }, '🏆 Ranking'),
         h('button', { class: 'link-btn', onclick: () => shareLevel(level) }, 'Compartir'),
         level.mine
           ? h('button', { class: 'link-btn danger', onclick: () => confirmDelete(level) }, 'Borrar')
