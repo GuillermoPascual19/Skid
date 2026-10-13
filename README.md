@@ -5,14 +5,18 @@ Reto diario con ranking entre amigos. Hecho con Phaser + TypeScript + Vite.
 
 ## Desarrollo
 
+Hace falta **Node 24** (ver `.node-version`). Se usa **pnpm** (la versión está en `packageManager` de `package.json`; con `corepack enable` se
+instala sola). Por seguridad, `pnpm-workspace.yaml` solo deja ejecutar scripts de instalación a
+`esbuild`, `sharp` y `workerd`, y no instala versiones publicadas hace menos de 3 días.
+
 ```sh
-npm install
-npm run dev     # juego (Vite, http://localhost:5173) + API con D1 local (Wrangler, :8787)
-npm test        # tests (Vitest)
-npm run build   # comprueba tipos y compila a dist/
+pnpm install
+pnpm run dev     # juego (Vite, http://localhost:5173) + API con D1 local (Wrangler, :8787)
+pnpm test        # tests (Vitest)
+pnpm run build   # comprueba tipos y compila a dist/
 ```
 
-`npm run dev:web` arranca solo el juego; el ranking dará error de conexión hasta que la API
+`pnpm run dev:web` arranca solo el juego; el ranking dará error de conexión hasta que la API
 esté en marcha. Con `VITE_API_BASE=` vacía en `.env.local` el juego funciona sin ranking online
 (por defecto la API está en `/api` del mismo dominio).
 
@@ -57,7 +61,7 @@ common/                lo que usan los dos; sin APIs del navegador ni imports de
 tests/                 backend/ y common/, con el mismo árbol que el código
 ```
 
-`npm run build` comprueba los tipos de las tres partes (`common/` sin DOM y sin importar nada de
+`pnpm run build` comprueba los tipos de las tres partes (`common/` sin DOM y sin importar nada de
 fuera) y compila el juego a `dist/`.
 
 ## Reto diario y puntuación
@@ -115,10 +119,10 @@ El plan gratuito sobra para esto.
 Primera vez:
 
 1. Crea una cuenta en [cloudflare.com](https://dash.cloudflare.com/sign-up) e inicia sesión desde
-   la terminal: `npx wrangler login`.
-2. Crea la base de datos: `npx wrangler d1 create skid`, y copia el `database_id` que devuelve en
+   la terminal: `pnpm exec wrangler login`.
+2. Crea la base de datos: `pnpm exec wrangler d1 create skid`, y copia el `database_id` que devuelve en
    `wrangler.jsonc`.
-3. Publica: `npm run deploy`. Aplica las migraciones y despliega; al terminar muestra la URL
+3. Publica: `pnpm run deploy`. Aplica las migraciones y despliega; al terminar muestra la URL
    (`https://skid.<tu-subdominio>.workers.dev`).
 
 Despliegue automático en cada push a `main` (`.github/workflows/deploy.yml`, pasa los tests antes):

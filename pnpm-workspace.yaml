@@ -1,0 +1,14 @@
+# Ajustes de pnpm para este proyecto (no es un monorepo: no hay "packages").
+
+# Solo estas dependencias pueden ejecutar scripts al instalarse (descargan o comprueban
+# su binario). Los scripts de instalación son la vía habitual de los paquetes maliciosos,
+# así que cualquier otro se bloquea; con strictDepBuilds, la instalación falla en vez de avisar.
+onlyBuiltDependencies:
+  - esbuild
+  - sharp
+  - workerd
+strictDepBuilds: true
+
+# No instalar versiones publicadas hace menos de 3 días (en minutos): los paquetes
+# comprometidos suelen detectarse y retirarse antes.
+minimumReleaseAge: 4320

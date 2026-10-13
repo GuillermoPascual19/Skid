@@ -22,13 +22,16 @@ jobs:
       CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
     steps:
       - uses: actions/checkout@v4
+      # La versión de pnpm sale de "packageManager" en package.json.
+      - uses: pnpm/action-setup@v4
       - uses: actions/setup-node@v4
         with:
-          node-version: 20
-          cache: npm
-      - run: npm ci
-      - run: npm test
-      - run: npm run build
+          node-version: 24
+          cache: pnpm
+      # Con el lockfile tal cual; los scripts de instalación permitidos están en pnpm-workspace.yaml.
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm test
+      - run: pnpm run build
       # Sin los secrets el despliegue falla (antes se saltaba y el run salía en verde sin publicar nada).
       - name: Comprobar los secrets de Cloudflare
         run: |
@@ -36,5 +39,5 @@ jobs:
             echo "::error::Faltan CLOUDFLARE_API_TOKEN o CLOUDFLARE_ACCOUNT_ID en Settings > Secrets and variables > Actions"
             exit 1
           fi
-      - run: npx wrangler d1 migrations apply skid --remote
-      - run: npx wrangler deploy
+      - run: pnpm exec wrangler d1 migrations apply skid --remote
+      - run: pnpm exec wrangler deploy
