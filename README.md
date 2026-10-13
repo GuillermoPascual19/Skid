@@ -67,6 +67,7 @@ fuera) y compila el juego a `dist/`.
 - Para las clasificaciones semanales y mensuales cada reto da puntos: 1000 al par y 100 menos por
   golpe de más (mínimo 100). Las constantes están en `common/logic/daily/score.ts`. Los retos de
   antes del golf conservan sus puntos.
+- Al terminar se puede ver la solución óptima, jugada por el pingüino.
 - El servidor no se fía del cliente: el navegador envía el registro de movimientos y el Worker
   lo reproduce para calcular el mejor intento, el tiempo (con su propio reloj) y los puntos.
 - Los jugadores son anónimos: la primera vez el servidor da un token que se guarda en el

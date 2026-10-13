@@ -362,6 +362,31 @@ p {
   color: var(--ink-soft);
 }
 
+/* Solución del reto: los movimientos como flechas, los hechos resaltados. */
+.solution-trail {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 4px;
+  margin: 8px 0 0;
+  font-size: 18px;
+  font-weight: 800;
+  color: var(--ink-faint);
+}
+
+.solution-trail span.done {
+  color: var(--gold-dark);
+}
+
+.solution-trail span.next {
+  color: var(--ink);
+  text-decoration: underline;
+}
+
+.solution-trail.big {
+  font-size: 24px;
+}
+
 .chips {
   display: flex;
   flex-wrap: wrap;

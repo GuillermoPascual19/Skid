@@ -1,6 +1,6 @@
 // Flujo del reto diario: comprobar si ya se jugó, presentar las reglas,
 // empezar (con la hora del servidor si hay ranking online), mostrar el resultado
-// y seguir mejorándolo.
+// y seguir mejorándolo o ver la solución.
 
 import { dailyLevel, dayKey, decodeRun, replayRun } from '../../../../common/logic/daily/daily';
 import { golfLabel } from '../../../../common/logic/daily/score';
@@ -167,6 +167,35 @@ export function improveDaily(day: string): void {
   go({ name: 'daily', record: next });
 }
 
+/** Abre la solución óptima. Si aún podía mejorar el resultado, avisa de que ya no podrá. */
+export function openSolution(day: string, r: DailyResult): void {
+  if (!canImprove(day, r)) return go({ name: 'solution', day });
+  const modal = openModal(
+    [
+      h('h2', null, '¿Ver la solución?'),
+      h('p', { class: 'lead' }, `Si la ves, te quedas con tu ${golfLabel(r.overPar!)} y ya no podrás mejorarlo hoy.`),
+      h(
+        'div',
+        { class: 'row' },
+        h('button', { class: 'btn ghost', onclick: () => modal.close() }, 'Cancelar'),
+        h(
+          'button',
+          {
+            class: 'btn',
+            onclick: () => {
+              const record = loadDaily(day);
+              if (record) saveDaily({ ...record, solutionSeen: true });
+              go({ name: 'solution', day });
+            },
+          },
+          'Ver solución',
+        ),
+      ),
+    ],
+    { dismissable: true },
+  );
+}
+
 function golfHeadline(over: number): string {
   if (over === 0) return '¡Al par!';
   if (over === 1) return '¡Casi perfecto!';
@@ -207,7 +236,12 @@ export function showDailyResult(day: string, r: DailyResult, opts: { error?: str
         h('button', { class: 'btn', onclick: () => share(shareText(day, r)) }, 'Compartir'),
         h('button', { class: 'btn secondary', onclick: () => go({ name: 'ranking' }) }, 'Ranking'),
       ),
-      canImprove(day, r) ? h('button', { class: 'btn secondary block', onclick: () => improveDaily(day) }, '↺ Mejorar') : null,
+      h(
+        'div',
+        { class: 'row' },
+        canImprove(day, r) ? h('button', { class: 'btn secondary', onclick: () => improveDaily(day) }, '↺ Mejorar') : null,
+        h('button', { class: 'btn ghost', onclick: () => openSolution(day, r) }, '👀 Ver solución'),
+      ),
       h('button', { class: 'link-btn', onclick: () => go({ name: 'home' }) }, 'Volver al inicio'),
     ],
     { dismissable: true },
@@ -230,6 +264,7 @@ function showPointsResult(day: string, r: DailyResult, opts: { error?: string; r
         h('button', { class: 'btn', onclick: () => share(shareText(day, r)) }, 'Compartir'),
         h('button', { class: 'btn secondary', onclick: () => go({ name: 'ranking' }) }, 'Ranking'),
       ),
+      h('button', { class: 'btn ghost block', onclick: () => go({ name: 'solution', day }) }, '👀 Ver solución'),
       h('button', { class: 'link-btn', onclick: () => go({ name: 'home' }) }, 'Volver al inicio'),
     ],
     { dismissable: true },
