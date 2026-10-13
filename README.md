@@ -29,11 +29,13 @@ frontend/              el juego en el navegador (Vite)
     features/          un apartado por carpeta: pantallas, llamadas al servidor (api.ts)
       home/            y lo que guarda en el navegador (storage.ts)
       free-play/       modo libre
-      daily/           reto diario y estadísticas
-      ranking/         ligas
+      daily/           reto diario, estadísticas, solución y fantasma de un amigo
+      weekly/          reto semanal
+      ranking/         ligas y ranking estilo golf (niveles, reto semanal)
       achievements/    logros y gorros
       community/       multijugador: listado, editor, partida, valorar, denunciar
       profile/         nombre, login con Google y perfil de otros jugadores
+      guide/           guía «Cómo se juega» y aviso de novedades
     play/              pantalla de partida común a todos los modos (pausa, gestos, teclas)
     game/              tablero en Phaser: escena, dibujo de casillas, efectos
     audio/             música y efectos sintetizados, y sus controles
@@ -48,6 +50,7 @@ common/                lo que usan los dos; sin APIs del navegador ni imports de
   logic/               reglas puras: el servidor reproduce las partidas con este mismo código
     engine/            tablero, movimiento, solver, generador, elementos, aleatorio
     daily/             reto diario, puntuación y rachas
+    weekly/            reto semanal
     achievements/      logros
     community/         validación de niveles creados por jugadores
   art/                 dibujos SVG (pingüino, gorros, elementos)
@@ -72,6 +75,16 @@ fuera) y compila el juego a `dist/`.
   lo reproduce para calcular el mejor intento, el tiempo (con su propio reloj) y los puntos.
 - Los jugadores son anónimos: la primera vez el servidor da un token que se guarda en el
   navegador (en la base de datos solo se guarda su hash). Cada uno elige su nombre.
+
+## Reto semanal
+
+- Un tablero más grande y difícil (nivel 30 del modo libre, con nieve y corrientes) de lunes a
+  domingo, el mismo para todos. Lo genera el servidor la primera vez que alguien lo pide y lo guarda
+  en `weekly_boards`; el juego lo descarga de ahí.
+- Se juega cuantas veces se quiera, sin pistas, y cuenta el mejor intento. El ranking es con los
+  amigos (quienes comparten alguna liga contigo); a igualdad gana quien lo consiguió antes.
+- Lógica en `common/logic/weekly/`, servidor en `backend/src/routes/weekly.ts` y el juego en
+  `frontend/src/features/weekly/`.
 
 ## Publicar en Cloudflare
 

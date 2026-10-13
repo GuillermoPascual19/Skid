@@ -11,6 +11,7 @@ import { isHatId } from '../../common/art/hats';
 import { type Env, HttpError, body, cleanText, json } from './http';
 import { playerAchievements } from './routes/achievements';
 import { finishRun, getRun, ghostRuns, startRun } from './routes/daily';
+import { finishWeekly, getWeekly, startWeekly, weeklyRanking } from './routes/weekly';
 import { createLeague, dailyWins, joinLeague, leagueRanking, leagueStandings, myLeagues } from './routes/leagues';
 import {
   createCustomLevel,
@@ -102,6 +103,14 @@ async function handleApi(req: Request, url: URL, env: Env): Promise<Response> {
   if ((m = route.match(/^POST \/daily\/(\d{4}-\d{2}-\d{2})\/finish$/))) {
     const { log } = await body<{ log?: unknown }>(req);
     return json(await finishRun(env, playerId, m[1], log));
+  }
+
+  if ((m = route.match(/^GET \/weekly\/(\d{4}-\d{2}-\d{2})$/))) return json(await getWeekly(env, playerId, m[1]));
+  if ((m = route.match(/^POST \/weekly\/(\d{4}-\d{2}-\d{2})\/start$/))) return json(await startWeekly(env, playerId, m[1]));
+  if ((m = route.match(/^GET \/weekly\/(\d{4}-\d{2}-\d{2})\/ranking$/))) return json(await weeklyRanking(env, playerId, m[1]));
+  if ((m = route.match(/^POST \/weekly\/(\d{4}-\d{2}-\d{2})\/finish$/))) {
+    const { log } = await body<{ log?: unknown }>(req);
+    return json(await finishWeekly(env, playerId, m[1], log));
   }
 
   if (route === 'GET /leagues') return json(await myLeagues(env, playerId));

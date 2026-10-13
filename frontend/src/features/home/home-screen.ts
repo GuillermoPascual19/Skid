@@ -17,11 +17,14 @@ import { dailyWins, getDaily, getStats } from '../daily/api';
 import { claimWinCelebration, loadDaily, saveDaily } from '../daily/storage';
 import { startingProgress } from '../free-play/storage';
 import type { Me } from '../profile/api';
-import { dismissGuideNews, guideStatus, openGuide } from '../guide/guide';
+import { NEWS, dismissGuideNews, guideStatus, openGuide } from '../guide/guide';
+import { weeklyCard } from '../weekly/weekly';
 
 export function homeScreen(): Screen {
   const day = today();
   const dailyCard = h('section', { class: 'card daily-card' });
+  // El reto semanal necesita el servidor (el tablero y el ranking están allí).
+  const weekly = online.onlineEnabled ? weeklyCard() : null;
   const account = h('div', { class: 'account' });
   const logoPenguin = h('div', { class: 'logo-penguin' }, svg(penguinSvg()));
   const wearHat = (hat: Me['hat']) => logoPenguin.replaceChildren(svg(penguinSvg(hat)));
@@ -232,19 +235,19 @@ export function homeScreen(): Screen {
       ? h(
           'section',
           { class: 'card news-card' },
-          h('span', { class: 'news-icon', 'aria-hidden': 'true' }, '⛳'),
+          h('span', { class: 'news-icon', 'aria-hidden': 'true' }, NEWS.icon),
           h(
             'div',
             { class: 'info' },
             h('p', { class: 'eyebrow' }, 'Novedad'),
-            h('p', null, h('strong', null, 'El reto diario ahora es estilo golf.'), ' Volver a empezar es gratis y cuenta tu mejor intento.'),
+            h('p', null, h('strong', null, NEWS.title), ` ${NEWS.text}`),
             h(
               'button',
               {
                 class: 'link-btn',
                 onclick: () => {
                   news?.remove();
-                  openGuide('daily');
+                  openGuide(NEWS.page);
                 },
               },
               'Ver cómo funciona',
@@ -279,6 +282,7 @@ export function homeScreen(): Screen {
     ),
     news,
     dailyCard,
+    weekly?.el ?? null,
     h(
       'section',
       { class: 'card levels-card' },
@@ -317,6 +321,7 @@ export function homeScreen(): Screen {
       if (guide === 'first') openGuide(); // Primera vez: las reglas antes de nada.
       ticker = window.setInterval(tick, 1000);
       void syncWithServer();
+      void weekly?.load();
     },
     dispose() {
       disposed = true;

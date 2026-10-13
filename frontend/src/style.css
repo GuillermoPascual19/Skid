@@ -2774,3 +2774,27 @@ input.switch:focus-visible {
   font-weight: 800;
   color: var(--gold-dark);
 }
+
+/* Reto semanal en la portada. */
+.weekly-card h2 {
+  font-size: 22px;
+}
+
+.week-left {
+  background: var(--cool-soft);
+  border-radius: 999px;
+  padding: 1px 10px;
+  font-weight: 700;
+  font-size: 14px;
+  color: var(--accent-ink);
+}
+
+.weekly-best {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.weekly-best .score-big {
+  font-size: 44px;
+}
