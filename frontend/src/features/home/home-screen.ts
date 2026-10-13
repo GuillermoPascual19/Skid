@@ -16,6 +16,7 @@ import { dailyWins, getDaily, getStats } from '../daily/api';
 import { claimWinCelebration, loadDaily, saveDaily } from '../daily/storage';
 import { startingProgress } from '../free-play/storage';
 import type { Me } from '../profile/api';
+import { dismissGuideNews, guideStatus, openGuide } from '../guide/guide';
 
 export function homeScreen(): Screen {
   const day = today();
@@ -223,6 +224,45 @@ export function homeScreen(): Screen {
   }
 
   const level = startingProgress().level;
+  const guide = guideStatus(level === 1 && !loadDaily(day));
+  // Quien ya jugaba ve un aviso cuando cambian las reglas.
+  const news =
+    guide === 'news'
+      ? h(
+          'section',
+          { class: 'card news-card' },
+          h('span', { class: 'news-icon', 'aria-hidden': 'true' }, '⛳'),
+          h(
+            'div',
+            { class: 'info' },
+            h('p', { class: 'eyebrow' }, 'Novedad'),
+            h('p', null, h('strong', null, 'El reto diario ahora es estilo golf.'), ' Volver a empezar es gratis y cuenta tu mejor intento.'),
+            h(
+              'button',
+              {
+                class: 'link-btn',
+                onclick: () => {
+                  news?.remove();
+                  openGuide('daily');
+                },
+              },
+              'Ver cómo funciona',
+            ),
+          ),
+          h(
+            'button',
+            {
+              class: 'icon-btn small',
+              'aria-label': 'Cerrar',
+              onclick: () => {
+                dismissGuideNews();
+                news?.remove();
+              },
+            },
+            '✕',
+          ),
+        )
+      : null;
   const audio = audioToggles();
   const el = h(
     'div',
@@ -235,6 +275,7 @@ export function homeScreen(): Screen {
       h('h1', null, 'Skid'),
       h('p', null, 'Desliza sobre el hielo. Recoge en orden.'),
     ),
+    news,
     dailyCard,
     h(
       'section',
@@ -246,6 +287,7 @@ export function homeScreen(): Screen {
       'nav',
       { class: 'nav-tiles' },
       navTile('🏆', 'Ranking', () => go({ name: 'ranking' })),
+      navTile('❓', 'Reglas', () => openGuide()),
       online.onlineEnabled ? navTile('📊', 'Estadísticas', () => go({ name: 'stats' })) : null,
       online.onlineEnabled ? navTile('🎩', 'Logros', () => go({ name: 'achievements' })) : null,
     ),
@@ -270,6 +312,7 @@ export function homeScreen(): Screen {
     el,
     mount() {
       renderDaily();
+      if (guide === 'first') openGuide(); // Primera vez: las reglas antes de nada.
       ticker = window.setInterval(tick, 1000);
       void syncWithServer();
     },

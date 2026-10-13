@@ -8,6 +8,7 @@ import * as online from '../../shared/api';
 import { formatDay, formatTime, h, openModal, plural, share, toast } from '../../shared/dom';
 import { celebrate } from '../../shared/celebrate';
 import { ensureName } from '../profile/profile';
+import { openGuide } from '../guide/guide';
 import { go } from '../../shared/router';
 import { type ServerRun, getDaily, startDaily } from './api';
 import { type DailyRecord, type DailyResult, loadDaily, saveDaily } from './storage';
@@ -86,6 +87,7 @@ function showIntro(day: string): void {
       ),
       error,
       start,
+      h('button', { class: 'link-btn', onclick: () => openGuide('daily') }, 'Ver todas las reglas'),
       h('button', { class: 'link-btn', onclick: () => modal.close() }, 'Ahora no'),
     ],
     { dismissable: true },

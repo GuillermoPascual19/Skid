@@ -2369,3 +2369,255 @@ input.switch:focus-visible {
   color: var(--bad);
 }
 
+/* ------------------------------------------------------------------ Guía "Cómo se juega" */
+
+.modal.guide {
+  gap: 12px;
+}
+
+.guide-page {
+  display: grid;
+  gap: 12px;
+  min-height: 300px;
+  align-content: start;
+}
+
+/* Fila de hielo con el pingüino deslizando: --step es lo que ocupa una casilla con su hueco. */
+.guide-demo {
+  --cell: 40px;
+  --step: calc(var(--cell) + 3px);
+  position: relative;
+  display: grid;
+  grid-template-columns: repeat(var(--cols), var(--cell));
+  gap: 3px;
+  justify-content: center;
+  margin: 4px auto 0;
+  width: max-content;
+}
+
+.guide-demo .cell {
+  height: var(--cell);
+  border-radius: 8px;
+  display: grid;
+  place-items: center;
+}
+
+.guide-demo .cell.ice {
+  background: linear-gradient(135deg, #cfeeff, #a9ddfa);
+}
+
+.guide-demo .cell.wall {
+  background: #fff;
+  box-shadow: inset 0 -5px 0 #d6e6f2;
+}
+
+.guide-demo .coin {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  background: #fff;
+  color: var(--ink-soft);
+  font-weight: 800;
+  font-size: 15px;
+  box-shadow: 0 2px 0 #c7d9e8;
+}
+
+.guide-demo .coin.next {
+  background: var(--gold);
+  color: var(--ink);
+  box-shadow: 0 0 0 4px rgba(255, 201, 60, 0.35);
+}
+
+.guide-demo .coin.collect {
+  animation: guide-collect 3s infinite;
+}
+
+.guide-penguin {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: var(--cell);
+  height: var(--cell);
+  padding: 3px;
+  transform: translateX(calc(var(--from) * var(--step)));
+}
+
+.guide-penguin svg {
+  width: 100%;
+  height: 100%;
+}
+
+.guide-penguin.sliding {
+  animation: guide-slide 3s infinite;
+}
+
+@keyframes guide-slide {
+  0%,
+  15% {
+    transform: translateX(calc(var(--from) * var(--step)));
+    animation-timing-function: cubic-bezier(0.2, 0.6, 0.3, 1);
+  }
+  55%,
+  90% {
+    transform: translateX(calc(var(--to) * var(--step)));
+  }
+  100% {
+    transform: translateX(calc(var(--from) * var(--step)));
+    opacity: 0;
+  }
+}
+
+@keyframes guide-collect {
+  0%,
+  24% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  32%,
+  92% {
+    opacity: 0;
+    transform: scale(1.6);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .guide-penguin.sliding,
+  .guide-demo .coin.collect {
+    animation: none;
+  }
+}
+
+.guide-stars {
+  display: flex;
+  justify-content: center;
+  gap: 6px;
+}
+
+.guide-stars svg {
+  width: 48px;
+  height: 48px;
+}
+
+.guide-golf {
+  display: grid;
+  gap: 2px;
+  background: #f2f8fd;
+  border-radius: 16px;
+  padding: 8px 14px;
+  text-align: left;
+}
+
+.guide-golf div {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 3px 0;
+  font-weight: 500;
+}
+
+.guide-golf div:first-child {
+  border-bottom: 2px dashed var(--line);
+  padding-bottom: 6px;
+}
+
+.guide-golf strong {
+  color: var(--gold-dark);
+  font-variant-numeric: tabular-nums;
+}
+
+.guide-golf strong.par {
+  color: var(--good);
+}
+
+.guide-elements {
+  display: grid;
+  gap: 8px;
+  text-align: left;
+}
+
+.guide-element {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  background: #f2f8fd;
+  border-radius: 14px;
+  padding: 8px 12px;
+}
+
+.guide-element .icon svg {
+  width: 44px;
+  height: 44px;
+  border-radius: 10px;
+  display: block;
+}
+
+.guide-element > span:last-child {
+  display: grid;
+  line-height: 1.25;
+}
+
+.guide-element small {
+  color: var(--secondary);
+  font-weight: 700;
+}
+
+.guide-element span span {
+  color: var(--ink-soft);
+  font-size: 14px;
+}
+
+.guide-dots {
+  display: flex;
+  justify-content: center;
+  gap: 6px;
+}
+
+.guide-dots button {
+  appearance: none;
+  border: 0;
+  width: 9px;
+  height: 9px;
+  padding: 0;
+  border-radius: 50%;
+  background: var(--line);
+  cursor: pointer;
+}
+
+.guide-dots button.on {
+  width: 22px;
+  border-radius: 5px;
+  background: var(--secondary);
+}
+
+/* Aviso de novedades en la portada. */
+.news-card {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  text-align: left;
+}
+
+.news-card .news-icon {
+  font-size: 30px;
+  line-height: 1;
+}
+
+.news-card .info {
+  flex: 1;
+  display: grid;
+  gap: 2px;
+}
+
+.news-card .info p {
+  margin: 0;
+}
+
+.news-card .link-btn {
+  justify-self: start;
+}
