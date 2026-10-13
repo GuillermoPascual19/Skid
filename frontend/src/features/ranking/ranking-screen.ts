@@ -9,7 +9,7 @@ import { golfLabel } from '../../../../common/logic/daily/score';
 import { today } from '../daily/daily';
 import { ensureName } from '../profile/profile';
 import { go, type Screen } from '../../shared/router';
-import { type League, type RankingRow, createLeague, joinLeague, leagueRanking, leagueStandings, myLeagues } from './api';
+import { type League, type RankingRow, createLeague, joinLeague, leagueInvite, leagueRanking, leagueStandings, leaveLeague, myLeagues } from './api';
 
 type Period = 'today' | 'yesterday' | 'week' | 'month';
 
@@ -85,11 +85,15 @@ export function rankingScreen(route: { join?: string }): Screen {
     try {
       if (!(await ensureName())) return go({ name: 'home' });
       if (route.join) {
-        const league = await joinLeague(route.join);
-        selected = league.id;
-        toast(`Te has unido a ${league.name}`);
+        // Un enlace de invitación no te une solo: primero ves a qué liga y decides.
+        const code = route.join;
         route = {};
         history.replaceState(null, '', location.pathname);
+        const joined = await confirmInvite(code);
+        if (joined) {
+          selected = joined.id;
+          toast(`Te has unido a ${joined.name}`);
+        }
       }
       leagues = await myLeagues();
       selected = leagues.find((l) => l.id === selected)?.id ?? leagues[0]?.id ?? null;
@@ -99,6 +103,72 @@ export function rankingScreen(route: { join?: string }): Screen {
         h('section', { class: 'card empty' }, h('p', { class: 'error' }, (err as Error).message), h('button', { class: 'btn', onclick: load }, 'Reintentar')),
       );
     }
+  }
+
+  /** Enseña la liga de un enlace de invitación y une al jugador solo si acepta. */
+  async function confirmInvite(code: string): Promise<League | null> {
+    const invite = await leagueInvite(code);
+    if (invite.alreadyMember) return null;
+    return new Promise((resolve) => {
+      let joined: League | null = null;
+      const accept = h('button', { class: 'btn' }, 'Unirme');
+      const error = h('p', { class: 'error', hidden: true });
+      const modal = openModal(
+        [
+          h('p', { class: 'eyebrow' }, 'Invitación a una liga'),
+          h('h2', null, invite.name),
+          h('p', { class: 'lead' }, `${plural(invite.members, 'miembro', 'miembros')}. Al unirte, los demás verán tus resultados del reto y tu perfil, y tú los suyos.`),
+          error,
+          h('div', { class: 'row' }, h('button', { class: 'btn ghost', onclick: () => modal.close() }, 'No, gracias'), accept),
+        ],
+        { dismissable: true, onClose: () => resolve(joined) },
+      );
+      accept.addEventListener('click', async () => {
+        accept.disabled = true;
+        try {
+          joined = await joinLeague(code);
+          modal.close();
+        } catch (err) {
+          error.textContent = (err as Error).message;
+          error.hidden = false;
+          accept.disabled = false;
+        }
+      });
+    });
+  }
+
+  /** Salir de una liga (con confirmación). */
+  function confirmLeave(league: League) {
+    const modal = openModal(
+      [
+        h('h2', null, `¿Salir de ${league.name}?`),
+        h('p', { class: 'lead' }, 'Dejarás de ver a sus miembros y ellos a ti. Para volver necesitarás otra vez el código.'),
+        h(
+          'div',
+          { class: 'row' },
+          h('button', { class: 'btn ghost', onclick: () => modal.close() }, 'Cancelar'),
+          h(
+            'button',
+            {
+              class: 'btn',
+              onclick: async () => {
+                modal.close();
+                try {
+                  await leaveLeague(league.id);
+                  toast(`Has salido de ${league.name}`);
+                  selected = null;
+                  await load();
+                } catch (err) {
+                  toast((err as Error).message);
+                }
+              },
+            },
+            'Salir',
+          ),
+        ),
+      ],
+      { dismissable: true },
+    );
   }
 
   function render() {
@@ -171,6 +241,7 @@ export function rankingScreen(route: { join?: string }): Screen {
           'Invitar',
         ),
       ),
+      h('button', { class: 'link-btn leave-league', onclick: () => confirmLeave(league) }, 'Salir de esta liga'),
     );
 
     if (range) void fillStandings(list, league.id, range);

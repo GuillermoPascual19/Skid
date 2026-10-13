@@ -1,27 +1,31 @@
 {
   "name": "skid",
   "private": true,
+  "packageManager": "pnpm@10.34.6",
+  "engines": {
+    "node": ">=24"
+  },
   "version": "0.1.0",
   "type": "module",
   "scripts": {
-    "dev": "concurrently -k -n web,api -c cyan,magenta \"vite\" \"npm:dev:api\"",
+    "dev": "concurrently -k -n web,api -c cyan,magenta \"vite\" \"pnpm:dev:api\"",
     "dev:web": "vite",
     "dev:api": "vite build && wrangler d1 migrations apply skid --local && wrangler dev --port 8787",
     "build": "tsc && tsc -p backend && tsc -p common && vite build",
     "preview": "vite preview",
     "test": "vitest run",
     "test:watch": "vitest",
-    "deploy": "npm run build && wrangler d1 migrations apply skid --remote && wrangler deploy"
+    "deploy": "pnpm run build && wrangler d1 migrations apply skid --remote && wrangler deploy"
   },
   "dependencies": {
     "phaser": "^4.2.1"
   },
   "devDependencies": {
-    "@cloudflare/workers-types": "^4.20260702.1",
-    "concurrently": "^9.2.4",
+    "@cloudflare/workers-types": "^5.20261010.1",
+    "concurrently": "^9.2.5",
     "typescript": "^7.0.2",
-    "vite": "^8.3.3",
+    "vite": "^8.3.4",
     "vitest": "^4.1.11",
-    "wrangler": "^4.86.0"
+    "wrangler": "^4.149.0"
   }
 }

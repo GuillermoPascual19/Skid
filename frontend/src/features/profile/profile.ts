@@ -3,6 +3,7 @@
 import { h, openModal } from '../../shared/dom';
 import { renderGoogleButton } from './google';
 import { type Me, getMe, setName } from './api';
+import { nameProblem } from '../../../../common/logic/players/names';
 
 let cachedMe: Promise<Me> | null = null;
 
@@ -59,9 +60,11 @@ export function askName(initial = ''): Promise<string | null> {
         style: 'flex-direction: column',
         onsubmit: async (e: Event) => {
           e.preventDefault();
-          const name = input.value.trim();
-          if (name.length < 2) {
-            error.textContent = 'Mínimo 2 caracteres';
+          const name = input.value.trim().replace(/\s+/g, ' ');
+          // Las mismas reglas que el servidor, para avisar sin esperar.
+          const problem = nameProblem(name);
+          if (problem) {
+            error.textContent = problem;
             error.hidden = false;
             return;
           }

@@ -12,7 +12,7 @@ import { type Env, HttpError, body, cleanText, json } from './http';
 import { playerAchievements } from './routes/achievements';
 import { finishRun, getRun, ghostRuns, startRun } from './routes/daily';
 import { finishWeekly, getWeekly, startWeekly, weeklyRanking } from './routes/weekly';
-import { createLeague, dailyWins, joinLeague, leagueRanking, leagueStandings, myLeagues } from './routes/leagues';
+import { createLeague, dailyWins, joinLeague, leagueInvite, leagueRanking, leagueStandings, leaveLeague, myLeagues } from './routes/leagues';
 import {
   createCustomLevel,
   customLevelRanking,
@@ -25,7 +25,8 @@ import {
 } from './routes/levels';
 import { playerProfile } from './routes/players';
 import { playerStats } from './routes/stats';
-import { authenticate, createSession, googleLogin } from './session';
+import { authenticate, createSession, deleteAccount, googleLogin, logoutEverywhere } from './session';
+import { nameKey, nameProblem, NAME_MAX } from '../../common/logic/players/names';
 
 export default {
   async fetch(req, env): Promise<Response> {
@@ -50,6 +51,8 @@ async function handleApi(req: Request, url: URL, env: Env): Promise<Response> {
 
   const session = await authenticate(req, env);
   const { playerId } = session;
+  // Límite general por jugador: de sobra para jugar, corta los scripts que machacan la API.
+  if (!(await env.API_RATE_LIMITER.limit({ key: playerId })).success) throw new HttpError(429, 'Demasiadas peticiones. Espera un minuto.');
 
   if (route === 'POST /auth/google') {
     const { credential } = await body<{ credential?: unknown }>(req);
@@ -58,6 +61,13 @@ async function handleApi(req: Request, url: URL, env: Env): Promise<Response> {
   if (route === 'POST /auth/logout') {
     await env.DB.prepare('DELETE FROM sessions WHERE token_hash = ?').bind(session.tokenHash).run();
     return json({ ok: true });
+  }
+  if (route === 'POST /auth/logout-all') return json(await logoutEverywhere(env, session));
+  if (route === 'DELETE /me') {
+    // Se pide la palabra exacta: que no se borre una cuenta por una llamada equivocada.
+    const { confirm } = await body<{ confirm?: unknown }>(req);
+    if (confirm !== 'BORRAR') throw new HttpError(400, 'Falta la confirmación');
+    return json(await deleteAccount(env, session));
   }
 
   if (route === 'GET /me') {
@@ -84,13 +94,15 @@ async function handleApi(req: Request, url: URL, env: Env): Promise<Response> {
   }
   if (route === 'PUT /me') {
     const { name } = await body<{ name?: unknown }>(req);
-    const clean = cleanText(name, 2, 20, 'El nombre');
-    // Nombres únicos (sin distinguir mayúsculas), para que nadie se haga pasar por otro.
-    const taken = await env.DB.prepare('SELECT 1 FROM players WHERE lower(name) = lower(?) AND id <> ?')
-      .bind(clean, playerId)
-      .first();
-    if (taken) throw new HttpError(409, 'Ese nombre ya lo tiene otro jugador. Prueba con otro.');
-    await env.DB.prepare('UPDATE players SET name = ? WHERE id = ?').bind(clean, playerId).run();
+    const clean = cleanText(name, 1, NAME_MAX, 'El nombre');
+    const problem = nameProblem(clean);
+    if (problem) throw new HttpError(400, problem);
+    // Nombres únicos según su clave (sin tildes, mayúsculas ni separadores), para que
+    // nadie se haga pasar por otro con un nombre que se ve igual.
+    const key = nameKey(clean);
+    const taken = await env.DB.prepare('SELECT 1 FROM players WHERE name_key = ? AND id <> ?').bind(key, playerId).first();
+    if (taken) throw new HttpError(409, 'Ese nombre (o uno que se ve igual) ya lo tiene otro jugador. Prueba con otro.');
+    await env.DB.prepare('UPDATE players SET name = ?, name_key = ? WHERE id = ?').bind(clean, key, playerId).run();
     return json({ name: clean });
   }
 
@@ -125,6 +137,13 @@ async function handleApi(req: Request, url: URL, env: Env): Promise<Response> {
     const { code } = await body<{ code?: unknown }>(req);
     return json(await joinLeague(env, playerId, code));
   }
+  if ((m = route.match(/^GET \/leagues\/invite\/([A-Za-z0-9]{1,12})$/))) {
+    // Comparte límite con unirse: si no, se podrían probar códigos por aquí.
+    const { success } = await env.JOIN_RATE_LIMITER.limit({ key: playerId });
+    if (!success) throw new HttpError(429, 'Demasiados intentos. Espera un minuto.');
+    return json(await leagueInvite(env, playerId, m[1]));
+  }
+  if ((m = route.match(/^POST \/leagues\/([\w-]+)\/leave$/))) return json(await leaveLeague(env, playerId, m[1]));
   if ((m = route.match(/^GET \/leagues\/([\w-]+)\/ranking$/))) {
     const day = url.searchParams.get('day') ?? '';
     if (!/^\d{4}-\d{2}-\d{2}$/.test(day)) throw new HttpError(400, 'Día no válido');

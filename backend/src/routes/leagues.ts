@@ -1,4 +1,4 @@
-// Ligas entre amigos: crear, unirse, ranking del día, ganadores y clasificación por periodo.
+// Ligas entre amigos: crear, ver una invitación, unirse, salir, ranking del día, ganadores y clasificación por periodo.
 
 import { isHatId } from '../../../common/art/hats';
 import { type Env, HttpError, cleanText } from '../http';
@@ -64,6 +64,30 @@ export async function joinLeague(env: Env, playerId: string, code: unknown): Pro
   if (!league) throw new HttpError(404, 'No existe ninguna liga con ese código');
   await env.DB.prepare('INSERT OR IGNORE INTO league_members (league_id, player_id) VALUES (?, ?)').bind(league.id, playerId).run();
   return league;
+}
+
+/**
+ * Lo que se ve de una liga antes de unirse con su código (desde un enlace de
+ * invitación): su nombre y cuántos son. Así nadie te mete en una liga sin que lo veas.
+ */
+export async function leagueInvite(env: Env, playerId: string, code: string) {
+  const league = await env.DB.prepare(
+    `SELECT l.name, (SELECT COUNT(*) FROM league_members m WHERE m.league_id = l.id) AS members,
+            EXISTS (SELECT 1 FROM league_members m WHERE m.league_id = l.id AND m.player_id = ?2) AS member
+     FROM leagues l WHERE l.code = ?1`,
+  )
+    .bind(code.trim().toUpperCase(), playerId)
+    .first<{ name: string; members: number; member: number }>();
+  if (!league) throw new HttpError(404, 'No existe ninguna liga con ese código');
+  return { name: league.name, members: league.members, alreadyMember: league.member === 1 };
+}
+
+/** Sales de una liga: dejas de ver a los demás y ellos a ti. Si se queda vacía, se borra. */
+export async function leaveLeague(env: Env, playerId: string, leagueId: string) {
+  const result = await env.DB.prepare('DELETE FROM league_members WHERE league_id = ? AND player_id = ?').bind(leagueId, playerId).run();
+  if (!result.meta.changes) throw new HttpError(404, 'No perteneces a esa liga');
+  await env.DB.prepare('DELETE FROM leagues WHERE id = ? AND NOT EXISTS (SELECT 1 FROM league_members WHERE league_id = ?)').bind(leagueId, leagueId).run();
+  return { ok: true };
 }
 
 interface RankingDbRow {

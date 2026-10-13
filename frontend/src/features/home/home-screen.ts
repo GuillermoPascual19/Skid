@@ -12,6 +12,7 @@ import { themeButton } from '../../shared/theme';
 import { formatDay, formatTime, h, openModal, plural, previousDay, share, svg, toast, untilMidnight } from '../../shared/dom';
 import { renderGoogleButton, signOut } from '../profile/google';
 import { askName, currentMe } from '../profile/profile';
+import { confirmDeleteAccount, confirmLogoutEverywhere } from '../profile/account';
 import { go, type Screen } from '../../shared/router';
 import { dailyWins, getDaily, getStats } from '../daily/api';
 import { claimWinCelebration, loadDaily, saveDaily } from '../daily/storage';
@@ -162,6 +163,15 @@ export function homeScreen(): Screen {
     );
     const who = h('p', { class: 'player-line' }, me.name ? `Juegas como ${me.name} · ` : '', changeName);
 
+    // Cerrar sesión en todas partes (con Google) y borrar la cuenta.
+    const privacy = h(
+      'p',
+      { class: 'player-line small account-actions' },
+      me.email ? h('button', { class: 'link-btn', onclick: confirmLogoutEverywhere }, 'cerrar sesión en todos los dispositivos') : null,
+      me.email ? ' · ' : null,
+      h('button', { class: 'link-btn danger', onclick: confirmDeleteAccount }, 'borrar mi cuenta'),
+    );
+
     if (me.email) {
       account.replaceChildren(
         who,
@@ -171,6 +181,7 @@ export function homeScreen(): Screen {
           `🔗 Cuenta de Google: ${me.email} · `,
           h('button', { class: 'link-btn', onclick: confirmSignOut }, 'cerrar sesión'),
         ),
+        privacy,
       );
       return;
     }
@@ -183,7 +194,7 @@ export function homeScreen(): Screen {
       h('p', { class: 'muted' }, 'Entra con Google y tu nombre, tus ligas y tus puntos te seguirán en el móvil y en el ordenador.'),
       slot,
     );
-    account.replaceChildren(who, card);
+    account.replaceChildren(who, card, privacy);
     void renderGoogleButton(slot, (result) => {
       if (result.switched) {
         toast(result.name ? `Has entrado como ${result.name}` : 'Has entrado con tu cuenta de Google');

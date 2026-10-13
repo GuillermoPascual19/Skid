@@ -1,4 +1,5 @@
-// Sesiones anónimas por token y login con Google (varias sesiones por jugador).
+// Sesiones anónimas por token (caducan tras un año sin usarse), login con Google (varias
+// sesiones por jugador), cerrar sesión en todos los dispositivos y borrar la cuenta.
 
 import { dayKey } from '../../common/logic/daily/daily';
 import { GOOGLE_CERTS_URL, googleKeyProvider, InvalidTokenError, verifyGoogleIdToken } from './google';
@@ -6,6 +7,11 @@ import { type Env, HttpError, type Session } from './http';
 
 /** Cuentas nuevas por IP y día (alto a propósito: en una universidad muchos comparten IP). */
 const MAX_SESSIONS_PER_IP_PER_DAY = 20;
+
+/** Una sesión que lleva un año sin usarse caduca: un token olvidado o robado no sirve para siempre. */
+const SESSION_MAX_IDLE_MS = 365 * 86_400_000;
+/** El último uso se apunta como mucho una vez al día (para no escribir en cada petición). */
+const SESSION_TOUCH_MS = 86_400_000;
 
 async function sha256(text: string): Promise<string> {
   const digest = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(text));
@@ -19,14 +25,16 @@ function randomToken(): string {
 
 export async function createSession(req: Request, env: Env): Promise<{ token: string }> {
   const ip = req.headers.get('CF-Connecting-IP') ?? 'desconocida';
-  const ipHash = await sha256(`skid-ip:${ip}`);
+  // Solo se guarda el hash, y con el día dentro: no sirve para seguir a una IP de un día a otro
+  // (y la tabla se vacía a diario).
+  const day = dayKey(new Date());
+  const ipHash = await sha256(`skid-ip:${day}:${ip}`);
 
   // Ráfagas: el limitador de Cloudflare, en memoria (no gasta base de datos).
   const { success } = await env.SESSION_RATE_LIMITER.limit({ key: ipHash });
   if (!success) throw new HttpError(429, 'Demasiadas cuentas nuevas seguidas. Espera un minuto.');
 
   // Total diario, en D1. Los días anteriores se borran sobre la marcha.
-  const day = dayKey(new Date());
   const [, counter] = await env.DB.batch([
     env.DB.prepare('DELETE FROM session_limits WHERE day < ?').bind(day),
     env.DB.prepare(
@@ -45,7 +53,7 @@ export async function createSession(req: Request, env: Env): Promise<{ token: st
   const id = crypto.randomUUID();
   await env.DB.batch([
     env.DB.prepare('INSERT INTO players (id, token_hash) VALUES (?, ?)').bind(id, tokenHash),
-    env.DB.prepare('INSERT INTO sessions (token_hash, player_id) VALUES (?, ?)').bind(tokenHash, id),
+    env.DB.prepare('INSERT INTO sessions (token_hash, player_id, last_used_at) VALUES (?, ?, ?)').bind(tokenHash, id, Date.now()),
   ]);
   return { token };
 }
@@ -54,14 +62,34 @@ export async function authenticate(req: Request, env: Env): Promise<Session> {
   const token = req.headers.get('Authorization')?.match(/^Bearer (.+)$/)?.[1];
   if (!token) throw new HttpError(401, 'Sin sesión');
   const tokenHash = await sha256(token);
-  const row = await env.DB.prepare('SELECT player_id FROM sessions WHERE token_hash = ?')
+  const row = await env.DB.prepare('SELECT player_id, last_used_at FROM sessions WHERE token_hash = ?')
     .bind(tokenHash)
-    .first<{ player_id: string }>();
+    .first<{ player_id: string; last_used_at: number | null }>();
   if (!row) throw new HttpError(401, 'Sesión no válida');
+  const now = Date.now();
+  const lastUsed = row.last_used_at ?? 0;
+  if (now - lastUsed > SESSION_MAX_IDLE_MS) {
+    await env.DB.prepare('DELETE FROM sessions WHERE token_hash = ?').bind(tokenHash).run();
+    throw new HttpError(401, 'Sesión caducada');
+  }
+  if (now - lastUsed > SESSION_TOUCH_MS) {
+    await env.DB.prepare('UPDATE sessions SET last_used_at = ? WHERE token_hash = ?').bind(now, tokenHash).run();
+  }
   return { playerId: row.player_id, tokenHash };
 }
 
 let googleKeys: ReturnType<typeof googleKeyProvider> | null = null;
+
+/**
+ * De dónde se descargan las claves de Google. GOOGLE_CERTS_URL es solo para
+ * pruebas en local: se ignora si no apunta a esta máquina, para que una
+ * configuración equivocada no permita firmar tokens con otras claves.
+ */
+function certsUrl(env: Env): string {
+  const override = env.GOOGLE_CERTS_URL;
+  if (override && /^http:\/\/(localhost|127\.0\.0\.1)(:\d+)?\//.test(override)) return override;
+  return GOOGLE_CERTS_URL;
+}
 
 interface GoogleLoginResult {
   /** Token nuevo si este dispositivo pasa a ser otro jugador; null si sigue siendo el mismo. */
@@ -82,7 +110,7 @@ export async function googleLogin(env: Env, session: Session, credential: unknow
   if (!env.GOOGLE_CLIENT_ID) throw new HttpError(503, 'El login con Google no está configurado');
   if (typeof credential !== 'string' || credential.length > 4096) throw new HttpError(400, 'Credencial no válida');
 
-  googleKeys ??= googleKeyProvider(env.GOOGLE_CERTS_URL || GOOGLE_CERTS_URL);
+  googleKeys ??= googleKeyProvider(certsUrl(env));
   let claims;
   try {
     claims = await verifyGoogleIdToken(credential, env.GOOGLE_CLIENT_ID, googleKeys);
@@ -114,7 +142,7 @@ export async function googleLogin(env: Env, session: Session, credential: unknow
     const tokenHash = await sha256(token);
     await env.DB.batch([
       env.DB.prepare('INSERT INTO players (id, token_hash, google_sub, email) VALUES (?, ?, ?, ?)').bind(id, tokenHash, claims.sub, email),
-      env.DB.prepare('INSERT INTO sessions (token_hash, player_id) VALUES (?, ?)').bind(tokenHash, id),
+      env.DB.prepare('INSERT INTO sessions (token_hash, player_id, last_used_at) VALUES (?, ?, ?)').bind(tokenHash, id, Date.now()),
       env.DB.prepare('DELETE FROM sessions WHERE token_hash = ?').bind(session.tokenHash),
     ]);
     return { token, switched: true, name: null, email };
@@ -138,9 +166,39 @@ async function switchDevice(
   const token = randomToken();
   const tokenHash = await sha256(token);
   await env.DB.batch([
-    env.DB.prepare('INSERT INTO sessions (token_hash, player_id) VALUES (?, ?)').bind(tokenHash, playerId),
+    env.DB.prepare('INSERT INTO sessions (token_hash, player_id, last_used_at) VALUES (?, ?, ?)').bind(tokenHash, playerId, Date.now()),
     env.DB.prepare('DELETE FROM sessions WHERE token_hash = ?').bind(session.tokenHash),
     env.DB.prepare('UPDATE players SET email = ? WHERE id = ?').bind(email, playerId),
   ]);
   return { token, switched: true, name, email };
+}
+
+/**
+ * Cierra la sesión en todos los dispositivos del jugador (también en este). Solo
+ * con la cuenta vinculada a Google: sin ella no habría forma de volver a entrar.
+ */
+export async function logoutEverywhere(env: Env, session: Session): Promise<{ ok: true }> {
+  const player = await env.DB.prepare('SELECT google_sub FROM players WHERE id = ?').bind(session.playerId).first<{ google_sub: string | null }>();
+  if (!player?.google_sub) throw new HttpError(400, 'Vincula antes tu cuenta de Google: si no, no podrías volver a entrar');
+  await env.DB.prepare('DELETE FROM sessions WHERE player_id = ?').bind(session.playerId).run();
+  return { ok: true };
+}
+
+/**
+ * Borra la cuenta y todo lo suyo: partidas, niveles, valoraciones, sesiones…
+ * Las ligas que creó pasan al miembro más antiguo; las que se quedan vacías se borran.
+ */
+export async function deleteAccount(env: Env, session: Session): Promise<{ ok: true }> {
+  const id = session.playerId;
+  await env.DB.batch([
+    env.DB.prepare(
+      `UPDATE leagues SET created_by = (
+         SELECT m.player_id FROM league_members m WHERE m.league_id = leagues.id AND m.player_id <> ?1 ORDER BY m.joined_at LIMIT 1)
+       WHERE created_by = ?1 AND EXISTS (SELECT 1 FROM league_members m WHERE m.league_id = leagues.id AND m.player_id <> ?1)`,
+    ).bind(id),
+    // Las que siguen siendo suyas no tienen a nadie más: se borran con él.
+    env.DB.prepare('DELETE FROM players WHERE id = ?').bind(id),
+    env.DB.prepare('DELETE FROM leagues WHERE NOT EXISTS (SELECT 1 FROM league_members m WHERE m.league_id = leagues.id)'),
+  ]);
+  return { ok: true };
 }

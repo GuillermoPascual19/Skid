@@ -107,6 +107,20 @@ export async function loginWithGoogle(credential: string): Promise<GoogleLogin> 
   return { switched: result.switched, name: result.name, email: result.email };
 }
 
+/** Cierra la sesión en todos los dispositivos (solo con cuenta de Google). */
+export async function logoutEverywhere(): Promise<void> {
+  await api('POST', '/auth/logout-all');
+  memoryToken = null;
+  writeToken(null);
+}
+
+/** Borra la cuenta en el servidor y olvida la sesión de este navegador. */
+export async function deleteAccount(): Promise<void> {
+  await api('DELETE', '/me', { confirm: 'BORRAR' });
+  memoryToken = null;
+  writeToken(null);
+}
+
 /** Cierra la sesión de este dispositivo. La próxima llamada crea un jugador anónimo nuevo. */
 export async function logout(): Promise<void> {
   try {
