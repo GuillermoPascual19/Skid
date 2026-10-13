@@ -6,6 +6,13 @@
     <meta name="description" content="Skid: puzzle de deslizamiento sobre hielo. Reto diario y ranking con tus amigos." />
     <meta name="theme-color" content="#7cc8f7" />
     <title>Skid</title>
+    <!-- Tema elegido (ver src/shared/theme.ts) antes de pintar, para que no parpadee. -->
+    <script>
+      try {
+        var theme = JSON.parse(localStorage.getItem('skid.theme.v1'));
+        if (theme === 'dark' || theme === 'light') document.documentElement.dataset.theme = theme;
+      } catch (e) {}
+    </script>
     <link rel="icon" href="favicon.svg" type="image/svg+xml" />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />

@@ -14,6 +14,7 @@ import { statsScreen } from './features/daily/stats-screen';
 import { achievementsScreen } from './features/achievements/achievements-screen';
 import { playerScreen } from './features/profile/player-screen';
 import { go, setRoutes } from './shared/router';
+import { applyTheme } from './shared/theme';
 
 const FONT_FAMILY = '"Baloo 2"';
 
@@ -62,6 +63,7 @@ setRoutes({
   customTest: (route) => customLevelScreen({ testRows: route.rows }),
 });
 
+applyTheme();
 snow();
 installAudio();
 await waitForFonts();
