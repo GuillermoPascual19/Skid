@@ -8,6 +8,7 @@ import { golfLabel } from '../../../../common/logic/daily/score';
 import { penguinSvg } from '../../../../common/art/hats';
 import { celebrateNewAchievements } from '../achievements/achievements-screen';
 import { audioToggles } from '../../audio/audio-controls';
+import { themeButton } from '../../shared/theme';
 import { formatDay, formatTime, h, openModal, plural, previousDay, share, svg, toast, untilMidnight } from '../../shared/dom';
 import { renderGoogleButton, signOut } from '../profile/google';
 import { askName, currentMe } from '../profile/profile';
@@ -264,6 +265,7 @@ export function homeScreen(): Screen {
         )
       : null;
   const audio = audioToggles();
+  audio.el.prepend(themeButton());
   const el = h(
     'div',
     { class: 'screen home' },

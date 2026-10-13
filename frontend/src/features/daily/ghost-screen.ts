@@ -1,0 +1,208 @@
+// Fantasma de un amigo: tu mejor intento del reto y el suyo, a la vez y
+// movimiento a movimiento. Su pingüino es el fantasma (semitransparente, con su
+// nombre); si no jugaste ese día, su partida la hace el pingüino normal.
+
+import { initialState, type Direction, type GameState } from '../../../../common/logic/engine/board';
+import { dailyLevel, decodeRun } from '../../../../common/logic/daily/daily';
+import { applyMove } from '../../../../common/logic/engine/move';
+import { golfLabel } from '../../../../common/logic/daily/score';
+import type { HatId } from '../../../../common/art/hats';
+import type { BoardHooks } from '../../game/BoardScene';
+import type { MountedBoard } from '../../game/mount';
+import { formatDay, formatTime, h, openModal, toast } from '../../shared/dom';
+import { sfx } from '../../audio/sound';
+import { go, type Screen } from '../../shared/router';
+import { loadBoard, onKey, openPauseMenu, playLayout } from '../../play/play';
+import { currentMe } from '../profile/profile';
+import { type GhostRun, getGhost } from './api';
+
+const FIRST_DELAY = 900;
+const STEP_DELAY = 350;
+
+/** "Par", "+2" o, en retos de antes del golf, los puntos. */
+const resultLabel = (run: GhostRun) => (run.overPar !== null ? golfLabel(run.overPar) : `${run.score ?? 0} pts`);
+
+export function ghostScreen(day: string, friendId: string): Screen {
+  const board = dailyLevel(day).board;
+  let mounted: MountedBoard | null = null;
+  let disposed = false;
+  let me: GhostRun | null = null;
+  let friend: GhostRun | null = null;
+  /** Lo que hace el pingüino normal (tú, o tu amigo si no jugaste) y el fantasma (tu amigo, o nadie). */
+  let lead: Direction[] = [];
+  let ghost: Direction[] = [];
+  let state: GameState = initialState(board);
+  let step = 0;
+  let expected: Direction | null = null;
+  let settled: (() => void) | null = null;
+  /** Sube al volver a empezar: las continuaciones de la vuelta anterior se descartan. */
+  let run = 0;
+
+  const ui = playLayout({
+    stats: [
+      { key: 'lead', label: 'Tú' },
+      { key: 'ghost', label: 'Amigo' },
+      { key: 'step', label: 'Golpe' },
+    ],
+    hint: {
+      keys: 'Tu mejor intento contra el suyo · R para verlo otra vez',
+      touch: 'Tu mejor intento contra el suyo · ↺ para verlo otra vez',
+    },
+    onMenu: () =>
+      openPauseMenu(mounted, {
+        restartLabel: 'Ver otra vez',
+        onRestart: () => replay(),
+        onExit: () => go({ name: 'ranking' }),
+      }),
+    onRestart: () => replay(),
+    onSwipe: () => {},
+    restartLabel: 'Ver otra vez',
+  });
+  ui.setTitle('Fantasma', `Reto · ${formatDay(day)}`);
+
+  const hud = () => {
+    ui.setStat('lead', `${Math.min(step, lead.length)}/${lead.length}`);
+    if (me) ui.setStat('ghost', `${Math.min(step, ghost.length)}/${ghost.length}`);
+    ui.setStat('step', step);
+  };
+
+  const hooks: BoardHooks = {
+    onMove(dir) {
+      if (dir !== expected) return undefined; // El tablero ignora las flechas y gestos.
+      expected = null;
+      const next = applyMove(board, state, dir);
+      if (next) state = next;
+      return next;
+    },
+    onSettled() {
+      settled?.();
+    },
+  };
+
+  /** Mueve el pingüino normal; se resuelve al terminar la animación. */
+  function moveLead(dir: Direction): Promise<void> {
+    return new Promise((resolve) => {
+      settled = () => {
+        settled = null;
+        resolve();
+      };
+      expected = dir;
+      mounted!.scene.requestMove(dir);
+    });
+  }
+
+  function schedule(delay: number) {
+    const current = run;
+    mounted?.scene.time.delayedCall(delay, async () => {
+      if (current !== run || !mounted) return;
+      const moves: Promise<void>[] = [];
+      if (step < lead.length) moves.push(moveLead(lead[step]));
+      if (step < ghost.length) moves.push(mounted.scene.moveGhost(ghost[step]));
+      await Promise.all(moves);
+      if (current !== run || disposed) return;
+      step++;
+      hud();
+      if (step < Math.max(lead.length, ghost.length)) schedule(STEP_DELAY);
+      else finish();
+    });
+  }
+
+  function replay() {
+    if (!mounted) return;
+    run++;
+    state = initialState(board);
+    step = 0;
+    expected = null;
+    settled = null;
+    mounted.scene.reset(state);
+    mounted.scene.placeGhost(state);
+    hud();
+    schedule(FIRST_DELAY);
+  }
+
+  /** Quién gana: menos golpes y, a igualdad, menos tiempo (como el ranking). */
+  function verdict(): string {
+    if (!me || !friend) return '';
+    const a = me.overPar ?? -(me.score ?? 0);
+    const b = friend.overPar ?? -(friend.score ?? 0);
+    if (a !== b) return a < b ? '¡Ganas tú!' : `Gana ${friend.name}`;
+    const ta = me.timeMs ?? 0;
+    const tb = friend.timeMs ?? 0;
+    if (ta === tb) return '¡Empate!';
+    return ta < tb ? '¡Ganas tú, por tiempo!' : `Gana ${friend.name}, por tiempo`;
+  }
+
+  function finish() {
+    sfx.win();
+    mounted?.scene.time.delayedCall(600, () => {
+      if (!friend) return;
+      const line = (who: string, r: GhostRun) =>
+        h(
+          'div',
+          null,
+          h('span', null, who),
+          h('span', null, `${resultLabel(r)} · ${decodeRun(r.path).length} mov.${r.hints ? ` · 💡 ${r.hints}` : ''} · ⏱ ${formatTime(r.timeMs ?? 0)}`),
+        );
+      const modal = openModal(
+        [
+          h('p', { class: 'eyebrow' }, `Reto · ${formatDay(day)}`),
+          h('h2', null, me ? verdict() : `La partida de ${friend.name}`),
+          h('div', { class: 'breakdown' }, me ? line('Tú', me) : null, line(friend.name ?? 'Amigo', friend)),
+          h(
+            'div',
+            { class: 'row' },
+            h('button', { class: 'btn secondary', onclick: () => (modal.close(), replay()) }, '↺ Ver otra vez'),
+            h('button', { class: 'btn', onclick: () => go({ name: 'ranking' }) }, 'Ranking'),
+          ),
+        ],
+        { dismissable: true },
+      );
+    });
+  }
+
+  let removeKeys = () => {};
+  return {
+    el: ui.el,
+    async mount() {
+      removeKeys = onKey((e) => {
+        if (e.key === 'r' || e.key === 'R') replay();
+        if (e.key === 'Escape') ui.el.querySelector<HTMLButtonElement>('[aria-label=Pausa]')?.click();
+      });
+      let myHat: HatId | null = null;
+      try {
+        const [runs, profile] = await Promise.all([getGhost(day, friendId), currentMe().catch(() => null)]);
+        me = runs.me;
+        friend = runs.friend;
+        myHat = profile?.hat ?? null;
+      } catch (err) {
+        toast((err as Error).message);
+        return go({ name: 'ranking' });
+      }
+      if (disposed) return;
+      const friendName = friend.name ?? 'Amigo';
+      lead = decodeRun((me ?? friend).path) as Direction[];
+      ghost = me ? (decodeRun(friend.path) as Direction[]) : [];
+      // Los nombres en los contadores: el tuyo y el suyo (o solo el suyo).
+      const labels = ui.el.querySelectorAll('.stat > span');
+      labels[0].textContent = me ? 'Tú' : friendName;
+      labels[1].textContent = me ? friendName : '—';
+      if (!me) ui.setStat('ghost', '—');
+      hud();
+
+      const m = await loadBoard(ui.boardWrap, board, hooks);
+      if (disposed) return m.destroy();
+      mounted = m;
+      m.scene.setBoard(board, state);
+      m.scene.setHat(me ? myHat : friend.hat);
+      if (me) m.scene.setGhost({ name: friendName, hat: friend.hat, state });
+      schedule(FIRST_DELAY);
+    },
+    dispose() {
+      disposed = true;
+      run++;
+      removeKeys();
+      mounted?.destroy();
+      ui.dispose();
+    },
+  };
+}

@@ -218,6 +218,20 @@ export function rankingScreen(route: { join?: string }): Screen {
     try {
       const rows = await leagueRanking(leagueId, forDay);
       if (disposed || id !== requestId) return;
+      // Las partidas de los demás se pueden ver como fantasma cuando ya terminaste (o el día ya pasó).
+      const canWatch = forDay < today() || rows.some((r) => r.isMe && r.status === 'finished');
+      const ghostButton = (row: RankingRow) =>
+        h(
+          'button',
+          {
+            class: 'link-btn ghost-link',
+            onclick: (e: Event) => {
+              e.stopPropagation(); // La fila abre el perfil.
+              go({ name: 'ghost', day: forDay, friendId: row.id });
+            },
+          },
+          '👻 Ver su partida',
+        );
       list.replaceChildren(
         ...rows.map((row, i) =>
           h(
@@ -240,6 +254,7 @@ export function rankingScreen(route: { join?: string }): Screen {
                     ? 'Jugando…'
                     : 'Sin jugar',
               ),
+              canWatch && !row.isMe && row.status === 'finished' ? ghostButton(row) : null,
             ),
             row.status === 'finished'
               ? row.overPar !== null

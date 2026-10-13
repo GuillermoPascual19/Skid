@@ -20,9 +20,10 @@ export function boardThumb(rows: readonly string[]): string {
     [...row].forEach((ch, x) => {
       const cx = x + 0.5;
       const cy = y + 0.5;
-      parts.push(`<rect x="${x}" y="${y}" width="1" height="1" fill="${ch === '#' ? '#f6fbff' : (x + y) % 2 ? '#9bdaf1' : '#a6e1f5'}"/>`);
+      // Hielo, nieve y piezas con las variables del CSS: cambian con el tema oscuro.
+      parts.push(`<rect x="${x}" y="${y}" width="1" height="1" fill="${ch === '#' ? 'var(--snow)' : (x + y) % 2 ? 'var(--ice-alt)' : 'var(--ice)'}"/>`);
       if (ch === '@') parts.push(`<circle cx="${cx}" cy="${cy}" r=".36" fill="#1f2f45"/><circle cx="${cx}" cy="${cy + 0.08}" r=".2" fill="#fff"/>`);
-      else if (/^[1-9]$/.test(ch)) parts.push(`<circle cx="${cx}" cy="${cy}" r=".34" fill="${ch === '1' ? '#ffc93c' : '#fff'}" stroke="#8fb0cc" stroke-width=".06"/>`);
+      else if (/^[1-9]$/.test(ch)) parts.push(`<circle cx="${cx}" cy="${cy}" r=".34" fill="${ch === '1' ? '#ffc93c' : 'var(--coin)'}" stroke="var(--coin-rim)" stroke-width=".06"/>`);
       else if (ch === '*') parts.push(`<circle cx="${cx}" cy="${cy}" r=".36" fill="#fff"/>`);
       else if (ch === 'O') parts.push(`<ellipse cx="${cx}" cy="${cy}" rx=".34" ry=".28" fill="#1d5f8a"/>`);
       else if (ch in ARROW_ANGLE) parts.push(`<path d="M-.25 -.3 L.25 0 L-.25 .3 Z" fill="#1f86c2" transform="translate(${cx} ${cy}) rotate(${ARROW_ANGLE[ch]})"/>`);

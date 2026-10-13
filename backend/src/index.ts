@@ -10,7 +10,7 @@ import { unlockedHats } from '../../common/logic/achievements/achievements';
 import { isHatId } from '../../common/art/hats';
 import { type Env, HttpError, body, cleanText, json } from './http';
 import { playerAchievements } from './routes/achievements';
-import { finishRun, getRun, startRun } from './routes/daily';
+import { finishRun, getRun, ghostRuns, startRun } from './routes/daily';
 import { createLeague, dailyWins, joinLeague, leagueRanking, leagueStandings, myLeagues } from './routes/leagues';
 import { createCustomLevel, deleteCustomLevel, finishCustomLevel, getCustomLevel, listCustomLevels, rateCustomLevel, reportCustomLevel } from './routes/levels';
 import { playerProfile } from './routes/players';
@@ -89,6 +89,7 @@ async function handleApi(req: Request, url: URL, env: Env): Promise<Response> {
   if ((m = route.match(/^GET \/daily\/(\d{4}-\d{2}-\d{2})$/))) return json(await getRun(env, playerId, m[1]));
   if ((m = route.match(/^POST \/daily\/(\d{4}-\d{2}-\d{2})\/start$/))) return json(await startRun(env, playerId, m[1]));
   if ((m = route.match(/^GET \/daily\/(\d{4}-\d{2}-\d{2})\/wins$/))) return json(await dailyWins(env, playerId, m[1]));
+  if ((m = route.match(/^GET \/daily\/(\d{4}-\d{2}-\d{2})\/ghost\/([\w-]+)$/))) return json(await ghostRuns(env, playerId, m[1], m[2]));
   if ((m = route.match(/^POST \/daily\/(\d{4}-\d{2}-\d{2})\/finish$/))) {
     const { log } = await body<{ log?: unknown }>(req);
     return json(await finishRun(env, playerId, m[1], log));

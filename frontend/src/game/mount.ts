@@ -4,7 +4,8 @@
 import Phaser from 'phaser';
 import type { Board } from '../../../common/logic/engine/board';
 import { BoardScene, type BoardHooks } from './BoardScene';
-import { TILE } from './palette';
+import { TILE, usePalette } from './palette';
+import { isDark } from '../shared/theme';
 
 export interface MountedBoard {
   readonly scene: BoardScene;
@@ -12,6 +13,7 @@ export interface MountedBoard {
 }
 
 export async function mountBoard(parent: HTMLElement, board: Board, hooks: BoardHooks): Promise<MountedBoard> {
+  usePalette(isDark()); // De noche con el tema oscuro (se aplica al dibujar el tablero).
   const scene = new BoardScene(hooks);
   const game = new Phaser.Game({
     type: Phaser.AUTO,

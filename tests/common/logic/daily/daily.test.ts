@@ -64,7 +64,7 @@ describe('registro de la partida', () => {
       retries: 1,
       hints: 0,
       completed: true,
-      best: { moves: 2, hints: 0, strokes: 2 },
+      best: { moves: 2, hints: 0, strokes: 2, path: ['right', 'down'] },
     });
   });
 
@@ -78,8 +78,8 @@ describe('registro de la partida', () => {
 
   it('cada pista suma un golpe, también en los intentos siguientes', () => {
     const board = parseBoard(['#####', '#@.1#', '#..2#', '#####']);
-    expect(replayRun(board, decodeRun('HRD')).best).toEqual({ moves: 2, hints: 1, strokes: 3 });
-    expect(replayRun(board, decodeRun('HRDXRD')).last).toEqual({ moves: 2, hints: 1, strokes: 3 });
+    expect(replayRun(board, decodeRun('HRD')).best).toMatchObject({ moves: 2, hints: 1, strokes: 3 });
+    expect(replayRun(board, decodeRun('HRDXRD')).last).toMatchObject({ moves: 2, hints: 1, strokes: 3 });
   });
 
   it('tras completar se puede volver a empezar para mejorar; cuenta el mejor intento', () => {
@@ -87,9 +87,9 @@ describe('registro de la partida', () => {
     // Un primer intento más largo y luego el óptimo.
     const run = replayRun(board, decodeRun('DRURDXRD'));
     expect(run.completed).toBe(true);
-    expect(run.best).toEqual({ moves: 2, hints: 0, strokes: 2 });
+    expect(run.best).toEqual({ moves: 2, hints: 0, strokes: 2, path: ['right', 'down'] });
     // Un intento peor después no cambia el mejor.
-    expect(replayRun(board, decodeRun('RDXDRURD')).best).toEqual({ moves: 2, hints: 0, strokes: 2 });
+    expect(replayRun(board, decodeRun('RDXDRURD')).best).toEqual({ moves: 2, hints: 0, strokes: 2, path: ['right', 'down'] });
   });
 
   it('a medias no hay intento terminado', () => {

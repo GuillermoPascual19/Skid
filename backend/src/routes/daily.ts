@@ -1,6 +1,8 @@
-// Reto diario: empezar, consultar, terminar y mejorar (el servidor reproduce la partida para verificarla).
+// Reto diario: empezar, consultar, terminar y mejorar (el servidor reproduce la partida para
+// verificarla), y ver el mejor intento de un amigo como fantasma.
 
-import { dailyLevel, dayKey, decodeRun, minPlayTimeMs, replayRun } from '../../../common/logic/daily/daily';
+import { isHatId } from '../../../common/art/hats';
+import { dailyLevel, dayKey, decodeRun, encodeRun, minPlayTimeMs, replayRun } from '../../../common/logic/daily/daily';
 import { streaks } from '../../../common/logic/daily/streaks';
 import { golfPoints, overPar } from '../../../common/logic/daily/score';
 import { type Env, HttpError } from '../http';
@@ -151,4 +153,66 @@ export async function finishRun(env: Env, playerId: string, day: string, log: un
     freezes: streak.freezes,
     freezeEarned: !improving && streak.lastFreezeEarned === day,
   };
+}
+
+interface GhostRow {
+  player_id: string;
+  name: string | null;
+  hat: string | null;
+  log: string | null;
+  time_ms: number | null;
+  over_par: number | null;
+  score: number | null;
+}
+
+/**
+ * El mejor intento de un amigo y el tuyo en el reto de `day`, para verlos a la
+ * vez. Solo de alguien con quien compartas liga y, si es el reto de hoy, cuando
+ * ya lo hayas terminado (para no destripar la solución).
+ */
+export async function ghostRuns(env: Env, playerId: string, day: string, friendId: string) {
+  if (friendId === playerId) throw new HttpError(400, 'Elige a otro jugador');
+  const shared = await env.DB.prepare(
+    `SELECT 1 FROM league_members a JOIN league_members b ON b.league_id = a.league_id AND b.player_id = ?2
+     WHERE a.player_id = ?1 LIMIT 1`,
+  )
+    .bind(playerId, friendId)
+    .first();
+  if (!shared) throw new HttpError(403, 'Solo puedes ver partidas de jugadores de tus ligas');
+
+  const { results } = await env.DB.prepare(
+    `SELECT r.player_id, p.name, p.hat, r.log, r.time_ms, r.over_par, r.score
+     FROM daily_runs r JOIN players p ON p.id = r.player_id
+     WHERE r.day = ?1 AND r.player_id IN (?2, ?3) AND r.finished_at IS NOT NULL`,
+  )
+    .bind(day, playerId, friendId)
+    .all<GhostRow>();
+  const mine = results.find((r) => r.player_id === playerId) ?? null;
+  const theirs = results.find((r) => r.player_id === friendId) ?? null;
+  if (!mine && day >= dayKey(new Date())) throw new HttpError(403, 'Termina el reto de hoy para ver la partida de tus amigos');
+  if (!theirs) throw new HttpError(404, 'Ese jugador no ha terminado este reto');
+
+  const board = dailyLevel(day).board;
+  const ghost = (row: GhostRow | null) => {
+    if (!row?.log) return null;
+    let best;
+    try {
+      best = replayRun(board, decodeRun(row.log)).best;
+    } catch {
+      return null; // Registro antiguo que ya no se reproduce: sin fantasma.
+    }
+    if (!best) return null;
+    return {
+      name: row.name,
+      hat: isHatId(row.hat) ? row.hat : null,
+      path: encodeRun(best.path),
+      hints: best.hints,
+      timeMs: row.time_ms,
+      overPar: row.over_par,
+      score: row.score,
+    };
+  };
+  const friend = ghost(theirs);
+  if (!friend) throw new HttpError(404, 'No hay partida que ver de ese jugador');
+  return { me: ghost(mine), friend };
 }

@@ -4,6 +4,7 @@ import { h } from './shared/dom';
 import { levelsScreen } from './features/free-play/free-play-screen';
 import { dailyScreen } from './features/daily/daily-screen';
 import { solutionScreen } from './features/daily/solution-screen';
+import { ghostScreen } from './features/daily/ghost-screen';
 import { customLevelScreen } from './features/community/play-screen';
 import { communityScreen } from './features/community/community-screen';
 import { editorScreen } from './features/community/editor-screen';
@@ -13,6 +14,7 @@ import { statsScreen } from './features/daily/stats-screen';
 import { achievementsScreen } from './features/achievements/achievements-screen';
 import { playerScreen } from './features/profile/player-screen';
 import { go, setRoutes } from './shared/router';
+import { applyTheme } from './shared/theme';
 
 const FONT_FAMILY = '"Baloo 2"';
 
@@ -50,6 +52,7 @@ setRoutes({
   levels: () => levelsScreen(),
   daily: (route) => dailyScreen(route.record),
   solution: (route) => solutionScreen(route.day),
+  ghost: (route) => ghostScreen(route.day, route.friendId),
   ranking: (route) => rankingScreen(route),
   stats: () => statsScreen(),
   achievements: () => achievementsScreen(),
@@ -60,6 +63,7 @@ setRoutes({
   customTest: (route) => customLevelScreen({ testRows: route.rows }),
 });
 
+applyTheme();
 snow();
 installAudio();
 await waitForFonts();

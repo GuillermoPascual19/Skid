@@ -7,7 +7,8 @@ import type { Pos } from '../../../common/logic/engine/board';
 export const TILE = 96;
 export const FONT = '"Baloo 2", "Trebuchet MS", sans-serif';
 
-export const C = {
+/** Colores del tablero de día (tema claro). */
+const DAY = {
   ice: 0xa6e1f5,
   iceAlt: 0x9bdaf1,
   iceShine: 0xffffff,
@@ -32,6 +33,29 @@ export const C = {
   ripple: 0x8fd3f7,
   iceEdge: 0xe6f6fd,
 };
+
+/** De noche (tema oscuro) cambian el hielo, la nieve y las piezas; el pingüino y el agua no. */
+const NIGHT: Partial<typeof DAY> = {
+  ice: 0x2f5f80,
+  iceAlt: 0x2a5675,
+  iceShine: 0x9fd0ee,
+  iceShadow: 0x06111c,
+  snowTop: 0xd3e1ec,
+  snowSpeck: 0xb3c7d8,
+  snowFront: 0x93adc3,
+  snowFrontDark: 0x6f8aa2,
+  coin: 0xe3edf6,
+  coinRim: 0x7891a8,
+  iceEdge: 0x3a6d90,
+};
+
+/** Colores en uso: los de día, o los de noche tras usePalette(true). */
+export const C = { ...DAY };
+
+/** Elige la paleta antes de dibujar un tablero. */
+export function usePalette(dark: boolean): void {
+  Object.assign(C, DAY, dark ? NIGHT : {});
+}
 
 /** Color de cada pareja de teletransportes. */
 export const PORTAL_COLORS = [0xa78bfa, 0xff8fa3, 0x2bb673, 0xff9f1c, 0x2b8fd6];

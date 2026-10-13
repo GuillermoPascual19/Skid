@@ -1,6 +1,7 @@
 // Llamadas al servidor del reto diario y de las estadísticas.
 
 import { api } from '../../shared/api';
+import type { HatId } from '../../../../common/art/hats';
 import type { DailyResult } from './storage';
 
 export interface ServerRun {
@@ -68,4 +69,21 @@ export interface PlayerStats {
 
 export function getStats(): Promise<PlayerStats> {
   return api<PlayerStats>('GET', '/stats');
+}
+
+export interface GhostRun {
+  name: string | null;
+  hat: HatId | null;
+  /** Movimientos del mejor intento (ver encodeRun). */
+  path: string;
+  hints: number;
+  timeMs: number | null;
+  /** null en retos de antes del golf. */
+  overPar: number | null;
+  score: number | null;
+}
+
+/** Tu mejor intento (null si no jugaste ese día) y el de un amigo de tus ligas. */
+export function getGhost(day: string, friendId: string): Promise<{ me: GhostRun | null; friend: GhostRun }> {
+  return api('GET', `/daily/${day}/ghost/${friendId}`);
 }
