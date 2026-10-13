@@ -1,7 +1,9 @@
 import './style.css';
 import { installAudio } from './audio/sound';
 import { h } from './shared/dom';
-import { customLevelScreen, dailyScreen, levelsScreen } from './play/play';
+import { levelsScreen } from './features/free-play/free-play-screen';
+import { dailyScreen } from './features/daily/daily-screen';
+import { customLevelScreen } from './features/community/play-screen';
 import { communityScreen } from './features/community/community-screen';
 import { editorScreen } from './features/community/editor-screen';
 import { homeScreen } from './features/home/home-screen';
