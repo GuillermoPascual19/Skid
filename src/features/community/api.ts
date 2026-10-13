@@ -1,0 +1,64 @@
+// Llamadas al servidor de los niveles de la comunidad.
+
+import { api } from '../../shared/api';
+import type { HatId } from '../../art/hats';
+import type { ElementId } from '../../logic/engine/elements';
+
+export interface CustomLevel {
+  id: string;
+  name: string;
+  rows: string[];
+  optimal: number;
+  elements: ElementId[];
+  createdAt: number;
+  author: string;
+  authorId: string;
+  authorHat: HatId | null;
+  /** Es un nivel tuyo. */
+  mine: boolean;
+  /** Jugadores (sin contar al autor) que lo han superado. */
+  plays: number;
+  /** Media de las valoraciones (1-5), o null si nadie lo ha valorado. */
+  rating: number | null;
+  ratingCount: number;
+  /** Tu mejor marca, o null si no lo has superado. */
+  myBest: number | null;
+  myRating: number | null;
+  /** Oculto por denuncias: solo lo ve su autor. */
+  hidden: boolean;
+  /** Ya lo has denunciado. */
+  reported: boolean;
+}
+
+export type ReportReason = 'name' | 'broken' | 'other';
+
+export type CustomLevelSort = 'top' | 'new' | 'mine';
+
+export function listCustomLevels(sort: CustomLevelSort, offset = 0): Promise<{ levels: CustomLevel[]; more: boolean }> {
+  return api('GET', `/levels?sort=${sort}&offset=${offset}`);
+}
+
+export function getCustomLevel(id: string): Promise<CustomLevel> {
+  return api('GET', `/levels/${encodeURIComponent(id)}`);
+}
+
+/** Publica un nivel. `log` es cómo lo superó el autor (lo exige el servidor). */
+export function publishCustomLevel(name: string, rows: string[], log: string): Promise<CustomLevel> {
+  return api('POST', '/levels', { name, rows, log });
+}
+
+export function finishCustomLevel(id: string, log: string): Promise<CustomLevel> {
+  return api('POST', `/levels/${encodeURIComponent(id)}/finish`, { log });
+}
+
+export function rateCustomLevel(id: string, stars: number): Promise<CustomLevel> {
+  return api('PUT', `/levels/${encodeURIComponent(id)}/rating`, { stars });
+}
+
+export async function deleteCustomLevel(id: string): Promise<void> {
+  await api('DELETE', `/levels/${encodeURIComponent(id)}`);
+}
+
+export async function reportCustomLevel(id: string, reason: ReportReason): Promise<void> {
+  await api('POST', `/levels/${encodeURIComponent(id)}/report`, { reason });
+}

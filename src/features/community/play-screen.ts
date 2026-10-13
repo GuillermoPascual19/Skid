@@ -8,20 +8,20 @@ import { solve } from '../../logic/engine/solver';
 import { starsFor } from '../../logic/daily/score';
 import type { BoardHooks } from '../../game/BoardScene';
 import type { MountedBoard } from '../../game/mount';
-import * as online from '../../shared/api';
-import { loadEditorDraft, saveEditorDraft } from '../../shared/storage';
 import { shareLevel } from './community-screen';
 import { h, haptic, openModal, starSvg, toast, type Modal } from '../../shared/dom';
 import { sfx } from '../../audio/sound';
 import { go, type Screen } from '../../shared/router';
 import { loadBoard, onKey, openPauseMenu, playLayout, wearHat } from '../../play/play';
+import { finishCustomLevel, rateCustomLevel, type CustomLevel } from './api';
+import { loadEditorDraft, saveEditorDraft } from './storage';
 
 /**
  * Partida de un nivel de la comunidad (`level`) o prueba de uno en el editor
  * (`testRows`). Se manda al servidor el último intento entero, para que pueda
  * comprobar que se ha superado. En la prueba, superarlo habilita publicarlo.
  */
-export function customLevelScreen(source: { level: online.CustomLevel } | { testRows: string[] }): Screen {
+export function customLevelScreen(source: { level: CustomLevel } | { testRows: string[] }): Screen {
   const testing = 'testRows' in source;
   let level = testing ? null : source.level;
   const rows = testing ? source.testRows : source.level.rows;
@@ -128,7 +128,7 @@ export function customLevelScreen(source: { level: online.CustomLevel } | { test
     const status = h('p', { class: 'rate-status' }, 'Guardando tu marca…');
     const boxTitle = h('p', { class: 'eyebrow' }, 'Valora este nivel');
     const rateBox = h('section', { class: 'rate-box' }, boxTitle, status, rating);
-    const showRating = (lvl: online.CustomLevel) => {
+    const showRating = (lvl: CustomLevel) => {
       if (lvl.mine) {
         boxTitle.textContent = 'Tu nivel';
         status.textContent = 'Lo valoran los demás jugadores al superarlo.';
@@ -144,7 +144,7 @@ export function customLevelScreen(source: { level: online.CustomLevel } | { test
               'aria-label': `${n} ${n === 1 ? 'estrella' : 'estrellas'}`,
               onclick: async () => {
                 try {
-                  level = await online.rateCustomLevel(lvl.id, n);
+                  level = await rateCustomLevel(lvl.id, n);
                   showRating(level);
                 } catch (err) {
                   toast((err as Error).message);
@@ -169,8 +169,7 @@ export function customLevelScreen(source: { level: online.CustomLevel } | { test
       h('button', { class: 'link-btn', onclick: () => shareLevel(level!) }, 'Compartir nivel'),
     ]);
 
-    online
-      .finishCustomLevel(level!.id, log)
+    finishCustomLevel(level!.id, log)
       .then((saved) => {
         level = saved;
         if (!disposed) showRating(saved);

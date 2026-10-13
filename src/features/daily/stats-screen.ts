@@ -7,6 +7,7 @@ import { openDaily } from './daily';
 import { formatDay, h, plural } from '../../shared/dom';
 import { currentName } from '../profile/profile';
 import { go, type Screen } from '../../shared/router';
+import { type PlayerStats, getStats } from './api';
 
 const SVG_NS = 'http://www.w3.org/2000/svg';
 
@@ -33,7 +34,7 @@ export function statsScreen(): Screen {
       return;
     }
     try {
-      const [stats, name] = await Promise.all([online.getStats(), currentName().catch(() => null)]);
+      const [stats, name] = await Promise.all([getStats(), currentName().catch(() => null)]);
       if (disposed) return;
       subtitle.textContent = name ? `Reto diario · ${name}` : 'Reto diario';
       render(stats);
@@ -44,7 +45,7 @@ export function statsScreen(): Screen {
     }
   }
 
-  function render(s: online.PlayerStats) {
+  function render(s: PlayerStats) {
     body.replaceChildren(
       streakCard(s),
       h(
@@ -69,7 +70,7 @@ export function statsScreen(): Screen {
   };
 }
 
-function streakCard(s: online.PlayerStats): HTMLElement {
+function streakCard(s: PlayerStats): HTMLElement {
   let status: HTMLElement | null = null;
   if (!s.playedToday) {
     status = h(
@@ -124,7 +125,7 @@ function monthStart(day: string, months = 0): string {
  * Calendario mensual con los retos jugados (azul), ganados (dorado) y los días
  * salvados por un protector (🛡️). Se puede ir a meses anteriores.
  */
-function streakCalendar(calendar: online.PlayerStats['calendar'] | undefined): HTMLElement {
+function streakCalendar(calendar: PlayerStats['calendar'] | undefined): HTMLElement {
   const played = new Set(calendar?.played ?? []);
   const won = new Set(calendar?.won ?? []);
   const frozen = new Set(calendar?.frozen ?? []);
@@ -199,7 +200,7 @@ function shortDay(day: string): string {
  * ganado, punto en la base = no jugado. Tooltip al tocar o pasar por encima, y
  * la misma información en una lista (el dorado tiene poco contraste con el fondo).
  */
-export function scoreChart(history: online.PlayerStats['history']): HTMLElement {
+export function scoreChart(history: PlayerStats['history']): HTMLElement {
   const W = 320;
   const H = 150;
   const pad = { left: 30, right: 6, top: 10, bottom: 22 };

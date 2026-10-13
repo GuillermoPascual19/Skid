@@ -1,14 +1,14 @@
 // Nombre del jugador en el ranking online y cuenta de Google vinculada.
 
-import * as online from '../../shared/api';
 import { h, openModal } from '../../shared/dom';
 import { renderGoogleButton } from './google';
+import { type Me, getMe, setName } from './api';
 
-let cachedMe: Promise<online.Me> | null = null;
+let cachedMe: Promise<Me> | null = null;
 
 /** Nombre y correo de Google del jugador de este dispositivo (se piden una vez). */
-export function currentMe(): Promise<online.Me> {
-  cachedMe ??= online.getMe().catch((err) => {
+export function currentMe(): Promise<Me> {
+  cachedMe ??= getMe().catch((err) => {
     cachedMe = null;
     throw err;
   });
@@ -20,7 +20,7 @@ export async function currentName(): Promise<string | null> {
 }
 
 /** Actualiza el gorro en la caché del perfil (tras ponérselo). */
-export function setCachedHat(hat: online.Me['hat']): void {
+export function setCachedHat(hat: Me['hat']): void {
   const previous = cachedMe;
   if (previous) cachedMe = previous.then((me) => ({ ...me, hat }));
 }
@@ -67,7 +67,7 @@ export function askName(initial = ''): Promise<string | null> {
           }
           save.disabled = true;
           try {
-            await online.setName(name);
+            await setName(name);
             const me = await currentMe().catch(() => ({ name, email: null, hat: null }));
             cachedMe = Promise.resolve({ ...me, name });
             finish(name);

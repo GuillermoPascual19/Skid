@@ -8,6 +8,7 @@ import { monthRange, weekRange, type DayRange } from '../../logic/daily/daily';
 import { today } from '../daily/daily';
 import { ensureName } from '../profile/profile';
 import { go, type Screen } from '../../shared/router';
+import { type League, type RankingRow, createLeague, joinLeague, leagueRanking, leagueStandings, myLeagues } from './api';
 
 type Period = 'today' | 'yesterday' | 'week' | 'month';
 
@@ -70,7 +71,7 @@ export function rankingScreen(route: { join?: string }): Screen {
     ['month', 'Mes'],
   ];
 
-  let leagues: online.League[] = [];
+  let leagues: League[] = [];
   // Al volver del perfil de un amigo se sigue en la misma liga y pestaña.
   let selected: string | null = remembered.selected;
   let period: Period = remembered.period;
@@ -83,13 +84,13 @@ export function rankingScreen(route: { join?: string }): Screen {
     try {
       if (!(await ensureName())) return go({ name: 'home' });
       if (route.join) {
-        const league = await online.joinLeague(route.join);
+        const league = await joinLeague(route.join);
         selected = league.id;
         toast(`Te has unido a ${league.name}`);
         route = {};
         history.replaceState(null, '', location.pathname);
       }
-      leagues = await online.myLeagues();
+      leagues = await myLeagues();
       selected = leagues.find((l) => l.id === selected)?.id ?? leagues[0]?.id ?? null;
       if (!disposed) render();
     } catch (err) {
@@ -179,7 +180,7 @@ export function rankingScreen(route: { join?: string }): Screen {
   async function fillStandings(list: HTMLElement, leagueId: string, range: DayRange) {
     const id = ++requestId;
     try {
-      const rows = await online.leagueStandings(leagueId, range.from, range.to);
+      const rows = await leagueStandings(leagueId, range.from, range.to);
       if (disposed || id !== requestId) return;
       list.replaceChildren(
         ...rows.map((row, i) =>
@@ -214,7 +215,7 @@ export function rankingScreen(route: { join?: string }): Screen {
   async function fillRanking(list: HTMLElement, leagueId: string, forDay: string) {
     const id = ++requestId;
     try {
-      const rows = await online.leagueRanking(leagueId, forDay);
+      const rows = await leagueRanking(leagueId, forDay);
       if (disposed || id !== requestId) return;
       list.replaceChildren(
         ...rows.map((row, i) =>
@@ -253,7 +254,7 @@ export function rankingScreen(route: { join?: string }): Screen {
     const nameInput = h('input', { class: 'field', placeholder: 'Nombre de la liga', maxLength: 30 });
     const error = h('p', { class: 'error', hidden: true });
 
-    const run = async (button: HTMLButtonElement, action: () => Promise<online.League>) => {
+    const run = async (button: HTMLButtonElement, action: () => Promise<League>) => {
       button.disabled = true;
       error.hidden = true;
       try {
@@ -281,7 +282,7 @@ export function rankingScreen(route: { join?: string }): Screen {
             class: 'row',
             onsubmit: (e: Event) => {
               e.preventDefault();
-              if (codeInput.value.trim()) void run(joinBtn, () => online.joinLeague(codeInput.value));
+              if (codeInput.value.trim()) void run(joinBtn, () => joinLeague(codeInput.value));
             },
           },
           codeInput,
@@ -294,7 +295,7 @@ export function rankingScreen(route: { join?: string }): Screen {
             class: 'row',
             onsubmit: (e: Event) => {
               e.preventDefault();
-              if (nameInput.value.trim().length >= 2) void run(createBtn, () => online.createLeague(nameInput.value));
+              if (nameInput.value.trim().length >= 2) void run(createBtn, () => createLeague(nameInput.value));
             },
           },
           nameInput,
@@ -319,7 +320,7 @@ export function rankingScreen(route: { join?: string }): Screen {
 }
 
 /** El pingüino de cada amigo, con su gorro. */
-function avatar(hat: online.RankingRow['hat']): HTMLElement {
+function avatar(hat: RankingRow['hat']): HTMLElement {
   return h('span', { class: 'avatar' }, svg(penguinSvg(hat)));
 }
 

@@ -5,39 +5,40 @@ import { elementSvg } from '../../art/elements';
 import { penguinSvg } from '../../art/hats';
 import { ELEMENTS } from '../../logic/engine/elements';
 import * as online from '../../shared/api';
-import { loadEditorDraft } from '../../shared/storage';
 import { boardThumb } from './board-art';
 import { h, openModal, plural, share, svg, toast } from '../../shared/dom';
 import { go, type Screen } from '../../shared/router';
+import { type CustomLevel, type CustomLevelSort, type ReportReason, deleteCustomLevel, getCustomLevel, listCustomLevels, reportCustomLevel } from './api';
+import { loadEditorDraft } from './storage';
 
-const TABS: { id: online.CustomLevelSort; label: string }[] = [
+const TABS: { id: CustomLevelSort; label: string }[] = [
   { id: 'top', label: 'Mejor valorados' },
   { id: 'new', label: 'Nuevos' },
   { id: 'mine', label: 'Mis niveles' },
 ];
 
 /** Pestaña que se estaba viendo (dura mientras la página esté abierta). */
-let lastTab: online.CustomLevelSort = 'top';
+let lastTab: CustomLevelSort = 'top';
 
 /** Enlace que abre directamente un nivel (ver main.ts). */
-export function levelLink(level: online.CustomLevel): string {
+export function levelLink(level: CustomLevel): string {
   return `${location.origin}${location.pathname}?nivel=${encodeURIComponent(level.id)}`;
 }
 
 /** Comparte un nivel (menú de compartir del móvil, o copiar el enlace). */
-export function shareLevel(level: online.CustomLevel): void {
+export function shareLevel(level: CustomLevel): void {
   const text = level.mine ? `🐧 Prueba mi nivel «${level.name}» en Skid` : `🐧 Prueba el nivel «${level.name}» de ${level.author} en Skid`;
   void share(`${text}\n${levelLink(level)}`);
 }
 
-const REPORT_REASONS: { id: online.ReportReason; label: string }[] = [
+const REPORT_REASONS: { id: ReportReason; label: string }[] = [
   { id: 'name', label: 'Nombre ofensivo o inapropiado' },
   { id: 'broken', label: 'No se puede jugar bien' },
   { id: 'other', label: 'Otro motivo' },
 ];
 
 /** Pide el motivo y denuncia el nivel. Se resuelve a true si se envió. */
-export function reportLevel(level: online.CustomLevel): Promise<boolean> {
+export function reportLevel(level: CustomLevel): Promise<boolean> {
   return new Promise((resolve) => {
     let sent = false;
     const modal = openModal(
@@ -51,7 +52,7 @@ export function reportLevel(level: online.CustomLevel): Promise<boolean> {
               class: 'btn secondary block',
               onclick: async () => {
                 try {
-                  await online.reportCustomLevel(level.id, r.id);
+                  await reportCustomLevel(level.id, r.id);
                   sent = true;
                   modal.close();
                   toast('Gracias por avisar. Si más jugadores lo denuncian, se ocultará.');
@@ -73,9 +74,9 @@ export function reportLevel(level: online.CustomLevel): Promise<boolean> {
 /**
  * `open`: id de un nivel que abrir nada más entrar (enlace compartido).
  */
-export function communityScreen(tab?: online.CustomLevelSort, open?: string): Screen {
+export function communityScreen(tab?: CustomLevelSort, open?: string): Screen {
   let current = tab ?? lastTab;
-  let levels: online.CustomLevel[] = [];
+  let levels: CustomLevel[] = [];
   let more = false;
   let loading = false;
   let disposed = false;
@@ -138,7 +139,7 @@ export function communityScreen(tab?: online.CustomLevelSort, open?: string): Sc
     const tabAtStart = current;
     if (!append) list.replaceChildren(h('p', { class: 'empty' }, 'Cargando…'));
     try {
-      const page = await online.listCustomLevels(current, append ? levels.length : 0);
+      const page = await listCustomLevels(current, append ? levels.length : 0);
       if (disposed || tabAtStart !== current) return;
       levels = append ? [...levels, ...page.levels] : page.levels;
       more = page.more;
@@ -163,7 +164,7 @@ export function communityScreen(tab?: online.CustomLevelSort, open?: string): Sc
     list.replaceChildren(...levels.map(levelCard));
   }
 
-  function levelCard(level: online.CustomLevel): HTMLElement {
+  function levelCard(level: CustomLevel): HTMLElement {
     const rating = level.rating === null ? 'Sin valorar' : `★ ${level.rating.toFixed(1)} (${level.ratingCount})`;
     const icons = ELEMENTS.filter((e) => level.elements.includes(e.id)).map((e) => h('span', { class: 'mini-element', title: e.name }, svg(elementSvg(e.id))));
     return h(
@@ -214,7 +215,7 @@ export function communityScreen(tab?: online.CustomLevelSort, open?: string): Sc
     );
   }
 
-  function confirmDelete(level: online.CustomLevel) {
+  function confirmDelete(level: CustomLevel) {
     const modal = openModal(
       [
         h('h2', null, '¿Borrar el nivel?'),
@@ -230,7 +231,7 @@ export function communityScreen(tab?: online.CustomLevelSort, open?: string): Sc
               onclick: async () => {
                 modal.close();
                 try {
-                  await online.deleteCustomLevel(level.id);
+                  await deleteCustomLevel(level.id);
                   levels = levels.filter((l) => l.id !== level.id);
                   renderList();
                   toast('Nivel borrado');
@@ -250,7 +251,7 @@ export function communityScreen(tab?: online.CustomLevelSort, open?: string): Sc
   /** Abre el nivel de un enlace compartido. */
   async function openShared(id: string) {
     try {
-      const level = await online.getCustomLevel(id);
+      const level = await getCustomLevel(id);
       if (!disposed) go({ name: 'custom', level });
     } catch (err) {
       toast((err as Error).message);

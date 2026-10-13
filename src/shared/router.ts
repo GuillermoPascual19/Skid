@@ -1,8 +1,8 @@
 // Navegación entre pantallas. Cada pantalla es un elemento con ganchos opcionales
 // para cuando ya está en el documento (mount) y cuando se sustituye (dispose).
 
-import type { CustomLevel, CustomLevelSort } from './api';
-import type { DailyRecord } from './storage';
+import type { CustomLevel, CustomLevelSort } from '../features/community/api';
+import type { DailyRecord } from '../features/daily/storage';
 
 export interface Screen {
   readonly el: HTMLElement;

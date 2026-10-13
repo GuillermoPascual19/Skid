@@ -2,9 +2,9 @@
 // solo se carga si el servidor tiene configurado un ID de cliente.
 
 import * as online from '../../shared/api';
-import { clearDaily } from '../../shared/storage';
 import { toast } from '../../shared/dom';
 import { resetProfile } from './profile';
+import { clearDaily } from '../daily/storage';
 
 interface GoogleIdApi {
   initialize(options: {

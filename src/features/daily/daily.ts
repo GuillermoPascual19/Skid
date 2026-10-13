@@ -4,17 +4,18 @@
 import { dailyLevel, dayKey } from '../../logic/daily/daily';
 import { dailyScore, SCORING } from '../../logic/daily/score';
 import * as online from '../../shared/api';
-import { loadDaily, saveDaily, type DailyRecord, type DailyResult } from '../../shared/storage';
 import { formatDay, formatTime, h, openModal, plural, share, toast } from '../../shared/dom';
 import { celebrate } from '../../shared/celebrate';
 import { ensureName } from '../profile/profile';
 import { go } from '../../shared/router';
+import { type ServerRun, getDaily, startDaily } from './api';
+import { type DailyRecord, type DailyResult, loadDaily, saveDaily } from './storage';
 
 export function today(): string {
   return dayKey(new Date());
 }
 
-export function resultFromServer(run: online.ServerRun, optimal: number): DailyResult {
+export function resultFromServer(run: ServerRun, optimal: number): DailyResult {
   return {
     moves: run.moves ?? 0,
     retries: run.retries ?? 0,
@@ -34,7 +35,7 @@ export async function openDaily(): Promise<void> {
   if (online.onlineEnabled) {
     try {
       if (!(await ensureName())) return;
-      const server = await online.getDaily(day);
+      const server = await getDaily(day);
       if (server?.finishedAt) {
         const result = resultFromServer(server, dailyLevel(day).solution.length);
         saveDaily({ day, startedAt: server.startedAt, log: record?.log ?? '', result });
@@ -83,7 +84,7 @@ function showIntro(day: string): void {
     start.disabled = true;
     try {
       let startedAt = Date.now();
-      if (online.onlineEnabled) startedAt = (await online.startDaily(day)).startedAt;
+      if (online.onlineEnabled) startedAt = (await startDaily(day)).startedAt;
       const record: DailyRecord = { day, startedAt, log: '' };
       saveDaily(record);
       modal.close();

@@ -3,10 +3,10 @@
 
 import { HAT_NAMES, penguinSvg } from '../../art/hats';
 import { ACHIEVEMENTS } from '../../logic/achievements/achievements';
-import * as online from '../../shared/api';
 import { h, plural, svg } from '../../shared/dom';
 import { go, type Screen } from '../../shared/router';
 import { scoreChart, tile } from '../daily/stats-screen';
+import { type PlayerProfile, getPlayer } from './api';
 
 export function playerScreen(id: string): Screen {
   const title = h('h1', null, 'Perfil');
@@ -28,7 +28,7 @@ export function playerScreen(id: string): Screen {
 
   async function load() {
     try {
-      const p = await online.getPlayer(id);
+      const p = await getPlayer(id);
       if (disposed) return;
       title.textContent = p.isMe ? 'Tu perfil' : (p.name ?? 'Jugador');
       subtitle.textContent = p.sharedLeagues.length ? p.sharedLeagues.join(' · ') : 'Reto diario';
@@ -40,7 +40,7 @@ export function playerScreen(id: string): Screen {
     }
   }
 
-  function render(p: online.PlayerProfile) {
+  function render(p: PlayerProfile) {
     const s = p.stats;
     const hats = ACHIEVEMENTS.filter((a) => p.achievements.includes(a.id));
     body.replaceChildren(
@@ -96,7 +96,7 @@ export function playerScreen(id: string): Screen {
 }
 
 /** Marcador de los días que jugasteis los dos. */
-function headToHead(r: NonNullable<online.PlayerProfile['headToHead']>, name: string): HTMLElement {
+function headToHead(r: NonNullable<PlayerProfile['headToHead']>, name: string): HTMLElement {
   if (r.played === 0) {
     return h('section', { class: 'card h2h' }, h('p', { class: 'eyebrow' }, 'Cara a cara'), h('p', { class: 'muted' }, 'Aún no habéis jugado el mismo día.'));
   }

@@ -2,7 +2,6 @@
 
 import { DAILY_TIME_ZONE, dailyLevel } from '../../logic/daily/daily';
 import * as online from '../../shared/api';
-import { claimWinCelebration, loadDaily, saveDaily, startingProgress } from '../../shared/storage';
 import { celebrate } from '../../shared/celebrate';
 import { openDaily, resultFromServer, shareText, showDailyResult, today } from '../daily/daily';
 import { penguinSvg } from '../../art/hats';
@@ -12,13 +11,17 @@ import { formatDay, formatTime, h, openModal, plural, previousDay, share, svg, t
 import { renderGoogleButton, signOut } from '../profile/google';
 import { askName, currentMe } from '../profile/profile';
 import { go, type Screen } from '../../shared/router';
+import { dailyWins, getDaily, getStats } from '../daily/api';
+import { claimWinCelebration, loadDaily, saveDaily } from '../daily/storage';
+import { startingProgress } from '../free-play/storage';
+import type { Me } from '../profile/api';
 
 export function homeScreen(): Screen {
   const day = today();
   const dailyCard = h('section', { class: 'card daily-card' });
   const account = h('div', { class: 'account' });
   const logoPenguin = h('div', { class: 'logo-penguin' }, svg(penguinSvg()));
-  const wearHat = (hat: online.Me['hat']) => logoPenguin.replaceChildren(svg(penguinSvg(hat)));
+  const wearHat = (hat: Me['hat']) => logoPenguin.replaceChildren(svg(penguinSvg(hat)));
   let ticker = 0;
   let disposed = false;
   /** Racha del servidor (null hasta que llega, o sin ranking online). */
@@ -89,15 +92,14 @@ export function homeScreen(): Screen {
       void celebrateYesterday(me.name)
         .then(() => (disposed || !me.name ? undefined : celebrateNewAchievements(wearHat)))
         .catch(() => {});
-      void online
-        .getStats()
+      void getStats()
         .then((s) => {
           streak = { current: s.currentStreak, playedToday: s.playedToday };
           if (!disposed) renderDaily();
         })
         .catch(() => {});
       // El reto pudo jugarse en otro dispositivo.
-      const server = await online.getDaily(day);
+      const server = await getDaily(day);
       const record = loadDaily(day);
       if (server?.finishedAt && (!record?.result || record.pendingSubmit)) {
         const result = resultFromServer(server, dailyLevel(day).solution.length);
@@ -117,7 +119,7 @@ export function homeScreen(): Screen {
     if (!online.onlineEnabled || !name) return;
     const yesterday = previousDay(day);
     try {
-      const wins = await online.dailyWins(yesterday);
+      const wins = await dailyWins(yesterday);
       if (disposed || wins.length === 0 || document.querySelector('.overlay')) return;
       if (!claimWinCelebration(yesterday)) return;
       const [first] = wins;
@@ -138,7 +140,7 @@ export function homeScreen(): Screen {
   }
 
   /** Quién juega en este dispositivo y, si no está vinculado, la invitación a entrar con Google. */
-  function renderAccount(me: online.Me) {
+  function renderAccount(me: Me) {
     const changeName = h(
       'button',
       {

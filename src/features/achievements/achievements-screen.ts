@@ -4,11 +4,12 @@
 import { HAT_NAMES, penguinSvg, type HatId } from '../../art/hats';
 import { ACHIEVEMENTS } from '../../logic/achievements/achievements';
 import * as online from '../../shared/api';
-import { markAchievementsSeen, seenAchievements } from '../../shared/storage';
 import { celebrate } from '../../shared/celebrate';
 import { h, svg, toast } from '../../shared/dom';
 import { setCachedHat } from '../profile/profile';
 import { go, type Screen } from '../../shared/router';
+import { type Achievements, getAchievements, setHat } from './api';
+import { markAchievementsSeen, seenAchievements } from './storage';
 
 export function achievementsScreen(): Screen {
   const subtitle = h('p');
@@ -25,7 +26,7 @@ export function achievementsScreen(): Screen {
     body,
   );
 
-  let data: online.Achievements | null = null;
+  let data: Achievements | null = null;
   let disposed = false;
 
   async function load() {
@@ -34,7 +35,7 @@ export function achievementsScreen(): Screen {
       return;
     }
     try {
-      data = await online.getAchievements();
+      data = await getAchievements();
       if (disposed) return;
       markAchievementsSeen(data.items.filter((i) => i.unlocked).map((i) => i.id)); // Ya los está viendo.
       render();
@@ -48,7 +49,7 @@ export function achievementsScreen(): Screen {
   async function wear(hat: HatId | null) {
     if (!data) return;
     try {
-      await online.setHat(hat);
+      await setHat(hat);
       data = { ...data, hat };
       setCachedHat(hat);
       render();
@@ -129,7 +130,7 @@ export function achievementsScreen(): Screen {
  */
 export async function celebrateNewAchievements(onHat: (hat: HatId) => void): Promise<void> {
   if (!online.onlineEnabled) return;
-  const { items } = await online.getAchievements();
+  const { items } = await getAchievements();
   const seen = seenAchievements();
   const fresh = ACHIEVEMENTS.filter((def) => items.find((i) => i.id === def.id)?.unlocked && !seen.has(def.id));
   if (fresh.length === 0 || document.querySelector('.overlay')) return;
@@ -159,7 +160,7 @@ export async function celebrateNewAchievements(onHat: (hat: HatId) => void): Pro
     });
     if (wantsIt) {
       try {
-        await online.setHat(def.hat);
+        await setHat(def.hat);
         setCachedHat(def.hat);
         onHat(def.hat);
       } catch (err) {

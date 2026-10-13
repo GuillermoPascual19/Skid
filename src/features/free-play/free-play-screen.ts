@@ -9,12 +9,12 @@ import { solve } from '../../logic/engine/solver';
 import { starsFor } from '../../logic/daily/score';
 import type { BoardHooks } from '../../game/BoardScene';
 import type { MountedBoard } from '../../game/mount';
-import { claimElementIntro, claimMilestone, MILESTONES, saveProgress, startingProgress } from '../../shared/storage';
 import { celebrate } from '../../shared/celebrate';
 import { h, haptic, openModal, starSvg, toast, type Modal } from '../../shared/dom';
 import { sfx } from '../../audio/sound';
 import { go, type Screen } from '../../shared/router';
 import { loadBoard, onKey, openPauseMenu, playLayout, wearHat } from '../../play/play';
+import { MILESTONES, claimElementIntro, claimMilestone, saveProgress, startingProgress } from './storage';
 
 export function levelsScreen(): Screen {
   const progress = startingProgress();

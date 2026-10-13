@@ -7,12 +7,13 @@ import { elementSvg } from '../../art/elements';
 import { PORTAL_CHARS } from '../../logic/engine/board';
 import { checkCustomLevel, CUSTOM_LIMITS, encodeRows } from '../../logic/community/community';
 import { ELEMENTS, unlockedElements, type ElementId } from '../../logic/engine/elements';
-import * as online from '../../shared/api';
-import { loadEditorDraft, saveEditorDraft, startingProgress, type EditorDraft } from '../../shared/storage';
 import { cellArt } from './board-art';
 import { h, openModal, svg, toast } from '../../shared/dom';
 import { ensureName } from '../profile/profile';
 import { go, type Screen } from '../../shared/router';
+import { publishCustomLevel } from './api';
+import { type EditorDraft, loadEditorDraft, saveEditorDraft } from './storage';
+import { startingProgress } from '../free-play/storage';
 
 type Tool = 'wall' | 'ice' | 'start' | 'piece' | 'snow' | 'arrow' | 'portal' | 'hole';
 
@@ -261,7 +262,7 @@ export function editorScreen(): Screen {
     publishBtn.disabled = true;
     try {
       if (!(await ensureName())) return;
-      await online.publishCustomLevel(clean, rows(), proof.proofLog);
+      await publishCustomLevel(clean, rows(), proof.proofLog);
       saveEditorDraft(null);
       toast('¡Nivel publicado!');
       go({ name: 'community', tab: 'mine' });

@@ -8,12 +8,13 @@ import { dailyScore, SCORING } from '../../logic/daily/score';
 import type { BoardHooks } from '../../game/BoardScene';
 import type { MountedBoard } from '../../game/mount';
 import * as online from '../../shared/api';
-import { saveDaily, type DailyRecord, type DailyResult } from '../../shared/storage';
 import { celebrateStreak, showDailyResult } from './daily';
 import { formatDay, formatTime, h, haptic, openModal } from '../../shared/dom';
 import { sfx } from '../../audio/sound';
 import { go, type Screen } from '../../shared/router';
 import { loadBoard, onKey, openPauseMenu, playLayout, wearHat } from '../../play/play';
+import { finishDaily } from './api';
+import { type DailyRecord, type DailyResult, saveDaily } from './storage';
 
 export function dailyScreen(record: DailyRecord): Screen {
   const { day } = record;
@@ -188,7 +189,7 @@ export function dailyScreen(record: DailyRecord): Screen {
 
     const sending = openModal([h('h2', null, '¡Conseguido!'), h('p', { class: 'lead' }, 'Enviando tu resultado…')]);
     try {
-      const result = await online.finishDaily(day, log);
+      const result = await finishDaily(day, log);
       saveDaily({ day, startedAt: record.startedAt, log, result });
       sending.close();
       await celebrateStreak(result);
