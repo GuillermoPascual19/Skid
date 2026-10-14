@@ -12,16 +12,16 @@ import { read, write } from '../../shared/storage';
 import { t, tn } from '../../i18n/i18n';
 
 /** Sube cuando cambian las reglas o hay algo nuevo (ver NEWS): quien ya jugaba ve el aviso. */
-export const GUIDE_VERSION = 4;
+export const GUIDE_VERSION = 5;
 const GUIDE_SEEN_KEY = 'skid.guide.v1';
 
 export type GuidePage = 'slide' | 'pieces' | 'free' | 'daily' | 'weekly' | 'duels' | 'leagues' | 'elements' | 'community';
 
 /** Aviso de la portada para quien ya jugaba: lo último que ha cambiado (sube GUIDE_VERSION al cambiarlo). */
 export const NEWS = {
-  icon: '⚔️',
+  icon: '🏆',
   // El título y el texto están en los diccionarios: news.title y news.text.
-  page: 'duels' as GuidePage,
+  page: 'leagues' as GuidePage,
 };
 
 interface Page {
@@ -158,6 +158,7 @@ const PAGES: Page[] = [
       rules(
         ['🏆', t('guide.leagues.r1')],
         ['📅', t('guide.leagues.r2', { par: GOLF.parPoints, stroke: GOLF.perStroke })],
+        ['🎃', t('guide.leagues.r6')],
         ['🔥', t('guide.leagues.r3')],
         ['🛡️', t('guide.leagues.r4', { every: FREEZE_EVERY, max: MAX_FREEZES })],
         ['🎩', t('guide.leagues.r5')],

@@ -16,7 +16,8 @@ y niveles creados por los jugadores.
   racha, solución al terminar y el fantasma de un amigo.
 - **Reto semanal**: un tablero grande y difícil de lunes a domingo, con ranking entre amigos.
 - **Duelos**: retas a un amigo (o a quien quieras con un enlace) al mismo tablero nuevo.
-- **Ligas**: ranking del día, de la semana y del mes con tus amigos; logros que desbloquean gorros.
+- **Ligas**: ranking del día y de la semana con tus amigos, y temporadas mensuales cuyo campeón se
+  lleva el gorro de ese mes; logros que desbloquean más gorros.
 - **Niveles de jugadores**: editor, publicar (hay que superarlo antes), valorar, ranking por nivel,
   compartir y denunciar.
 - Guía «Cómo se juega», modo oscuro, música y efectos sintetizados, y login con Google para jugar en
@@ -96,9 +97,9 @@ backend/                   el Worker de Cloudflare: sirve el juego (dist/) y la 
     session.ts             sesiones, login con Google, cerrar sesión y borrar la cuenta
     google.ts              verificación de los tokens de Google
     i18n.ts                idioma de cada petición para los mensajes de error
-    routes/                un archivo por apartado: daily, weekly, duels, leagues, levels,
-                           players, stats, achievements
-  migrations/              esquema de la base de datos D1 (0001 a 0012)
+    routes/                un archivo por apartado: daily, weekly, duels, leagues, seasons,
+                           levels, players, stats, achievements
+  migrations/              esquema de la base de datos D1 (0001 a 0013)
 common/                    lo que usan los dos; sin APIs del navegador ni imports de fuera
   logic/                   reglas puras: el servidor reproduce las partidas con este mismo código
     engine/                tablero, movimiento, solver, generador, elementos, aleatorio
@@ -106,6 +107,7 @@ common/                    lo que usan los dos; sin APIs del navegador ni import
     weekly/                reto semanal
     duels/                 duelos: dificultades y quién gana
     achievements/          logros
+    leagues/               temporadas: fechas, podio y el gorro de cada mes
     community/             validación de niveles creados por jugadores
     players/               reglas de los nombres
   i18n/                    idiomas y mensajes de error del servidor en cada uno
@@ -157,6 +159,19 @@ fuera) y compila el juego a `dist/`.
 - Lógica en `common/logic/duels/`, servidor en `backend/src/routes/duels.ts` y el juego en
   `frontend/src/features/duels/`. La partida «al mejor intento» es común con el reto semanal
   (`frontend/src/play/attempt-screen.ts`).
+
+## Temporadas
+
+- Cada mes natural es una temporada en cada liga. Gana quien más puntos sume (los mismos del
+  ranking) y, a igualdad, quien ganó más días; hace falta que jugaran al menos 2. Un empate en
+  cabeza da dos campeones.
+- El campeón se lleva el gorro de ese mes (12, uno por mes: `SEASON_HATS`), que solo se consigue
+  así. La primera temporada que cuenta es septiembre de 2026.
+- No hay tareas programadas: una temporada se cierra la primera vez que alguien de la liga abre
+  el juego después de que acabe. El podio se guarda en `season_results` con el nombre de la
+  liga, así que el título y el gorro se quedan aunque luego alguien salga o la liga se borre.
+- Lógica en `common/logic/leagues/seasons.ts`, servidor en `backend/src/routes/seasons.ts` y el
+  juego en la pestaña Temporada del ranking (`frontend/src/features/ranking/season.ts`).
 
 ## Seguridad
 

@@ -398,7 +398,7 @@ export const messages: Messages = {
       today: 'Hoje',
       yesterday: 'Ontem',
       week: 'Semana',
-      month: 'Mês',
+      season: 'Temporada',
     },
     joined: 'Entraste em {name}',
     join: 'Entrar',
@@ -440,6 +440,17 @@ export const messages: Messages = {
       createEyebrow: 'Criar uma liga nova',
     },
     author: 'autor',
+  },
+  season: {
+    prize: 'O campeão leva o chapéu do mês: {hat}.',
+    rule: 'Ganha quem somar mais pontos no mês, com pelo menos 2 a jogar. Cada chapéu de temporada só se consegue ganhando o seu mês.',
+    previous: 'Temporada anterior',
+    noChampion: 'Ninguém a ganhou: eram precisos pelo menos 2 a jogar.',
+    won: {
+      eyebrow: 'Fim de temporada · {season}',
+      title: 'Ganhaste a temporada em {league}!',
+      text: '{points} pontos em {month}. O teu prémio: {hat}, que só se ganha nesse mês.',
+    },
   },
   levels: {
     ranking: {
@@ -632,6 +643,18 @@ export const messages: Messages = {
     ushanka: 'Gorro polar',
     wizard: 'Chapéu de mago',
     crown: 'Coroa',
+    scarf: 'Cachecol',
+    hearts: 'Bandolete de corações',
+    clover: 'Chapéu de trevo',
+    umbrella: 'Guarda-chuva',
+    flowers: 'Coroa de flores',
+    visor: 'Viseira',
+    straw: 'Chapéu de palha',
+    goggles: 'Máscara de mergulho',
+    mortarboard: 'Capelo',
+    pumpkin: 'Abóbora',
+    leaves: 'Gorro de folhas',
+    star: 'Estrela da árvore',
   },
   achievementsScreen: {
     needsOnline: 'As conquistas precisam da classificação online.',
@@ -649,6 +672,11 @@ export const messages: Messages = {
     seeHats: 'Ver os meus chapéus',
     newOne: 'Nova conquista!',
     newOneText: '{description} Desbloqueaste: {hat}.',
+  },
+  seasonHats: {
+    title: 'Chapéus de temporada',
+    text: 'Cada mês é uma temporada nas tuas ligas: quem somar mais pontos leva o chapéu desse mês.',
+    locked: 'Ganha a temporada de {month} numa das tuas ligas.',
   },
   profile: {
     title: 'Perfil',
@@ -727,8 +755,8 @@ export const messages: Messages = {
     next: 'Seguinte',
   },
   news: {
-    title: 'Novo: duelos.',
-    text: 'Desafia um amigo (ou quem quiseres com um link) para o mesmo tabuleiro: ganha quem o fizer em menos jogadas.',
+    title: 'Novo: temporadas.',
+    text: 'Cada mês é uma temporada nas tuas ligas: quem somar mais pontos ganha um chapéu que só se consegue nesse mês.',
   },
   guide: {
     slide: {
@@ -785,6 +813,7 @@ export const messages: Messages = {
       r3: 'Joga o desafio vários dias seguidos para fazeres uma sequência.',
       r4: 'A cada {every} dias seguidos ganhas um protetor (até {max}): se um dia não jogares, a tua sequência não se perde.',
       r5: 'As conquistas desbloqueiam chapéus para o teu pinguim.',
+      r6: 'Cada mês é uma temporada: quem somar mais pontos na liga leva o chapéu desse mês, que só se consegue assim.',
     },
     community: {
       title: 'Níveis dos jogadores',

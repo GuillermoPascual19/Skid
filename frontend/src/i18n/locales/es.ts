@@ -397,7 +397,7 @@ export const messages = {
       today: 'Hoy',
       yesterday: 'Ayer',
       week: 'Semana',
-      month: 'Mes',
+      season: 'Temporada',
     },
     joined: 'Te has unido a {name}',
     join: 'Unirme',
@@ -439,6 +439,17 @@ export const messages = {
       createEyebrow: 'Crear una liga nueva',
     },
     author: 'autor',
+  },
+  season: {
+    prize: 'El campeón se lleva el gorro del mes: {hat}.',
+    rule: 'Gana quien más puntos sume en el mes, con al menos 2 jugando. Cada gorro de temporada solo se consigue ganando su mes.',
+    previous: 'Temporada anterior',
+    noChampion: 'Nadie la ganó: hacía falta que jugaran al menos 2.',
+    won: {
+      eyebrow: 'Fin de temporada · {season}',
+      title: '¡Has ganado la temporada en {league}!',
+      text: '{points} puntos en {month}. Tu premio: {hat}, que solo se consigue ganando ese mes.',
+    },
   },
   levels: {
     ranking: {
@@ -631,6 +642,18 @@ export const messages = {
     ushanka: 'Gorro polar',
     wizard: 'Gorro de mago',
     crown: 'Corona',
+    scarf: 'Bufanda',
+    hearts: 'Diadema de corazones',
+    clover: 'Sombrero de trébol',
+    umbrella: 'Paraguas',
+    flowers: 'Corona de flores',
+    visor: 'Visera',
+    straw: 'Sombrero de paja',
+    goggles: 'Gafas de buceo',
+    mortarboard: 'Birrete',
+    pumpkin: 'Calabaza',
+    leaves: 'Gorro de hojas',
+    star: 'Estrella de árbol',
   },
   achievementsScreen: {
     needsOnline: 'Los logros necesitan el ranking online.',
@@ -648,6 +671,11 @@ export const messages = {
     seeHats: 'Ver mis gorros',
     newOne: '¡Logro nuevo!',
     newOneText: '{description} Has desbloqueado: {hat}.',
+  },
+  seasonHats: {
+    title: 'Gorros de temporada',
+    text: 'Cada mes es una temporada en tus ligas: quien más puntos sume se lleva el gorro de ese mes.',
+    locked: 'Gana la temporada de {month} en una de tus ligas.',
   },
   profile: {
     title: 'Perfil',
@@ -726,8 +754,8 @@ export const messages = {
     next: 'Siguiente',
   },
   news: {
-    title: 'Nuevo: duelos.',
-    text: 'Reta a un amigo (o a quien quieras con un enlace) al mismo tablero y gana quien lo haga en menos golpes.',
+    title: 'Nuevo: temporadas.',
+    text: 'Cada mes es una temporada en tus ligas: quien más puntos sume se lleva un gorro que solo se consigue ese mes.',
   },
   guide: {
     slide: {
@@ -784,6 +812,7 @@ export const messages = {
       r3: 'Juega el reto varios días seguidos para hacer racha.',
       r4: 'Cada {every} días seguidos ganas un protector (hasta {max}): si un día no juegas, tu racha no se rompe.',
       r5: 'Los logros desbloquean gorros para tu pingüino.',
+      r6: 'Cada mes es una temporada: quien más puntos sume en la liga se lleva el gorro de ese mes, que solo se consigue así.',
     },
     community: {
       title: 'Niveles de jugadores',

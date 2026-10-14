@@ -14,7 +14,7 @@ const SVG_NS = 'http://www.w3.org/2000/svg';
 
 export function statsScreen(): Screen {
   const subtitle = h('p');
-  const body = h('div', { class: 'stats-body' }, h('p', { class: 'empty' }, 'Cargando…'));
+  const body = h('div', { class: 'stats-body' }, h('p', { class: 'empty' }, t('common.loading')));
   const el = h(
     'div',
     { class: 'screen' },

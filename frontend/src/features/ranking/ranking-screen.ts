@@ -4,15 +4,28 @@
 import * as online from '../../shared/api';
 import { penguinSvg } from '../../../../common/art/hats';
 import { formatDay, formatTime, h, openModal, previousDay, share, svg, toast } from '../../shared/dom';
-import { monthRange, weekRange, type DayRange } from '../../../../common/logic/daily/daily';
+import { weekRange, type DayRange } from '../../../../common/logic/daily/daily';
+import { seasonOf, seasonRange } from '../../../../common/logic/leagues/seasons';
 import { golfLabel } from '../../../../common/logic/daily/score';
 import { today } from '../daily/daily';
 import { ensureName } from '../profile/profile';
 import { go, type Screen } from '../../shared/router';
-import { type League, type RankingRow, createLeague, joinLeague, leagueInvite, leagueRanking, leagueStandings, leaveLeague, myLeagues } from './api';
+import {
+  type League,
+  type RankingRow,
+  createLeague,
+  joinLeague,
+  leagueInvite,
+  leagueRanking,
+  leagueSeason,
+  leagueStandings,
+  leaveLeague,
+  myLeagues,
+} from './api';
+import { previousSeasonCard, seasonCard } from './season';
 import { intlLocale, t, tn } from '../../i18n/i18n';
 
-type Period = 'today' | 'yesterday' | 'week' | 'month';
+type Period = 'today' | 'yesterday' | 'week' | 'season';
 
 /** Liga y pestaña que se estaban viendo (dura mientras la página esté abierta). */
 const remembered: { selected: string | null; period: Period } = { selected: null, period: 'today' };
@@ -70,7 +83,7 @@ export function rankingScreen(route: { join?: string }): Screen {
     ['today', t('ranking.period.today')],
     ['yesterday', t('ranking.period.yesterday')],
     ['week', t('ranking.period.week')],
-    ['month', t('ranking.period.month')],
+    ['season', t('ranking.period.season')],
   ];
 
   let leagues: League[] = [];
@@ -82,7 +95,7 @@ export function rankingScreen(route: { join?: string }): Screen {
   let disposed = false;
 
   async function load() {
-    body.replaceChildren(h('p', { class: 'empty' }, 'Cargando…'));
+    body.replaceChildren(h('p', { class: 'empty' }, t('common.loading')));
     try {
       if (!(await ensureName())) return go({ name: 'home' });
       if (route.join) {
@@ -190,9 +203,12 @@ export function rankingScreen(route: { join?: string }): Screen {
     const league = leagues.find((l) => l.id === selected)!;
     remembered.selected = selected;
     remembered.period = period;
-    const list = h('ol', { class: 'ranking' }, h('li', { class: 'empty', style: 'display:block' }, 'Cargando…'));
+    const list = h('ol', { class: 'ranking' }, h('li', { class: 'empty', style: 'display:block' }, t('common.loading')));
     const day = period === 'yesterday' ? previousDay(today()) : today();
-    const range = period === 'week' ? weekRange(day) : period === 'month' ? monthRange(day) : null;
+    const range = period === 'week' ? weekRange(day) : period === 'season' ? seasonRange(seasonOf(day)) : null;
+    // En la temporada, el premio va encima y el podio de la anterior debajo (se rellenan al llegar).
+    const seasonTop = h('div', { class: 'season-slot' });
+    const seasonBottom = h('div', { class: 'season-slot' });
 
     body.replaceChildren(
       h(
@@ -220,8 +236,11 @@ export function rankingScreen(route: { join?: string }): Screen {
           h('button', { class: p === period ? 'active' : '', onclick: () => ((period = p), render()) }, label),
         ),
       ),
-      h('p', { class: 'muted', style: 'text-align:center; margin-top:-6px' }, range ? formatRange(range, period === 'month') : formatDay(day)),
+      period === 'season'
+        ? seasonTop
+        : h('p', { class: 'muted', style: 'text-align:center; margin-top:-6px' }, range ? formatWeek(range) : formatDay(day)),
       list,
+      seasonBottom,
       h(
         'section',
         { class: 'card invite' },
@@ -247,6 +266,23 @@ export function rankingScreen(route: { join?: string }): Screen {
 
     if (range) void fillStandings(list, league.id, range);
     else void fillRanking(list, league.id, day);
+    if (period === 'season') void fillSeason(seasonTop, seasonBottom, league.id);
+  }
+
+  /** Premio y cuenta atrás de la temporada, y el podio de la anterior. */
+  async function fillSeason(top: HTMLElement, bottom: HTMLElement, leagueId: string) {
+    const id = requestId; // fillStandings ya ha subido el número de esta pestaña.
+    try {
+      const season = await leagueSeason(leagueId);
+      if (disposed || id !== requestId) return;
+      top.replaceChildren(seasonCard(season));
+      if (!season.previous) return;
+      // Los primeros días del mes el podio recién cerrado va arriba, que es la noticia.
+      const fresh = Number(today().slice(8, 10)) <= 7;
+      (fresh ? top : bottom).append(previousSeasonCard(season.previous));
+    } catch {
+      // Sin la tarjeta se sigue viendo la clasificación.
+    }
   }
 
   /** Clasificación acumulada de la semana o el mes. */
@@ -420,13 +456,9 @@ function medal(index: number): string {
   return ['🥇', '🥈', '🥉'][index] ?? String(index + 1);
 }
 
-/** "Semana 5–11 de octubre" o "Octubre de 2026", en el idioma del jugador. */
-function formatRange({ from, to }: DayRange, month: boolean): string {
+/** "Semana 5–11 de octubre", en el idioma del jugador. */
+function formatWeek({ from, to }: DayRange): string {
   const date = (d: string) => new Date(`${d}T12:00:00Z`);
-  if (month) {
-    const text = new Intl.DateTimeFormat(intlLocale(), { month: 'long', year: 'numeric', timeZone: 'UTC' }).format(date(from));
-    return text.charAt(0).toUpperCase() + text.slice(1);
-  }
   const range = new Intl.DateTimeFormat(intlLocale(), { day: 'numeric', month: 'long', timeZone: 'UTC' }).formatRange(date(from), date(to));
   return t('weekly.title', { range });
 }

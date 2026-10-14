@@ -61,6 +61,31 @@ export interface StandingRow {
   best: number | null;
 }
 
+export interface SeasonPlace {
+  id: string;
+  name: string | null;
+  hat: HatId | null;
+  /** 1 es el campeón (puede haber varios si empataron). */
+  position: number;
+  points: number;
+  isMe: boolean;
+}
+
+export interface LeagueSeason {
+  /** Temporada en curso ("YYYY-MM"). */
+  season: string;
+  /** Último día de la temporada en curso. */
+  ends: string;
+  /** Gorro que gana el campeón este mes. */
+  hat: HatId;
+  /** La temporada pasada, o null si la liga no la jugó. */
+  previous: { season: string; hat: HatId; podium: SeasonPlace[] } | null;
+}
+
+export function leagueSeason(leagueId: string): Promise<LeagueSeason> {
+  return api<LeagueSeason>('GET', `/leagues/${encodeURIComponent(leagueId)}/season`);
+}
+
 /** Clasificación de una liga entre dos días (ambos incluidos). */
 export function leagueStandings(leagueId: string, from: string, to: string): Promise<StandingRow[]> {
   return api<StandingRow[]>('GET', `/leagues/${encodeURIComponent(leagueId)}/standings?from=${from}&to=${to}`);

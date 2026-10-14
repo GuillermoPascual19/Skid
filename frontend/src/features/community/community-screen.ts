@@ -139,7 +139,7 @@ export function communityScreen(tab?: CustomLevelSort, open?: string): Screen {
     if (loading) return;
     loading = true;
     const tabAtStart = current;
-    if (!append) list.replaceChildren(h('p', { class: 'empty' }, 'Cargando…'));
+    if (!append) list.replaceChildren(h('p', { class: 'empty' }, t('common.loading')));
     try {
       const page = await listCustomLevels(current, append ? levels.length : 0);
       if (disposed || tabAtStart !== current) return;

@@ -1,6 +1,7 @@
 // Ligas entre amigos: crear, ver una invitación, unirse, salir, ranking del día, ganadores y clasificación por periodo.
 
 import { isHatId } from '../../../common/art/hats';
+import type { SeasonTotal } from '../../../common/logic/leagues/seasons';
 import { type Env, HttpError, cleanText } from '../http';
 import { requireName } from './players';
 
@@ -175,7 +176,7 @@ export async function dailyWins(env: Env, playerId: string, day: string) {
     .map((r) => ({ leagueId: r.league_id, leagueName: r.league_name, players: r.finishers, score: r.score }));
 }
 
-async function requireMember(env: Env, playerId: string, leagueId: string): Promise<void> {
+export async function requireMember(env: Env, playerId: string, leagueId: string): Promise<void> {
   const member = await env.DB.prepare('SELECT 1 FROM league_members WHERE league_id = ? AND player_id = ?')
     .bind(leagueId, playerId)
     .first();
@@ -200,6 +201,26 @@ interface StandingRow {
  */
 export async function leagueStandings(env: Env, playerId: string, leagueId: string, from: string, to: string) {
   await requireMember(env, playerId, leagueId);
+  const results = await standingRows(env, playerId, leagueId, from, to);
+  return results.map((r) => ({
+    id: r.id,
+    name: r.name,
+    hat: isHatId(r.hat) ? r.hat : null,
+    isMe: r.is_me === 1,
+    points: r.points,
+    days: r.days,
+    wins: r.wins,
+    best: r.best,
+  }));
+}
+
+/** Totales de cada miembro en un periodo, para cerrar una temporada (sin comprobar quién mira). */
+export async function leagueTotals(env: Env, leagueId: string, from: string, to: string): Promise<SeasonTotal[]> {
+  const results = await standingRows(env, '', leagueId, from, to);
+  return results.map((r) => ({ playerId: r.id, points: r.points, wins: r.wins, days: r.days }));
+}
+
+async function standingRows(env: Env, playerId: string, leagueId: string, from: string, to: string): Promise<StandingRow[]> {
   const { results } = await env.DB.prepare(
     `WITH runs AS (
        SELECT r.player_id, r.day, r.score, r.time_ms
@@ -227,15 +248,5 @@ export async function leagueStandings(env: Env, playerId: string, leagueId: stri
   )
     .bind(playerId, from, to, leagueId)
     .all<StandingRow>();
-
-  return results.map((r) => ({
-    id: r.id,
-    name: r.name,
-    hat: isHatId(r.hat) ? r.hat : null,
-    isMe: r.is_me === 1,
-    points: r.points,
-    days: r.days,
-    wins: r.wins,
-    best: r.best,
-  }));
+  return results;
 }

@@ -9,7 +9,7 @@ import { avatar, rivalName, confirmDecline, difficultyLabel, myTurn, openInvite,
 import { playerName, t } from '../../i18n/i18n';
 
 export function duelsScreen(open?: string): Screen {
-  const body = h('div', { class: 'duels-body' }, h('p', { class: 'empty' }, 'Cargando…'));
+  const body = h('div', { class: 'duels-body' }, h('p', { class: 'empty' }, t('common.loading')));
   let disposed = false;
 
   const el = h(

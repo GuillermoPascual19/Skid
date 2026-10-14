@@ -398,7 +398,7 @@ export const messages: Messages = {
       today: 'Aujourd\'hui',
       yesterday: 'Hier',
       week: 'Semaine',
-      month: 'Mois',
+      season: 'Saison',
     },
     joined: 'Tu as rejoint {name}',
     join: 'Rejoindre',
@@ -440,6 +440,17 @@ export const messages: Messages = {
       createEyebrow: 'Créer une nouvelle ligue',
     },
     author: 'auteur',
+  },
+  season: {
+    prize: 'Le champion remporte le chapeau du mois : {hat}.',
+    rule: 'Celui qui marque le plus de points dans le mois gagne, s\'il y a au moins 2 joueurs. Chaque chapeau de saison ne s\'obtient qu\'en gagnant son mois.',
+    previous: 'Saison précédente',
+    noChampion: 'Personne ne l\'a gagnée : il fallait au moins 2 joueurs.',
+    won: {
+      eyebrow: 'Fin de saison · {season}',
+      title: 'Tu as gagné la saison dans {league} !',
+      text: '{points} points en {month}. Ton prix : {hat}, qu\'on ne gagne qu\'en remportant ce mois.',
+    },
   },
   levels: {
     ranking: {
@@ -632,6 +643,18 @@ export const messages: Messages = {
     ushanka: 'Chapka',
     wizard: 'Chapeau de magicien',
     crown: 'Couronne',
+    scarf: 'Écharpe',
+    hearts: 'Serre-tête cœurs',
+    clover: 'Chapeau trèfle',
+    umbrella: 'Chapeau parapluie',
+    flowers: 'Couronne de fleurs',
+    visor: 'Visière',
+    straw: 'Chapeau de paille',
+    goggles: 'Masque de plongée',
+    mortarboard: 'Chapeau de diplômé',
+    pumpkin: 'Citrouille',
+    leaves: 'Bonnet feuillu',
+    star: 'Étoile de sapin',
   },
   achievementsScreen: {
     needsOnline: 'Les succès ont besoin du classement en ligne.',
@@ -649,6 +672,11 @@ export const messages: Messages = {
     seeHats: 'Voir mes chapeaux',
     newOne: 'Nouveau succès !',
     newOneText: '{description} Tu as débloqué : {hat}.',
+  },
+  seasonHats: {
+    title: 'Chapeaux de saison',
+    text: 'Chaque mois est une saison dans tes ligues : celui qui marque le plus de points remporte le chapeau du mois.',
+    locked: 'Gagne la saison en {month} dans une de tes ligues.',
   },
   profile: {
     title: 'Profil',
@@ -727,8 +755,8 @@ export const messages: Messages = {
     next: 'Suivant',
   },
   news: {
-    title: 'Nouveau : les duels.',
-    text: 'Défie un ami (ou qui tu veux avec un lien) sur le même plateau : celui qui le fait en moins de coups gagne.',
+    title: 'Nouveau : les saisons.',
+    text: 'Chaque mois est une saison dans tes ligues : celui qui marque le plus de points gagne un chapeau qu\'on ne peut obtenir que ce mois-là.',
   },
   guide: {
     slide: {
@@ -785,6 +813,7 @@ export const messages: Messages = {
       r3: 'Joue le défi plusieurs jours d\'affilée pour faire une série.',
       r4: 'Tous les {every} jours d\'affilée, tu gagnes un protecteur (jusqu\'à {max}) : si tu manques un jour, ta série ne s\'arrête pas.',
       r5: 'Les succès débloquent des chapeaux pour ton pingouin.',
+      r6: 'Chaque mois est une saison : celui qui marque le plus de points dans la ligue remporte le chapeau du mois, impossible à obtenir autrement.',
     },
     community: {
       title: 'Niveaux des joueurs',
