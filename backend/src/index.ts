@@ -26,6 +26,7 @@ import {
   reportCustomLevel,
 } from './routes/levels';
 import { playerProfile } from './routes/players';
+import { leagueSeason, seasonHats, seasonTitles, settleSeasons } from './routes/seasons';
 import { playerStats } from './routes/stats';
 import { authenticate, createSession, deleteAccount, googleLogin, logoutEverywhere } from './session';
 import { nameKey, nameProblem, NAME_MAX, NAME_MIN } from '../../common/logic/players/names';
@@ -79,16 +80,19 @@ async function handleApi(req: Request, url: URL, env: Env): Promise<Response> {
     return json({ name: row?.name ?? null, email: row?.email ?? null, hat: isHatId(row?.hat) ? row.hat : null });
   }
   if (route === 'GET /achievements') {
-    const [items, row] = await Promise.all([
+    // Al abrir la portada se piden los logros: así se cierran las temporadas del mes pasado.
+    await settleSeasons(env, playerId);
+    const [items, seasons, row] = await Promise.all([
       playerAchievements(env, playerId),
+      seasonTitles(env, playerId),
       env.DB.prepare('SELECT hat FROM players WHERE id = ?').bind(playerId).first<{ hat: string | null }>(),
     ]);
-    return json({ hat: isHatId(row?.hat) ? row.hat : null, items });
+    return json({ hat: isHatId(row?.hat) ? row.hat : null, items, seasons });
   }
   if (route === 'PUT /me/hat') {
     const { hat } = await body<{ hat?: unknown }>(req);
     if (hat !== null && !isHatId(hat)) throw new HttpError(400, 'unknownHat');
-    if (hat !== null && !unlockedHats(await playerAchievements(env, playerId)).has(hat)) {
+    if (hat !== null && !unlockedHats(await playerAchievements(env, playerId)).has(hat) && !(await seasonHats(env, playerId)).has(hat)) {
       throw new HttpError(403, 'hatLocked');
     }
     await env.DB.prepare('UPDATE players SET hat = ? WHERE id = ?').bind(hat, playerId).run();
@@ -165,6 +169,7 @@ async function handleApi(req: Request, url: URL, env: Env): Promise<Response> {
     if (!/^\d{4}-\d{2}-\d{2}$/.test(day)) throw new HttpError(400, 'invalidDay');
     return json(await leagueRanking(env, playerId, m[1], day));
   }
+  if ((m = route.match(/^GET \/leagues\/([\w-]+)\/season$/))) return json(await leagueSeason(env, playerId, m[1]));
   if ((m = route.match(/^GET \/leagues\/([\w-]+)\/standings$/))) {
     const from = url.searchParams.get('from') ?? '';
     const to = url.searchParams.get('to') ?? '';

@@ -3,6 +3,8 @@
 
 import { penguinSvg } from '../../../../common/art/hats';
 import { ACHIEVEMENTS } from '../../../../common/logic/achievements/achievements';
+import { SEASON_HATS } from '../../../../common/logic/leagues/seasons';
+import { seasonName } from '../ranking/season';
 import { h, svg } from '../../shared/dom';
 import { go, type Screen } from '../../shared/router';
 import { scoreChart, tile } from '../daily/stats-screen';
@@ -12,7 +14,7 @@ import { playerName, t, tn } from '../../i18n/i18n';
 export function playerScreen(id: string): Screen {
   const title = h('h1', null, t('profile.title'));
   const subtitle = h('p');
-  const body = h('div', { class: 'stats-body' }, h('p', { class: 'empty' }, 'Cargando…'));
+  const body = h('div', { class: 'stats-body' }, h('p', { class: 'empty' }, t('common.loading')));
   const el = h(
     'div',
     { class: 'screen' },
@@ -43,7 +45,17 @@ export function playerScreen(id: string): Screen {
 
   function render(p: PlayerProfile) {
     const s = p.stats;
-    const hats = ACHIEVEMENTS.filter((a) => p.achievements.includes(a.id));
+    // Los de logros y los de temporada (uno por mes ganado, aunque lo ganara varias veces).
+    const hats = [
+      ...ACHIEVEMENTS.filter((a) => p.achievements.includes(a.id)).map((a) => ({
+        hat: a.hat,
+        title: `${t(`achievements.${a.id}.name`)}: ${t(`achievements.${a.id}.description`)}`,
+      })),
+      ...SEASON_HATS.flatMap((hat) => {
+        const won = p.seasons.filter((s) => s.hat === hat);
+        return won.length ? [{ hat, title: won.map((s) => `🏆 ${s.leagueName} · ${seasonName(s.season)}`).join('\n') }] : [];
+      }),
+    ];
     body.replaceChildren(
       h(
         'section',
@@ -74,19 +86,14 @@ export function playerScreen(id: string): Screen {
       h(
         'section',
         { class: 'card' },
-        h('h2', { class: 'section-title' }, t('profile.hats', { n: hats.length, total: ACHIEVEMENTS.length })),
+        h('h2', { class: 'section-title' }, t('profile.hats', { n: hats.length, total: ACHIEVEMENTS.length + SEASON_HATS.length })),
         hats.length === 0
           ? h('p', { class: 'muted' }, t('profile.noHats'))
           : h(
               'div',
               { class: 'hat-shelf' },
-              ...hats.map((a) =>
-                h(
-                  'div',
-                  { class: 'hat-item', title: `${t(`achievements.${a.id}.name`)}: ${t(`achievements.${a.id}.description`)}` },
-                  svg(penguinSvg(a.hat)),
-                  h('small', null, t(`hats.${a.hat}`)),
-                ),
+              ...hats.map((item) =>
+                h('div', { class: 'hat-item', title: item.title }, svg(penguinSvg(item.hat)), h('small', null, t(`hats.${item.hat}`))),
               ),
             ),
       ),

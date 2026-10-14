@@ -398,7 +398,7 @@ export const messages: Messages = {
       today: 'Today',
       yesterday: 'Yesterday',
       week: 'Week',
-      month: 'Month',
+      season: 'Season',
     },
     joined: 'You joined {name}',
     join: 'Join',
@@ -440,6 +440,17 @@ export const messages: Messages = {
       createEyebrow: 'Create a new league',
     },
     author: 'author',
+  },
+  season: {
+    prize: 'The champion wins this month\'s hat: {hat}.',
+    rule: 'Whoever scores the most points this month wins, as long as at least 2 play. Each season hat can only be won in its month.',
+    previous: 'Last season',
+    noChampion: 'Nobody won it: at least 2 players were needed.',
+    won: {
+      eyebrow: 'End of season · {season}',
+      title: 'You won the season in {league}!',
+      text: '{points} points in {month}. Your prize: {hat}, which can only be won that month.',
+    },
   },
   levels: {
     ranking: {
@@ -632,6 +643,18 @@ export const messages: Messages = {
     ushanka: 'Ushanka',
     wizard: 'Wizard hat',
     crown: 'Crown',
+    scarf: 'Scarf',
+    hearts: 'Heart headband',
+    clover: 'Shamrock hat',
+    umbrella: 'Umbrella hat',
+    flowers: 'Flower crown',
+    visor: 'Sun visor',
+    straw: 'Straw hat',
+    goggles: 'Diving mask',
+    mortarboard: 'Graduation cap',
+    pumpkin: 'Pumpkin',
+    leaves: 'Leafy beanie',
+    star: 'Tree-top star',
   },
   achievementsScreen: {
     needsOnline: 'Achievements need the online ranking.',
@@ -649,6 +672,11 @@ export const messages: Messages = {
     seeHats: 'See my hats',
     newOne: 'New achievement!',
     newOneText: '{description} You unlocked: {hat}.',
+  },
+  seasonHats: {
+    title: 'Season hats',
+    text: 'Every month is a season in your leagues: whoever scores the most points wins that month\'s hat.',
+    locked: 'Win the {month} season in one of your leagues.',
   },
   profile: {
     title: 'Profile',
@@ -727,8 +755,8 @@ export const messages: Messages = {
     next: 'Next',
   },
   news: {
-    title: 'New: duels.',
-    text: 'Challenge a friend (or anyone you like with a link) to the same board: whoever does it in fewer strokes wins.',
+    title: 'New: seasons.',
+    text: 'Every month is a season in your leagues: whoever scores the most points wins a hat you can only get that month.',
   },
   guide: {
     slide: {
@@ -785,6 +813,7 @@ export const messages: Messages = {
       r3: 'Play the challenge several days in a row to build a streak.',
       r4: 'Every {every} days in a row you earn a streak freeze (up to {max}): if you miss a day, your streak won\'t break.',
       r5: 'Achievements unlock hats for your penguin.',
+      r6: 'Every month is a season: whoever scores the most points in the league wins that month\'s hat, which can\'t be won any other way.',
     },
     community: {
       title: 'Player levels',

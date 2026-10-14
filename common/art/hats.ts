@@ -5,10 +5,56 @@
 // elipse centrada en (50, 52) de radios 32 × 38, así que la cabeza acaba en y = 14.
 // Los gorros pueden subir hasta y = -30.
 
-export type HatId = 'beanie' | 'earmuffs' | 'cap' | 'tophat' | 'viking' | 'party' | 'santa' | 'ushanka' | 'wizard' | 'crown';
+export type HatId =
+  | 'beanie'
+  | 'earmuffs'
+  | 'cap'
+  | 'tophat'
+  | 'viking'
+  | 'party'
+  | 'santa'
+  | 'ushanka'
+  | 'wizard'
+  | 'crown'
+  // De temporada: uno por mes (ver common/logic/leagues/seasons.ts).
+  | 'scarf'
+  | 'hearts'
+  | 'clover'
+  | 'umbrella'
+  | 'flowers'
+  | 'visor'
+  | 'straw'
+  | 'goggles'
+  | 'mortarboard'
+  | 'pumpkin'
+  | 'leaves'
+  | 'star';
 
 /** Los nombres de los gorros están en los diccionarios del juego (hats.<id>). */
-export const HAT_IDS: readonly HatId[] = ['beanie', 'earmuffs', 'cap', 'tophat', 'viking', 'party', 'santa', 'ushanka', 'wizard', 'crown'];
+export const HAT_IDS: readonly HatId[] = [
+  'beanie',
+  'earmuffs',
+  'cap',
+  'tophat',
+  'viking',
+  'party',
+  'santa',
+  'ushanka',
+  'wizard',
+  'crown',
+  'scarf',
+  'hearts',
+  'clover',
+  'umbrella',
+  'flowers',
+  'visor',
+  'straw',
+  'goggles',
+  'mortarboard',
+  'pumpkin',
+  'leaves',
+  'star',
+];
 
 export function isHatId(value: unknown): value is HatId {
   return typeof value === 'string' && (HAT_IDS as readonly string[]).includes(value);
@@ -67,7 +113,94 @@ const HATS: Record<HatId, string> = {
     <circle cx="50" cy="-1" r="3" fill="#ffc93c" stroke="#e48f0c" stroke-width="1.5"/>
     <circle cx="70" cy="4" r="3" fill="#ffc93c" stroke="#e48f0c" stroke-width="1.5"/>
     <circle cx="40" cy="20" r="2.6" fill="#e5484d"/><circle cx="50" cy="19" r="3" fill="#2b8fd6"/><circle cx="60" cy="20" r="2.6" fill="#2bb673"/>`,
+  // De temporada, de enero a diciembre. La bufanda va al cuello (bajo el pico).
+  scarf: `
+    <path d="M19 57 Q50 66 81 57 L81 66 Q50 75 19 66 Z" fill="#e5484d"/>
+    <path d="M19.5 61 Q50 70 80.5 61" stroke="#f6f7f9" stroke-width="2.2" fill="none"/>
+    <path d="M62 66 L70 65 L73 86 L63 87 Z" fill="#e5484d"/>
+    <path d="M62.8 72 L70.9 71.2 M63.6 78 L71.8 77.2" stroke="#f6f7f9" stroke-width="2.2"/>
+    <path d="M63.5 87 L63.5 91 M66.5 86.8 L66.5 90.8 M69.5 86.5 L69.5 90.5 M72.5 86.2 L72.5 90.2" stroke="#c93a40" stroke-width="1.6" stroke-linecap="round"/>`,
+  hearts: `
+    <path d="M38 17 Q33 8 34 0 M62 17 Q67 8 66 0" fill="none" stroke="#22252b" stroke-width="2"/>
+    <path d="M24 32 C24 10 76 10 76 32" fill="none" stroke="#ff8fa3" stroke-width="5" stroke-linecap="round"/>
+    <path d="M34 1 C22 -6 29 -16 34 -9 C39 -16 46 -6 34 1 Z" fill="#e5484d"/>
+    <path d="M66 1 C54 -6 61 -16 66 -9 C71 -16 78 -6 66 1 Z" fill="#e5484d"/>
+    <circle cx="30.5" cy="-8.5" r="1.6" fill="#fff" opacity=".7"/><circle cx="62.5" cy="-8.5" r="1.6" fill="#fff" opacity=".7"/>`,
+  clover: `
+    <path d="M35 24 L38 -8 L62 -8 L65 24 Z" fill="#2bb673"/>
+    <rect x="36.3" y="11" width="27.4" height="7" fill="#22252b"/>
+    <rect x="46" y="10" width="8" height="9" rx="1" fill="none" stroke="#ffc93c" stroke-width="2"/>
+    <ellipse cx="50" cy="25" rx="27" ry="5.5" fill="#1f8a55"/>
+    <path d="M66 3 Q68 8 72 10" stroke="#7ee0a8" stroke-width="1.8" fill="none"/>
+    <g fill="#7ee0a8"><circle cx="66" cy="-2" r="3.6"/><circle cx="62.6" cy="3.4" r="3.6"/><circle cx="69.4" cy="3.4" r="3.6"/></g>`,
+  umbrella: `
+    <path d="M50 4 L50 25" stroke="#5b6b8c" stroke-width="2.5"/>
+    <path d="M17 6 C17 -24 83 -24 83 6 Q74.75 0 66.5 6 Q58.25 0 50 6 Q41.75 0 33.5 6 Q25.25 0 17 6 Z" fill="#2b8fd6"/>
+    <path d="M33.5 6 Q41.75 0 50 6 L50 -16.5 C41 -16.5 34.5 -8 33.5 6 Z M66.5 6 Q74.75 0 83 6 C83 -6 76 -14 67 -16 C69 -8 68 -1 66.5 6 Z" fill="#7cc4f5"/>
+    <circle cx="50" cy="-18" r="2.5" fill="#5b6b8c"/>
+    <rect x="26" y="23" width="48" height="6" rx="3" fill="#5b6b8c"/>`,
+  flowers: `
+    <path d="M24 32 C24 14 76 14 76 32" stroke="#2bb673" stroke-width="4" fill="none"/>
+    ${flower(28, 24, '#ff8fa3')}${flower(38.5, 18.5, '#f6f7f9')}${flower(50, 16.5, '#a78bfa')}${flower(61.5, 18.5, '#f6f7f9')}${flower(72, 24, '#ff8fa3')}`,
+  visor: `
+    <path d="M27 21 Q50 13 73 21 L74 26 Q50 18 26 26 Z" fill="#f6f7f9"/>
+    <path d="M27 25 Q50 17 73 25 L80 31 Q50 40 20 31 Z" fill="#2bb673" opacity=".8"/>
+    <path d="M27 25 Q50 17 73 25" stroke="#1f8a55" stroke-width="2" fill="none"/>
+    <path d="M20 31 Q50 40 80 31" stroke="#1f8a55" stroke-width="1.5" fill="none"/>`,
+  straw: `
+    <ellipse cx="50" cy="24" rx="41" ry="8" fill="#e9c46a"/>
+    <path d="M31 24 C31 -2 69 -2 69 24 Z" fill="#f2d48a"/>
+    <path d="M31.4 15 L68.6 15 L69 22 L31 22 Z" fill="#e5484d"/>
+    <path d="M14 26 Q50 36 86 26" stroke="#d4a944" stroke-width="1.5" fill="none"/>
+    <ellipse cx="50" cy="24" rx="41" ry="8" fill="none" stroke="#d4a944" stroke-width="1.5"/>`,
+  goggles: `
+    <path d="M76 30 L76 -6 Q76 -13 69 -13" fill="none" stroke="#ffc93c" stroke-width="5" stroke-linecap="round"/>
+    <path d="M76 1 L76 6" stroke="#e48f0c" stroke-width="5"/>
+    <path d="M22 28 C22 12 78 12 78 28" fill="none" stroke="#22252b" stroke-width="4"/>
+    <rect x="32" y="9" width="36" height="18" rx="8" fill="#ff9f1c"/>
+    <rect x="36" y="12" width="28" height="12" rx="5.5" fill="#7cc4f5"/>
+    <path d="M39.5 15 L46 15" stroke="#fff" stroke-width="2" stroke-linecap="round" opacity=".85"/>`,
+  mortarboard: `
+    <path d="M30 28 L30 15 Q50 21 70 15 L70 28 Q50 34 30 28 Z" fill="#22252b"/>
+    <path d="M50 -1 L89 9 L50 19 L11 9 Z" fill="#2f343d" stroke="#454c58" stroke-width="1"/>
+    <path d="M50 9 L81 12 L81 30" stroke="#ffc93c" stroke-width="1.8" fill="none"/>
+    <circle cx="50" cy="9" r="2.4" fill="#ffc93c"/>
+    <path d="M78.5 29 L83.5 29 L85 39 L77 39 Z" fill="#ffc93c"/>`,
+  pumpkin: `
+    <ellipse cx="50" cy="12" rx="27" ry="18" fill="#ff8a1c"/>
+    <path d="M38 -4 Q31 12 38 29 M62 -4 Q69 12 62 29" stroke="#e06d0c" stroke-width="2" fill="none" opacity=".7"/>
+    <path d="M38 8 L44 8 L41 2 Z M56 8 L62 8 L59 2 Z" fill="#7a3a00"/>
+    <path d="M39 16 L42.7 19 L46.3 16 L50 19 L53.7 16 L57.3 19 L61 16" stroke="#7a3a00" stroke-width="2" fill="none" stroke-linejoin="round"/>
+    <path d="M47 -5 L48 -13 Q50 -16 54 -14 L53 -5 Z" fill="#5c8a2e"/>
+    <path d="M54 -11 Q62 -16 65 -8 Q58 -11 54 -11 Z" fill="#2bb673"/>`,
+  leaves: `
+    ${leaf(42, 4, -32, '#e5484d', '#a8282d')}${leaf(58, 4, 30, '#ffc93c', '#e48f0c')}${leaf(50, -1, 0, '#ff8a1c', '#c9600c')}
+    <path d="M26 31 C26 9 74 9 74 31 Z" fill="#a0612b"/>
+    <path d="M38 14 L38 30 M50 11 L50 30 M62 14 L62 30" stroke="#8a5022" stroke-width="2.5" stroke-linecap="round"/>
+    <rect x="23" y="26" width="54" height="10" rx="5" fill="#e9c46a"/>`,
+  star: `
+    <path d="M24 32 C24 10 76 10 76 32" fill="none" stroke="#2bb673" stroke-width="5" stroke-linecap="round"/>
+    <circle cx="30" cy="20.5" r="2.4" fill="#e5484d"/><circle cx="40" cy="15.5" r="2.4" fill="#2b8fd6"/>
+    <circle cx="60" cy="15.5" r="2.4" fill="#ffc93c"/><circle cx="70" cy="20.5" r="2.4" fill="#a78bfa"/>
+    <path d="M50 15 L50 3" stroke="#c9ccd1" stroke-width="2.5"/>
+    <path d="M50 -22 L53.53 -12.85 L63.32 -12.33 L55.71 -6.15 L58.23 3.33 L50 -2 L41.77 3.33 L44.29 -6.15 L36.68 -12.33 L46.47 -12.85 Z" fill="#ffc93c" stroke="#e48f0c" stroke-width="1.8" stroke-linejoin="round"/>`,
 };
+
+/** Flor de cinco pétalos para la corona de flores. */
+function flower(x: number, y: number, color: string): string {
+  const petals = [0, 72, 144, 216, 288]
+    .map((deg) => {
+      const rad = ((deg - 90) * Math.PI) / 180;
+      return `<circle cx="${(x + 3.4 * Math.cos(rad)).toFixed(1)}" cy="${(y + 3.4 * Math.sin(rad)).toFixed(1)}" r="3"/>`;
+    })
+    .join('');
+  return `<g fill="${color}">${petals}</g><circle cx="${x}" cy="${y}" r="2" fill="#ffc93c"/>`;
+}
+
+/** Hoja de otoño (con su nervio) girada `deg` grados. */
+function leaf(x: number, y: number, deg: number, color: string, vein: string): string {
+  return `<g transform="translate(${x} ${y}) rotate(${deg})"><path d="M0 -10 Q8 -2 0 10 Q-8 -2 0 -10 Z" fill="${color}"/><path d="M0 -8 L0 9" stroke="${vein}" stroke-width="1.2"/></g>`;
+}
 
 const PENGUIN_BODY = `
   <ellipse cx="50" cy="93" rx="26" ry="5" fill="#2a6f99" opacity=".2"/>

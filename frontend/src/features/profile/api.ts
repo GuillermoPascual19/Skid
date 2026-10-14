@@ -34,6 +34,8 @@ export interface PlayerProfile {
   stats: PlayerStats;
   /** Logros desbloqueados. */
   achievements: AchievementProgress['id'][];
+  /** Temporadas ganadas (cada una da el gorro de su mes). */
+  seasons: { leagueName: string; season: string; hat: HatId }[];
   /** Días que jugasteis los dos (null en tu propio perfil). */
   headToHead: { played: number; myWins: number; theirWins: number; ties: number } | null;
 }

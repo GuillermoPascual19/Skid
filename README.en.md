@@ -16,7 +16,8 @@ friends, and levels made by the players.
   freezes, the solution once you finish, and a friend's ghost.
 - **Weekly challenge**: a big, hard board from Monday to Sunday, with a ranking among friends.
 - **Duels**: challenge a friend (or anyone, with a link) to the same brand-new board.
-- **Leagues**: daily, weekly and monthly rankings with your friends; achievements unlock hats.
+- **Leagues**: daily and weekly rankings with your friends, and monthly seasons whose champion
+  wins that month's hat; achievements unlock more hats.
 - **Player levels**: level editor, publishing (you must beat your level first), ratings, per-level
   ranking, sharing and reporting.
 - A "How to play" guide, dark mode, synthesized music and sound effects, and Google sign-in to play
@@ -96,9 +97,9 @@ backend/                   the Cloudflare Worker: serves the game (dist/) and th
     session.ts             sessions, Google sign-in, signing out and deleting the account
     google.ts              Google token verification
     i18n.ts                each request's language for error messages
-    routes/                one file per feature: daily, weekly, duels, leagues, levels,
-                           players, stats, achievements
-  migrations/              D1 database schema (0001 to 0012)
+    routes/                one file per feature: daily, weekly, duels, leagues, seasons,
+                           levels, players, stats, achievements
+  migrations/              D1 database schema (0001 to 0013)
 common/                    used by both; no browser APIs and no imports from outside
   logic/                   pure rules: the server replays games with this very same code
     engine/                board, movement, solver, generator, elements, randomness
@@ -106,6 +107,7 @@ common/                    used by both; no browser APIs and no imports from out
     weekly/                weekly challenge
     duels/                 duels: difficulties and who wins
     achievements/          achievements
+    leagues/               seasons: dates, podium and each month's hat
     community/             validation of player-made levels
     players/               player name rules
   i18n/                    languages and the server's error messages in each one
@@ -159,6 +161,19 @@ anything from outside) and builds the game to `dist/`.
 - Logic in `common/logic/duels/`, server in `backend/src/routes/duels.ts` and the game in
   `frontend/src/features/duels/`. The "best attempt" game is shared with the weekly challenge
   (`frontend/src/play/attempt-screen.ts`).
+
+## Seasons
+
+- Every calendar month is a season in each league. Whoever scores the most points wins (the same
+  points as the ranking) and, on a tie, whoever won more days; at least 2 must have played. A tie
+  at the top means two champions.
+- The champion wins that month's hat (12, one per month: `SEASON_HATS`), which can't be earned
+  any other way. The first season that counts is September 2026.
+- There are no scheduled jobs: a season is closed the first time someone in the league opens the
+  game after it ends. The podium is stored in `season_results` along with the league name, so the
+  title and the hat stay even if someone leaves later or the league is deleted.
+- Logic in `common/logic/leagues/seasons.ts`, server in `backend/src/routes/seasons.ts` and the
+  game in the Season tab of the ranking (`frontend/src/features/ranking/season.ts`).
 
 ## Security
 

@@ -398,7 +398,7 @@ export const messages: Messages = {
       today: 'Heute',
       yesterday: 'Gestern',
       week: 'Woche',
-      month: 'Monat',
+      season: 'Saison',
     },
     joined: 'Du bist {name} beigetreten',
     join: 'Beitreten',
@@ -440,6 +440,17 @@ export const messages: Messages = {
       createEyebrow: 'Neue Liga erstellen',
     },
     author: 'Autor',
+  },
+  season: {
+    prize: 'Der Champion bekommt den Hut des Monats: {hat}.',
+    rule: 'Es gewinnt, wer im Monat die meisten Punkte sammelt (mindestens 2 müssen spielen). Jeden Saisonhut gibt es nur, wenn man seinen Monat gewinnt.',
+    previous: 'Letzte Saison',
+    noChampion: 'Niemand hat sie gewonnen: Es hätten mindestens 2 spielen müssen.',
+    won: {
+      eyebrow: 'Saisonende · {season}',
+      title: 'Du hast die Saison in {league} gewonnen!',
+      text: '{points} Punkte im {month}. Dein Preis: {hat} – den gibt es nur, wenn man diesen Monat gewinnt.',
+    },
   },
   levels: {
     ranking: {
@@ -632,6 +643,18 @@ export const messages: Messages = {
     ushanka: 'Uschanka',
     wizard: 'Zauberhut',
     crown: 'Krone',
+    scarf: 'Schal',
+    hearts: 'Herz-Haarreif',
+    clover: 'Kleeblatthut',
+    umbrella: 'Schirmhut',
+    flowers: 'Blumenkranz',
+    visor: 'Sonnenblende',
+    straw: 'Strohhut',
+    goggles: 'Taucherbrille',
+    mortarboard: 'Doktorhut',
+    pumpkin: 'Kürbis',
+    leaves: 'Blättermütze',
+    star: 'Baumspitzen-Stern',
   },
   achievementsScreen: {
     needsOnline: 'Die Erfolge brauchen die Online-Rangliste.',
@@ -649,6 +672,11 @@ export const messages: Messages = {
     seeHats: 'Meine Hüte ansehen',
     newOne: 'Neuer Erfolg!',
     newOneText: '{description} Freigeschaltet: {hat}.',
+  },
+  seasonHats: {
+    title: 'Saisonhüte',
+    text: 'Jeder Monat ist eine Saison in deinen Ligen: Wer die meisten Punkte sammelt, bekommt den Hut des Monats.',
+    locked: 'Gewinne die Saison im {month} in einer deiner Ligen.',
   },
   profile: {
     title: 'Profil',
@@ -727,8 +755,8 @@ export const messages: Messages = {
     next: 'Weiter',
   },
   news: {
-    title: 'Neu: Duelle.',
-    text: 'Fordere einen Freund (oder wen du willst, per Link) zum selben Spielfeld heraus: Wer es mit weniger Schlägen schafft, gewinnt.',
+    title: 'Neu: Saisons.',
+    text: 'Jeder Monat ist eine Saison in deinen Ligen: Wer die meisten Punkte sammelt, gewinnt einen Hut, den es nur in diesem Monat gibt.',
   },
   guide: {
     slide: {
@@ -785,6 +813,7 @@ export const messages: Messages = {
       r3: 'Spiel die Herausforderung mehrere Tage in Folge, um eine Serie aufzubauen.',
       r4: 'Alle {every} Tage in Folge bekommst du einen Serienschutz (bis zu {max}): Wenn du einen Tag nicht spielst, reißt deine Serie nicht.',
       r5: 'Erfolge schalten Hüte für deinen Pinguin frei.',
+      r6: 'Jeder Monat ist eine Saison: Wer in der Liga die meisten Punkte sammelt, bekommt den Hut des Monats – anders gibt es ihn nicht.',
     },
     community: {
       title: 'Spieler-Level',

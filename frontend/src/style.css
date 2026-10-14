@@ -2959,3 +2959,96 @@ input.switch:focus-visible {
 .lang-option.selected {
   outline: 3px solid var(--secondary);
 }
+
+/* ------------------------------------------------------------- Temporadas */
+
+.season-slot {
+  display: grid;
+  gap: 14px;
+}
+
+.season-slot:empty {
+  display: none;
+}
+
+.season-card {
+  display: grid;
+  grid-template-columns: 84px 1fr;
+  align-items: center;
+  gap: 14px;
+  border: 2px solid var(--gold);
+}
+
+.season-prize svg {
+  display: block;
+  width: 84px;
+  height: auto;
+  filter: drop-shadow(0 6px 10px rgba(21, 50, 79, 0.18));
+}
+
+.season-info {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+}
+
+.season-info h2 {
+  font-size: 22px;
+}
+
+.season-info small {
+  font-size: 13px;
+  line-height: 1.3;
+}
+
+.season-podium {
+  list-style: none;
+  margin: 10px 0 0;
+  padding: 0;
+  display: grid;
+  gap: 6px;
+}
+
+.season-podium li {
+  display: grid;
+  grid-template-columns: 28px 34px 1fr auto;
+  align-items: center;
+  gap: 10px;
+  padding: 6px 10px;
+  border-radius: 14px;
+  background: var(--surface);
+}
+
+.season-podium li.champion {
+  background: var(--warm-soft);
+  border: 2px solid var(--gold);
+}
+
+.season-podium li.me strong {
+  color: var(--accent-ink);
+}
+
+.season-podium .pos {
+  font-size: 20px;
+  text-align: center;
+}
+
+.season-podium strong {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.season-podium .pts {
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+}
+
+.section-text {
+  margin: -6px 0 2px;
+}
+
+.achievement-info .season-titles {
+  white-space: pre-line;
+}

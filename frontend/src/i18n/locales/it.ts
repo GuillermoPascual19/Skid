@@ -398,7 +398,7 @@ export const messages: Messages = {
       today: 'Oggi',
       yesterday: 'Ieri',
       week: 'Settimana',
-      month: 'Mese',
+      season: 'Stagione',
     },
     joined: 'Sei entrato in {name}',
     join: 'Entra',
@@ -440,6 +440,17 @@ export const messages: Messages = {
       createEyebrow: 'Crea una nuova lega',
     },
     author: 'autore',
+  },
+  season: {
+    prize: 'Il campione vince il cappello del mese: {hat}.',
+    rule: 'Vince chi fa più punti nel mese, se giocano almeno in 2. Ogni cappello di stagione si ottiene solo vincendo il suo mese.',
+    previous: 'Stagione precedente',
+    noChampion: 'Nessuno l\'ha vinta: servivano almeno 2 giocatori.',
+    won: {
+      eyebrow: 'Fine stagione · {season}',
+      title: 'Hai vinto la stagione in {league}!',
+      text: '{points} punti a {month}. Il tuo premio: {hat}, che si vince solo in quel mese.',
+    },
   },
   levels: {
     ranking: {
@@ -632,6 +643,18 @@ export const messages: Messages = {
     ushanka: 'Colbacco',
     wizard: 'Cappello da mago',
     crown: 'Corona',
+    scarf: 'Sciarpa',
+    hearts: 'Cerchietto a cuori',
+    clover: 'Cappello col trifoglio',
+    umbrella: 'Cappello ombrello',
+    flowers: 'Corona di fiori',
+    visor: 'Visiera',
+    straw: 'Cappello di paglia',
+    goggles: 'Maschera da sub',
+    mortarboard: 'Tocco',
+    pumpkin: 'Zucca',
+    leaves: 'Berretto di foglie',
+    star: 'Stella dell\'albero',
   },
   achievementsScreen: {
     needsOnline: 'I traguardi richiedono la classifica online.',
@@ -649,6 +672,11 @@ export const messages: Messages = {
     seeHats: 'Vedi i miei cappelli',
     newOne: 'Nuovo traguardo!',
     newOneText: '{description} Hai sbloccato: {hat}.',
+  },
+  seasonHats: {
+    title: 'Cappelli di stagione',
+    text: 'Ogni mese è una stagione nelle tue leghe: chi fa più punti vince il cappello di quel mese.',
+    locked: 'Vinci la stagione di {month} in una delle tue leghe.',
   },
   profile: {
     title: 'Profilo',
@@ -727,8 +755,8 @@ export const messages: Messages = {
     next: 'Avanti',
   },
   news: {
-    title: 'Novità: duelli.',
-    text: 'Sfida un amico (o chiunque con un link) sullo stesso tabellone: vince chi lo completa con meno colpi.',
+    title: 'Novità: stagioni.',
+    text: 'Ogni mese è una stagione nelle tue leghe: chi fa più punti vince un cappello che si ottiene solo in quel mese.',
   },
   guide: {
     slide: {
@@ -785,6 +813,7 @@ export const messages: Messages = {
       r3: 'Gioca la sfida più giorni di fila per fare una serie.',
       r4: 'Ogni {every} giorni di fila guadagni una protezione (fino a {max}): se un giorno non giochi, la tua serie non si perde.',
       r5: 'I traguardi sbloccano cappelli per il tuo pinguino.',
+      r6: 'Ogni mese è una stagione: chi fa più punti nella lega vince il cappello di quel mese, che si ottiene solo così.',
     },
     community: {
       title: 'Livelli dei giocatori',

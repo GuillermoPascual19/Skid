@@ -3,18 +3,21 @@
 
 import { penguinSvg, type HatId } from '../../../../common/art/hats';
 import { ACHIEVEMENTS } from '../../../../common/logic/achievements/achievements';
+import { SEASON_HATS, seasonOf, shiftSeason } from '../../../../common/logic/leagues/seasons';
+import { today } from '../daily/daily';
+import { monthName, seasonName } from '../ranking/season';
 import * as online from '../../shared/api';
 import { celebrate } from '../../shared/celebrate';
 import { h, svg, toast } from '../../shared/dom';
 import { setCachedHat } from '../profile/profile';
 import { go, type Screen } from '../../shared/router';
-import { type Achievements, getAchievements, setHat } from './api';
+import { type Achievements, type SeasonTitle, getAchievements, setHat } from './api';
 import { markAchievementsSeen, seenAchievements } from './storage';
-import { t } from '../../i18n/i18n';
+import { intlLocale, t } from '../../i18n/i18n';
 
 export function achievementsScreen(): Screen {
   const subtitle = h('p');
-  const body = h('div', { class: 'stats-body' }, h('p', { class: 'empty' }, 'Cargando…'));
+  const body = h('div', { class: 'stats-body' }, h('p', { class: 'empty' }, t('common.loading')));
   const el = h(
     'div',
     { class: 'screen' },
@@ -62,7 +65,7 @@ export function achievementsScreen(): Screen {
 
   function render() {
     if (!data) return;
-    const { hat, items } = data;
+    const { hat, items, seasons } = data;
     const unlocked = items.filter((i) => i.unlocked).length;
     subtitle.textContent = t('achievementsScreen.unlocked', { n: unlocked, total: items.length });
 
@@ -85,7 +88,6 @@ export function achievementsScreen(): Screen {
         { class: 'achievements' },
         ...ACHIEVEMENTS.map((def) => {
           const p = items.find((i) => i.id === def.id)!;
-          const wearing = hat === def.hat;
           return h(
             'li',
             { class: `card achievement ${p.unlocked ? 'unlocked' : 'locked'}` },
@@ -104,15 +106,41 @@ export function achievementsScreen(): Screen {
                     h('span', null, `${p.current} / ${p.target}`),
                   ),
             ),
-            p.unlocked
-              ? wearing
-                ? h('span', { class: 'chip wearing' }, `✓ ${t('achievementsScreen.worn')}`)
-                : h('button', { class: 'btn small secondary', onclick: () => wear(def.hat) }, t('achievementsScreen.wear'))
-              : h('span', { class: 'lock', 'aria-label': t('achievementsScreen.locked') }, '🔒'),
+            p.unlocked ? wearButton(def.hat) : h('span', { class: 'lock', 'aria-label': t('achievementsScreen.locked') }, '🔒'),
+          );
+        }),
+      ),
+      h('h2', { class: 'section-title' }, t('seasonHats.title')),
+      h('p', { class: 'muted section-text' }, t('seasonHats.text')),
+      h(
+        'ul',
+        { class: 'achievements' },
+        ...SEASON_HATS.map((seasonHat, month) => {
+          // Las veces que lo ganó (puede ser en varias ligas o años).
+          const won = seasons.filter((s) => s.hat === seasonHat);
+          return h(
+            'li',
+            { class: `card achievement ${won.length ? 'unlocked' : 'locked'}` },
+            h('div', { class: 'achievement-penguin' }, svg(penguinSvg(seasonHat, { locked: won.length === 0 }))),
+            h(
+              'div',
+              { class: 'achievement-info' },
+              h('strong', null, t(`hats.${seasonHat}`)),
+              won.length
+                ? h('span', { class: 'muted season-titles' }, won.map((s) => `🏆 ${s.leagueName} · ${seasonName(s.season)}`).join('\n'))
+                : h('span', { class: 'muted' }, t('seasonHats.locked', { month: monthName(`2026-${String(month + 1).padStart(2, '0')}`) })),
+            ),
+            won.length ? wearButton(seasonHat) : h('span', { class: 'lock', 'aria-label': t('achievementsScreen.locked') }, '🔒'),
           );
         }),
       ),
     );
+
+    function wearButton(item: HatId): HTMLElement {
+      return hat === item
+        ? h('span', { class: 'chip wearing' }, `✓ ${t('achievementsScreen.worn')}`)
+        : h('button', { class: 'btn small secondary', onclick: () => wear(item) }, t('achievementsScreen.wear'));
+    }
   }
 
   return {
@@ -131,7 +159,8 @@ export function achievementsScreen(): Screen {
  */
 export async function celebrateNewAchievements(onHat: (hat: HatId) => void): Promise<void> {
   if (!online.onlineEnabled) return;
-  const { items } = await getAchievements();
+  const { items, seasons } = await getAchievements();
+  await celebrateSeasons(seasons, onHat);
   const seen = seenAchievements();
   const fresh = ACHIEVEMENTS.filter((def) => items.find((i) => i.id === def.id)?.unlocked && !seen.has(def.id));
   if (fresh.length === 0 || document.querySelector('.overlay')) return;
@@ -168,5 +197,33 @@ export async function celebrateNewAchievements(onHat: (hat: HatId) => void): Pro
         toast((err as Error).message);
       }
     }
+  }
+}
+
+/**
+ * Celebra las temporadas que el jugador acaba de ganar (solo las del mes pasado:
+ * en un dispositivo nuevo no salen las de hace un año).
+ */
+async function celebrateSeasons(seasons: SeasonTitle[], onHat: (hat: HatId) => void): Promise<void> {
+  const last = shiftSeason(seasonOf(today()), -1);
+  const seen = seenAchievements();
+  const fresh = seasons.filter((s) => s.season === last && !seen.has(`season:${s.leagueId}:${s.season}`));
+  if (fresh.length === 0 || document.querySelector('.overlay')) return;
+  markAchievementsSeen(fresh.map((s) => `season:${s.leagueId}:${s.season}`));
+  const wantsIt = await celebrate({
+    icon: '🏆',
+    iconSvg: penguinSvg(fresh[0].hat),
+    eyebrow: t('season.won.eyebrow', { season: seasonName(last) }),
+    title: t('season.won.title', { league: fresh.map((s) => s.leagueName).join(' · ') }),
+    text: t('season.won.text', { points: fresh[0].points.toLocaleString(intlLocale()), hat: t(`hats.${fresh[0].hat}`), month: monthName(last) }),
+    button: t('achievementsScreen.wear'),
+  });
+  if (!wantsIt) return;
+  try {
+    await setHat(fresh[0].hat);
+    setCachedHat(fresh[0].hat);
+    onHat(fresh[0].hat);
+  } catch (err) {
+    toast((err as Error).message);
   }
 }
