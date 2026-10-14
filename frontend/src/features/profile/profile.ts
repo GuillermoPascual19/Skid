@@ -3,7 +3,8 @@
 import { h, openModal } from '../../shared/dom';
 import { renderGoogleButton } from './google';
 import { type Me, getMe, setName } from './api';
-import { nameProblem } from '../../../../common/logic/players/names';
+import { NAME_MAX, NAME_MIN, nameProblem } from '../../../../common/logic/players/names';
+import { t, te } from '../../i18n/i18n';
 
 let cachedMe: Promise<Me> | null = null;
 
@@ -46,12 +47,12 @@ export function askName(initial = ''): Promise<string | null> {
       class: 'field',
       value: initial,
       maxLength: 20,
-      placeholder: 'Tu nombre',
+      placeholder: t('name.placeholder'),
       autocomplete: 'nickname',
-      'aria-label': 'Tu nombre',
+      'aria-label': t('name.placeholder'),
     });
     const error = h('p', { class: 'error', hidden: true });
-    const save = h('button', { class: 'btn block big', type: 'submit' }, 'Guardar');
+    const save = h('button', { class: 'btn block big', type: 'submit' }, t('name.save'));
 
     const form = h(
       'form',
@@ -64,7 +65,7 @@ export function askName(initial = ''): Promise<string | null> {
           // Las mismas reglas que el servidor, para avisar sin esperar.
           const problem = nameProblem(name);
           if (problem) {
-            error.textContent = problem;
+            error.textContent = te(problem === 'length' ? 'nameLength' : 'nameChars', { min: NAME_MIN, max: NAME_MAX });
             error.hidden = false;
             return;
           }
@@ -89,15 +90,15 @@ export function askName(initial = ''): Promise<string | null> {
     // La primera vez: quien ya juega en otro dispositivo puede entrar con Google
     // y recuperar su nombre, sus ligas y su historial.
     const google = h('div', { class: 'google-slot' });
-    const googleBlock = initial ? null : h('div', { class: 'or-google', hidden: true }, h('p', { class: 'divider' }, 'o'), google);
+    const googleBlock = initial ? null : h('div', { class: 'or-google', hidden: true }, h('p', { class: 'divider' }, t('name.or')), google);
 
     const modal = openModal(
       [
-        h('h2', null, initial ? 'Cambia tu nombre' : '¿Cómo te llamas?'),
-        h('p', { class: 'lead' }, 'Es el nombre que verán tus amigos en el ranking.'),
+        h('h2', null, initial ? t('name.changeTitle') : t('name.title')),
+        h('p', { class: 'lead' }, t('name.text')),
         form,
         googleBlock,
-        h('button', { class: 'link-btn', onclick: () => finish(null) }, 'Ahora no'),
+        h('button', { class: 'link-btn', onclick: () => finish(null) }, t('common.notNow')),
       ],
       { dismissable: true, onClose: () => finish(null) },
     );
@@ -106,7 +107,7 @@ export function askName(initial = ''): Promise<string | null> {
       void renderGoogleButton(google, (result) => {
         if (result.name) return finish(result.name);
         // Cuenta de Google nueva y sin nombre todavía: que lo elija aquí mismo.
-        googleBlock.replaceChildren(h('p', { class: 'muted' }, `Conectado con ${result.email ?? 'Google'}. Ahora elige tu nombre.`));
+        googleBlock.replaceChildren(h('p', { class: 'muted' }, t('name.connected', { email: result.email ?? 'Google' })));
       }).then((shown) => (googleBlock.hidden = !shown));
     }
     input.focus();

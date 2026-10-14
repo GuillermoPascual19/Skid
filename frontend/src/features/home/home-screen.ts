@@ -9,7 +9,8 @@ import { penguinSvg } from '../../../../common/art/hats';
 import { celebrateNewAchievements } from '../achievements/achievements-screen';
 import { audioToggles } from '../../audio/audio-controls';
 import { themeButton } from '../../shared/theme';
-import { formatDay, formatTime, h, openModal, plural, previousDay, share, svg, toast, untilMidnight } from '../../shared/dom';
+import { languageButton } from '../../shared/language';
+import { formatDay, formatTime, h, openModal, previousDay, share, svg, toast, untilMidnight } from '../../shared/dom';
 import { renderGoogleButton, signOut } from '../profile/google';
 import { askName, currentMe } from '../profile/profile';
 import { confirmDeleteAccount, confirmLogoutEverywhere } from '../profile/account';
@@ -21,6 +22,7 @@ import type { Me } from '../profile/api';
 import { NEWS, dismissGuideNews, guideStatus, openGuide } from '../guide/guide';
 import { weeklyCard } from '../weekly/weekly';
 import { duelsCard } from '../duels/duels';
+import { t, tn } from '../../i18n/i18n';
 
 export function homeScreen(): Screen {
   const day = today();
@@ -43,24 +45,24 @@ export function homeScreen(): Screen {
       h(
         'div',
         { class: 'daily-head' },
-        h('p', { class: 'eyebrow' }, 'Reto diario'),
-        streak && streak.current > 0 ? h('span', { class: 'streak-pill', title: 'Días seguidos' }, `🔥 ${streak.current}`) : null,
+        h('p', { class: 'eyebrow' }, t('home.daily.eyebrow')),
+        streak && streak.current > 0 ? h('span', { class: 'streak-pill', title: t('home.daily.streakTitle') }, `🔥 ${streak.current}`) : null,
       ),
       h('h2', null, formatDay(day)),
     );
     if (streak && streak.current > 0 && !streak.playedToday && !result) {
-      dailyCard.append(h('p', { class: 'streak-line' }, `¡No pierdas tu racha de ${plural(streak.current, 'día', 'días')}!`));
+      dailyCard.append(h('p', { class: 'streak-line' }, t('home.daily.keepStreak', { days: tn('common.days', streak.current) })));
     }
 
     if (result) {
       dailyCard.append(
         result.overPar != null
           ? h('div', { class: `score-big golf${result.overPar === 0 ? ' par' : ''}` }, golfLabel(result.overPar))
-          : h('div', { class: 'score-big' }, String(result.score), h('small', null, 'pts')),
+          : h('div', { class: 'score-big' }, String(result.score), h('small', null, t('common.pts'))),
         h(
           'div',
           { class: 'chips' },
-          h('span', { class: 'chip' }, `🧊 ${result.moves} mov.`),
+          h('span', { class: 'chip' }, `🧊 ${t('common.movesShort', { n: result.moves })}`),
           result.overPar == null ? h('span', { class: 'chip' }, `↺ ${result.retries}`) : null,
           result.hints ? h('span', { class: 'chip' }, `💡 ${result.hints}`) : null,
           h('span', { class: 'chip' }, `⏱ ${formatTime(result.timeMs)}`),
@@ -68,21 +70,21 @@ export function homeScreen(): Screen {
         h(
           'div',
           { class: 'row' },
-          h('button', { class: 'btn', onclick: () => share(shareText(day, result)) }, 'Compartir'),
-          h('button', { class: 'btn ghost', onclick: () => showDailyResult(day, result) }, 'Detalle'),
+          h('button', { class: 'btn', onclick: () => share(shareText(day, result)) }, t('common.share')),
+          h('button', { class: 'btn ghost', onclick: () => showDailyResult(day, result) }, t('home.daily.details')),
         ),
-        ...(canImprove(day, result) ? [h('button', { class: 'btn secondary block', onclick: () => improveDaily(day) }, '↺ Mejorar resultado')] : []),
+        ...(canImprove(day, result) ? [h('button', { class: 'btn secondary block', onclick: () => improveDaily(day) }, `↺ ${t('home.daily.improve')}`)] : []),
         h('p', { class: 'muted', 'data-countdown': '' }),
       );
     } else if (record) {
       dailyCard.append(
-        h('p', { class: 'muted' }, 'En curso. El reloj sigue corriendo: ', h('strong', { 'data-elapsed': '' })),
-        h('button', { class: 'btn big block', onclick: openDaily }, 'Continuar'),
+        h('p', { class: 'muted' }, t('home.daily.inProgress'), ' ', h('strong', { 'data-elapsed': '' })),
+        h('button', { class: 'btn big block', onclick: openDaily }, t('play.continue')),
       );
     } else {
       dailyCard.append(
-        h('p', { class: 'muted' }, 'Estilo golf: haz el tablero en los menos golpes posibles. Volver a empezar es gratis.'),
-        h('button', { class: 'btn big block', onclick: openDaily }, 'Jugar el reto'),
+        h('p', { class: 'muted' }, t('home.daily.pitch')),
+        h('button', { class: 'btn big block', onclick: openDaily }, t('home.daily.play')),
       );
     }
     tick();
@@ -91,7 +93,7 @@ export function homeScreen(): Screen {
   function tick() {
     const record = loadDaily(day);
     dailyCard.querySelector('[data-elapsed]')?.replaceChildren(formatTime(Date.now() - (record?.startedAt ?? Date.now())));
-    dailyCard.querySelector('[data-countdown]')?.replaceChildren(`Nuevo reto en ${untilMidnight(DAILY_TIME_ZONE)}`);
+    dailyCard.querySelector('[data-countdown]')?.replaceChildren(t('home.daily.nextIn', { time: untilMidnight(DAILY_TIME_ZONE) }));
   }
 
   async function syncWithServer() {
@@ -137,13 +139,13 @@ export function homeScreen(): Screen {
       const rivals = first.players - 1;
       await celebrate({
         icon: '🏆',
-        eyebrow: `Reto de ayer · ${formatDay(yesterday)}`,
-        title: `¡Primer puesto, ${name}!`,
+        eyebrow: t('home.win.eyebrow', { day: formatDay(yesterday) }),
+        title: t('home.win.title', { name }),
         text:
           wins.length === 1
-            ? `Ganaste en ${first.leagueName} con ${first.score} puntos, por delante de ${plural(rivals, 'amigo', 'amigos')}.`
-            : `Ganaste en ${wins.length} ligas: ${wins.map((w) => w.leagueName).join(', ')}. ¡Con ${first.score} puntos!`,
-        button: 'A por el de hoy',
+            ? t('home.win.one', { league: first.leagueName, points: first.score ?? 0, friends: tn('common.friends', rivals) })
+            : t('home.win.many', { n: wins.length, leagues: wins.map((w) => w.leagueName).join(', '), points: first.score ?? 0 }),
+        button: t('home.win.button'),
       });
     } catch {
       // Sin conexión: se celebrará la próxima vez.
@@ -161,17 +163,17 @@ export function homeScreen(): Screen {
           if (name) renderAccount({ ...me, name });
         },
       },
-      me.name ? 'cambiar nombre' : 'elige tu nombre',
+      me.name ? t('home.account.changeName') : t('home.account.pickName'),
     );
-    const who = h('p', { class: 'player-line' }, me.name ? `Juegas como ${me.name} · ` : '', changeName);
+    const who = h('p', { class: 'player-line' }, me.name ? `${t('home.account.playingAs', { name: me.name })} · ` : '', changeName);
 
     // Cerrar sesión en todas partes (con Google) y borrar la cuenta.
     const privacy = h(
       'p',
       { class: 'player-line small account-actions' },
-      me.email ? h('button', { class: 'link-btn', onclick: confirmLogoutEverywhere }, 'cerrar sesión en todos los dispositivos') : null,
+      me.email ? h('button', { class: 'link-btn', onclick: confirmLogoutEverywhere }, t('home.account.logoutEverywhere')) : null,
       me.email ? ' · ' : null,
-      h('button', { class: 'link-btn danger', onclick: confirmDeleteAccount }, 'borrar mi cuenta'),
+      h('button', { class: 'link-btn danger', onclick: confirmDeleteAccount }, t('home.account.deleteAccount')),
     );
 
     if (me.email) {
@@ -180,8 +182,8 @@ export function homeScreen(): Screen {
         h(
           'p',
           { class: 'player-line small' },
-          `🔗 Cuenta de Google: ${me.email} · `,
-          h('button', { class: 'link-btn', onclick: confirmSignOut }, 'cerrar sesión'),
+          `🔗 ${t('home.account.googleAccount', { email: me.email })} · `,
+          h('button', { class: 'link-btn', onclick: confirmSignOut }, t('home.account.signOut')),
         ),
         privacy,
       );
@@ -192,18 +194,18 @@ export function homeScreen(): Screen {
     const card = h(
       'section',
       { class: 'card account-card', hidden: true },
-      h('p', { class: 'eyebrow' }, 'Todos tus dispositivos'),
-      h('p', { class: 'muted' }, 'Entra con Google y tu nombre, tus ligas y tus puntos te seguirán en el móvil y en el ordenador.'),
+      h('p', { class: 'eyebrow' }, t('home.account.devicesEyebrow')),
+      h('p', { class: 'muted' }, t('home.account.devicesText')),
       slot,
     );
     account.replaceChildren(who, card, privacy);
     void renderGoogleButton(slot, (result) => {
       if (result.switched) {
-        toast(result.name ? `Has entrado como ${result.name}` : 'Has entrado con tu cuenta de Google');
+        toast(result.name ? t('home.account.signedInAs', { name: result.name }) : t('home.account.signedIn'));
         go({ name: 'home' }); // Otro jugador: se vuelve a cargar todo.
         return;
       }
-      toast('Cuenta vinculada con Google');
+      toast(t('home.account.linked'));
       renderAccount({ name: result.name, email: result.email, hat: null });
     }).then((shown) => (card.hidden = !shown));
   }
@@ -211,12 +213,12 @@ export function homeScreen(): Screen {
   function confirmSignOut() {
     const modal = openModal(
       [
-        h('h2', null, '¿Cerrar sesión?'),
-        h('p', { class: 'lead' }, 'Saldrás en este dispositivo. Para volver a tu cuenta, entra otra vez con Google.'),
+        h('h2', null, t('home.signOut.title')),
+        h('p', { class: 'lead' }, t('home.signOut.text')),
         h(
           'div',
           { class: 'row' },
-          h('button', { class: 'btn ghost', onclick: () => modal.close() }, 'Cancelar'),
+          h('button', { class: 'btn ghost', onclick: () => modal.close() }, t('common.cancel')),
           h(
             'button',
             {
@@ -225,14 +227,14 @@ export function homeScreen(): Screen {
                 modal.close();
                 try {
                   await signOut();
-                  toast('Sesión cerrada');
+                  toast(t('home.signOut.done'));
                 } catch (err) {
                   toast((err as Error).message);
                 }
                 go({ name: 'home' });
               },
             },
-            'Cerrar sesión',
+            t('home.signOut.button'),
           ),
         ),
       ],
@@ -252,8 +254,8 @@ export function homeScreen(): Screen {
           h(
             'div',
             { class: 'info' },
-            h('p', { class: 'eyebrow' }, 'Novedad'),
-            h('p', null, h('strong', null, NEWS.title), ` ${NEWS.text}`),
+            h('p', { class: 'eyebrow' }, t('home.news.eyebrow')),
+            h('p', null, h('strong', null, t('news.title')), ` ${t('news.text')}`),
             h(
               'button',
               {
@@ -263,14 +265,14 @@ export function homeScreen(): Screen {
                   openGuide(NEWS.page);
                 },
               },
-              'Ver cómo funciona',
+              t('home.news.howItWorks'),
             ),
           ),
           h(
             'button',
             {
               class: 'icon-btn small',
-              'aria-label': 'Cerrar',
+              'aria-label': t('common.close'),
               onclick: () => {
                 dismissGuideNews();
                 news?.remove();
@@ -281,7 +283,7 @@ export function homeScreen(): Screen {
         )
       : null;
   const audio = audioToggles();
-  audio.el.prepend(themeButton());
+  audio.el.prepend(languageButton(), themeButton());
   const el = h(
     'div',
     { class: 'screen home' },
@@ -291,7 +293,7 @@ export function homeScreen(): Screen {
       { class: 'logo' },
       logoPenguin,
       h('h1', null, 'Skid'),
-      h('p', null, 'Desliza sobre el hielo. Recoge en orden.'),
+      h('p', null, t('home.tagline')),
     ),
     news,
     dailyCard,
@@ -300,16 +302,16 @@ export function homeScreen(): Screen {
     h(
       'section',
       { class: 'card levels-card' },
-      h('div', { class: 'info' }, h('p', { class: 'eyebrow' }, 'Modo libre'), h('h2', null, `Nivel ${level}`), h('p', { class: 'muted' }, 'Cada nivel, un poco más difícil.')),
-      h('button', { class: 'btn secondary', onclick: () => go({ name: 'levels' }) }, 'Jugar'),
+      h('div', { class: 'info' }, h('p', { class: 'eyebrow' }, t('home.free.eyebrow')), h('h2', null, t('common.levelN', { n: level })), h('p', { class: 'muted' }, t('home.free.text'))),
+      h('button', { class: 'btn secondary', onclick: () => go({ name: 'levels' }) }, t('common.play')),
     ),
     h(
       'nav',
       { class: 'nav-tiles' },
-      navTile('🏆', 'Ranking', () => go({ name: 'ranking' })),
-      navTile('❓', 'Reglas', () => openGuide()),
-      online.onlineEnabled ? navTile('📊', 'Estadísticas', () => go({ name: 'stats' })) : null,
-      online.onlineEnabled ? navTile('🎩', 'Logros', () => go({ name: 'achievements' })) : null,
+      navTile('🏆', t('nav.ranking'), () => go({ name: 'ranking' })),
+      navTile('❓', t('nav.rules'), () => openGuide()),
+      online.onlineEnabled ? navTile('📊', t('nav.stats'), () => go({ name: 'stats' })) : null,
+      online.onlineEnabled ? navTile('🎩', t('nav.achievements'), () => go({ name: 'achievements' })) : null,
     ),
     online.onlineEnabled
       ? h(
@@ -318,11 +320,11 @@ export function homeScreen(): Screen {
           h(
             'div',
             { class: 'info' },
-            h('p', { class: 'eyebrow' }, 'Multijugador'),
-            h('h2', null, 'Niveles de jugadores'),
-            h('p', { class: 'muted' }, 'Juega y valora los de otros, o crea el tuyo.'),
+            h('p', { class: 'eyebrow' }, t('home.community.eyebrow')),
+            h('h2', null, t('home.community.title')),
+            h('p', { class: 'muted' }, t('home.community.text')),
           ),
-          h('button', { class: 'btn secondary', onclick: () => go({ name: 'community' }) }, 'Entrar'),
+          h('button', { class: 'btn secondary', onclick: () => go({ name: 'community' }) }, t('home.community.enter')),
         )
       : null,
     online.onlineEnabled ? account : null,

@@ -9,6 +9,7 @@ import { FREEZE_EVERY, MAX_FREEZES } from '../../../../common/logic/daily/streak
 import * as online from '../../shared/api';
 import { h, openModal, starSvg, svg } from '../../shared/dom';
 import { read, write } from '../../shared/storage';
+import { t, tn } from '../../i18n/i18n';
 
 /** Sube cuando cambian las reglas o hay algo nuevo (ver NEWS): quien ya jugaba ve el aviso. */
 export const GUIDE_VERSION = 4;
@@ -19,16 +20,16 @@ export type GuidePage = 'slide' | 'pieces' | 'free' | 'daily' | 'weekly' | 'duel
 /** Aviso de la portada para quien ya jugaba: lo último que ha cambiado (sube GUIDE_VERSION al cambiarlo). */
 export const NEWS = {
   icon: '⚔️',
-  title: 'Nuevo: duelos.',
-  text: 'Reta a un amigo (o a quien quieras con un enlace) al mismo tablero y gana quien lo haga en menos golpes.',
+  // El título y el texto están en los diccionarios: news.title y news.text.
   page: 'duels' as GuidePage,
 };
 
 interface Page {
   readonly id: GuidePage;
-  readonly title: string;
   body(): HTMLElement[];
 }
+
+const pageTitle = (id: GuidePage) => t(`guide.${id}.title`);
 
 const rules = (...items: [string, string][]) =>
   h('ul', { class: 'rules' }, ...items.map(([icon, text]) => h('li', null, h('b', null, icon), h('span', null, text))));
@@ -55,42 +56,38 @@ function demoRow(cells: DemoCell[], penguin: { at: number; slideTo?: number }): 
 const PAGES: Page[] = [
   {
     id: 'slide',
-    title: 'Desliza sobre el hielo',
     body: () => [
       demoRow(['ice', 'ice', 'ice', 'ice', 'ice', 'wall'], { at: 0, slideTo: 4 }),
       rules(
-        ['🐧', 'El pingüino no frena: sigue deslizando hasta chocar con la nieve o un muro.'],
-        ['⌨️', 'Muévete con las flechas o WASD. En el móvil, desliza el dedo en cualquier parte.'],
+        ['🐧', t('guide.slide.r1')],
+        ['⌨️', t('guide.slide.r2')],
       ),
     ],
   },
   {
     id: 'pieces',
-    title: 'Recoge en orden',
     body: () => [
       demoRow(['ice', { coin: 1, collect: true }, 'ice', { coin: 2 }, 'ice', { coin: 3 }], { at: 0, slideTo: 2 }),
       rules(
-        ['🔢', 'Recoge las piezas en orden: 1, 2, 3… La que toca brilla. Al cogerla sigues deslizando.'],
-        ['🪙', 'Las piezas que aún no tocan hacen de muro: el pingüino choca y se para delante.'],
-        ['🧊', 'Si te quedas sin salida, te avisamos: vuelve a empezar con ↺.'],
+        ['🔢', t('guide.pieces.r1')],
+        ['🪙', t('guide.pieces.r2')],
+        ['🧊', t('guide.pieces.r3')],
       ),
     ],
   },
   {
     id: 'free',
-    title: 'Modo libre',
     body: () => [
       h('div', { class: 'guide-stars' }, starSvg(true), starSvg(true), starSvg(true)),
       rules(
-        ['⭐', 'Tres estrellas si lo haces con los movimientos justos (el óptimo); dos si te pasas en 1 o 2; una si te pasas más.'],
-        ['📈', 'Cada nivel es un poco más difícil, y cada cierto tiempo aparecen elementos nuevos.'],
-        ['💡', 'Si te atascas, la bombilla te dice el siguiente movimiento.'],
+        ['⭐', t('guide.free.r1')],
+        ['📈', t('guide.free.r2')],
+        ['💡', t('guide.free.r3')],
       ),
     ],
   },
   {
     id: 'elements',
-    title: 'Elementos del tablero',
     body: () => [
       h(
         'div',
@@ -100,7 +97,13 @@ const PAGES: Page[] = [
             'div',
             { class: 'guide-element' },
             h('span', { class: 'icon' }, svg(elementSvg(e.id))),
-            h('span', null, h('strong', null, e.name), h('small', null, `Desde el nivel ${e.level}`), h('span', null, e.description)),
+            h(
+              'span',
+              null,
+              h('strong', null, t(`elements.${e.id}.name`)),
+              h('small', null, t('guide.elements.fromLevel', { n: e.level })),
+              h('span', null, t(`elements.${e.id}.description`)),
+            ),
           ),
         ),
       ),
@@ -108,72 +111,67 @@ const PAGES: Page[] = [
   },
   {
     id: 'daily',
-    title: 'Reto diario: estilo golf',
     body: () => [
       h(
         'div',
         { class: 'guide-golf' },
-        h('div', null, h('span', null, 'Óptimo del día'), h('strong', null, '12 golpes')),
-        h('div', null, h('span', null, 'Lo haces en 12'), h('strong', { class: 'par' }, 'Par')),
-        h('div', null, h('span', null, 'Lo haces en 14'), h('strong', null, '+2')),
-        h('div', null, h('span', null, 'En 12, con 1 pista'), h('strong', null, '+1')),
+        h('div', null, h('span', null, t('guide.daily.optimal')), h('strong', null, tn('common.strokes', 12))),
+        h('div', null, h('span', null, t('guide.daily.doneIn', { n: 12 })), h('strong', { class: 'par' }, 'Par')),
+        h('div', null, h('span', null, t('guide.daily.doneIn', { n: 14 })), h('strong', null, '+2')),
+        h('div', null, h('span', null, t('guide.daily.withHint', { n: 12 })), h('strong', null, '+1')),
       ),
       rules(
-        ['🎯', 'Un tablero nuevo cada día, el mismo para todos. Cada movimiento es un golpe.'],
-        ['↺', 'Volver a empezar es gratis y cuenta tu mejor intento. Puedes mejorarlo todo el día.'],
-        ['💡', 'Cada pista suma un golpe.'],
-        ['⏱', 'El reloj no se para. A igualdad de golpes, gana quien tarda menos.'],
-        ['👀', 'Al terminar puedes ver la solución, pero entonces ya no puedes mejorar.'],
+        ['🎯', t('guide.daily.r1')],
+        ['↺', t('guide.daily.r2')],
+        ['💡', t('guide.daily.r3')],
+        ['⏱', t('guide.daily.r4')],
+        ['👀', t('guide.daily.r5')],
       ),
     ],
   },
   {
     id: 'weekly',
-    title: 'Reto semanal',
     body: () => [
       rules(
-        ['🗺️', 'Un tablero más grande y difícil, de lunes a domingo, el mismo para todos.'],
-        ['↺', 'Juega cuantas veces quieras durante la semana: cuenta tu mejor intento.'],
-        ['🚫', 'Sin pistas.'],
-        ['🏆', 'Ranking con tus amigos de todas tus ligas. A igualdad de golpes, gana quien lo consiguió antes.'],
+        ['🗺️', t('guide.weekly.r1')],
+        ['↺', t('guide.weekly.r2')],
+        ['🚫', t('guide.weekly.r3')],
+        ['🏆', t('guide.weekly.r4')],
       ),
     ],
   },
   {
     id: 'duels',
-    title: 'Duelos',
     body: () => [
       rules(
-        ['⚔️', 'Reta a un amigo de tus ligas, o a cualquiera con un enlace. Eliges la dificultad.'],
-        ['🗺️', 'Un tablero nuevo que ninguno ha visto, el mismo para los dos.'],
-        ['↺', 'Juega cuantas veces quieras y, cuando te guste tu marca, entrégala. Sin pistas.'],
-        ['🙈', 'No ves la marca del otro hasta que los dos entregáis (o pasan 48 h).'],
-        ['🏆', 'Gana quien tenga menos golpes; a igualdad, quien tardó menos. Luego podéis ver el duelo con el fantasma y pedir la revancha.'],
+        ['⚔️', t('guide.duels.r1')],
+        ['🗺️', t('guide.duels.r2')],
+        ['↺', t('guide.duels.r3')],
+        ['🙈', t('guide.duels.r4')],
+        ['🏆', t('guide.duels.r5')],
       ),
     ],
   },
   {
     id: 'leagues',
-    title: 'Ligas, rachas y gorros',
     body: () => [
       rules(
-        ['🏆', 'Crea una liga y pasa el código a tus amigos: veréis quién gana el reto cada día.'],
-        ['📅', `Clasificación semanal y mensual: cada reto da ${GOLF.parPoints} puntos al par y ${GOLF.perStroke} menos por golpe de más.`],
-        ['🔥', 'Juega el reto varios días seguidos para hacer racha.'],
-        ['🛡️', `Cada ${FREEZE_EVERY} días seguidos ganas un protector (hasta ${MAX_FREEZES}): si un día no juegas, tu racha no se rompe.`],
-        ['🎩', 'Los logros desbloquean gorros para tu pingüino.'],
+        ['🏆', t('guide.leagues.r1')],
+        ['📅', t('guide.leagues.r2', { par: GOLF.parPoints, stroke: GOLF.perStroke })],
+        ['🔥', t('guide.leagues.r3')],
+        ['🛡️', t('guide.leagues.r4', { every: FREEZE_EVERY, max: MAX_FREEZES })],
+        ['🎩', t('guide.leagues.r5')],
       ),
     ],
   },
   {
     id: 'community',
-    title: 'Niveles de jugadores',
     body: () => [
       rules(
-        ['✏️', 'Crea tus propios niveles con el editor, con los elementos que ya has desbloqueado.'],
-        ['✅', 'Para publicar un nivel tienes que superarlo antes.'],
-        ['⭐', 'Juega los de los demás y valóralos de 1 a 5 estrellas.'],
-        ['🔗', 'Comparte un nivel por enlace, o denúncialo si no es apropiado.'],
+        ['✏️', t('guide.community.r1')],
+        ['✅', t('guide.community.r2')],
+        ['⭐', t('guide.community.r3')],
+        ['🔗', t('guide.community.r4')],
       ),
     ],
   },
@@ -193,19 +191,19 @@ export function openGuide(start: GuidePage = 'slide'): void {
   const eyebrow = h('p', { class: 'eyebrow' });
   const title = h('h2');
   const content = h('div', { class: 'guide-page' });
-  const dots = h('div', { class: 'guide-dots' }, ...list.map((p, i) => h('button', { 'aria-label': p.title, onclick: () => show(i) })));
-  const back = h('button', { class: 'btn ghost', onclick: () => show(index - 1) }, 'Atrás');
+  const dots = h('div', { class: 'guide-dots' }, ...list.map((p, i) => h('button', { 'aria-label': pageTitle(p.id), onclick: () => show(i) })));
+  const back = h('button', { class: 'btn ghost', onclick: () => show(index - 1) }, t('guide.back'));
   const next = h('button', { class: 'btn', onclick: () => (index === list.length - 1 ? modal.close() : show(index + 1)) });
 
   function show(i: number) {
     index = Math.min(list.length - 1, Math.max(0, i));
     const page = list[index];
-    eyebrow.textContent = `Cómo se juega · ${index + 1}/${list.length}`;
-    title.textContent = page.title;
+    eyebrow.textContent = t('guide.eyebrow', { n: index + 1, total: list.length });
+    title.textContent = pageTitle(page.id);
     content.replaceChildren(...page.body());
     [...dots.children].forEach((d, j) => d.classList.toggle('on', j === index));
     back.disabled = index === 0;
-    next.textContent = index === list.length - 1 ? '¡A jugar!' : 'Siguiente';
+    next.textContent = index === list.length - 1 ? t('guide.letsPlay') : t('free.next');
   }
 
   const onKey = (e: KeyboardEvent) => {

@@ -21,7 +21,7 @@ interface WeeklyRunRow {
 
 /** Comprueba que `week` es el lunes de una semana que ya ha empezado. */
 function checkWeek(week: string): void {
-  if (weekKey(week) !== week || week > weekKey(dayKey(new Date()))) throw new HttpError(400, 'Semana no válida');
+  if (weekKey(week) !== week || week > weekKey(dayKey(new Date()))) throw new HttpError(400, 'invalidWeek');
 }
 
 /** Tablero de la semana: se genera la primera vez que alguien lo pide y se guarda. */
@@ -93,7 +93,7 @@ export async function getWeekly(env: Env, playerId: string, week: string) {
 /** Empieza el reto de esta semana (para saber cuánto se ha tardado como mínimo). */
 export async function startWeekly(env: Env, playerId: string, week: string) {
   checkWeek(week);
-  if (week !== weekKey(dayKey(new Date()))) throw new HttpError(400, 'Esa semana ya ha terminado');
+  if (week !== weekKey(dayKey(new Date()))) throw new HttpError(400, 'weekOver');
   await env.DB.prepare('INSERT OR IGNORE INTO weekly_runs (player_id, week, started_at) VALUES (?, ?, ?)')
     .bind(playerId, week, Date.now())
     .run();
@@ -107,24 +107,24 @@ export async function startWeekly(env: Env, playerId: string, week: string) {
  */
 export async function finishWeekly(env: Env, playerId: string, week: string, log: unknown) {
   checkWeek(week);
-  if (week !== weekKey(dayKey(new Date()))) throw new HttpError(409, 'Esa semana ya ha terminado');
+  if (week !== weekKey(dayKey(new Date()))) throw new HttpError(409, 'weekOver');
   if (typeof log !== 'string' || log.length === 0 || log.length > MAX_LOG_LENGTH || /[XH]/.test(log)) {
-    throw new HttpError(400, 'Registro no válido');
+    throw new HttpError(400, 'invalidLog');
   }
   const run = await selectRun(env, playerId, week);
-  if (!run) throw new HttpError(409, 'No has empezado el reto de esta semana');
+  if (!run) throw new HttpError(409, 'weeklyNotStarted');
 
   const board = await weeklyBoard(env, week);
   let replay;
   try {
     replay = replayRun(parseBoard(board.rows), decodeRun(log));
   } catch (err) {
-    throw new HttpError(400, `Registro no válido: ${(err as Error).message}`);
+    throw new HttpError(400, 'invalidLog');
   }
-  if (!replay.completed) throw new HttpError(400, 'El registro no completa el reto');
+  if (!replay.completed) throw new HttpError(400, 'logIncomplete');
   // Más rápido que las animaciones = enviado con un script, sin jugar.
   if (Date.now() - run.started_at < minPlayTimeMs(replay) * 0.9) {
-    throw new HttpError(400, 'Partida demasiado rápida para haberse jugado en el juego');
+    throw new HttpError(400, 'tooFast');
   }
 
   const moves = replay.moves;
@@ -160,7 +160,7 @@ export async function weeklyRanking(env: Env, playerId: string, week: string) {
     total: results.length,
     top: results.map((r) => ({
       id: r.player_id,
-      name: r.name ?? 'Anónimo',
+      name: r.name,
       hat: isHatId(r.hat) ? r.hat : null,
       position: r.pos,
       moves: r.best_moves,

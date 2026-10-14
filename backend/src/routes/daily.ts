@@ -51,7 +51,7 @@ export async function getRun(env: Env, playerId: string, day: string) {
 
 /** Empieza el reto de hoy; el cronómetro arranca aquí. Si ya existía, lo devuelve tal cual. */
 export async function startRun(env: Env, playerId: string, day: string) {
-  if (day !== dayKey(new Date())) throw new HttpError(400, 'Solo se puede jugar el reto de hoy');
+  if (day !== dayKey(new Date())) throw new HttpError(400, 'onlyToday');
   await env.DB.prepare('INSERT OR IGNORE INTO daily_runs (player_id, day, started_at) VALUES (?, ?, ?)')
     .bind(playerId, day, Date.now())
     .run();
@@ -65,14 +65,14 @@ export async function startRun(env: Env, playerId: string, day: string) {
  * con el tiempo hasta este envío.
  */
 export async function finishRun(env: Env, playerId: string, day: string, log: unknown) {
-  if (typeof log !== 'string' || log.length > MAX_LOG_LENGTH) throw new HttpError(400, 'Registro no válido');
+  if (typeof log !== 'string' || log.length > MAX_LOG_LENGTH) throw new HttpError(400, 'invalidLog');
   const run = await selectRun(env, playerId, day);
-  if (!run) throw new HttpError(409, 'No has empezado el reto de ese día');
+  if (!run) throw new HttpError(409, 'dailyNotStarted');
   const improving = run.finished_at !== null;
   if (improving) {
-    if (run.over_par === null) throw new HttpError(409, 'Ya completaste este reto');
-    if (day !== dayKey(new Date())) throw new HttpError(409, 'Solo se puede mejorar el reto de hoy');
-    if (!log.startsWith(run.log ?? '')) throw new HttpError(409, 'La partida ha cambiado en otro dispositivo; vuelve a abrir el reto');
+    if (run.over_par === null) throw new HttpError(409, 'dailyAlreadyDone');
+    if (day !== dayKey(new Date())) throw new HttpError(409, 'improveOnlyToday');
+    if (!log.startsWith(run.log ?? '')) throw new HttpError(409, 'dailyChangedElsewhere');
   }
 
   const level = dailyLevel(day);
@@ -80,16 +80,16 @@ export async function finishRun(env: Env, playerId: string, day: string, log: un
   try {
     replay = replayRun(level.board, decodeRun(log));
   } catch (err) {
-    throw new HttpError(400, `Registro no válido: ${(err as Error).message}`);
+    throw new HttpError(400, 'invalidLog');
   }
-  if (!replay.best) throw new HttpError(400, 'El registro no completa el reto');
+  if (!replay.best) throw new HttpError(400, 'logIncomplete');
 
   const finishedAt = Date.now();
   const timeMs = finishedAt - run.started_at;
   // Jugando de verdad no se puede terminar antes de que acaben las animaciones
   // (con un 10 % de margen). Más rápido = enviado con un script, sin jugar.
   if (timeMs < minPlayTimeMs(replay) * 0.9) {
-    throw new HttpError(400, 'Partida demasiado rápida para haberse jugado en el juego');
+    throw new HttpError(400, 'tooFast');
   }
   const optimal = level.solution.length;
   // El mejor intento de todo el registro: si uno bueno no llegó a enviarse (se
@@ -127,7 +127,7 @@ export async function finishRun(env: Env, playerId: string, day: string, log: un
         run.log,
       );
   if (!(await update.run()).meta.changes) {
-    throw new HttpError(409, improving ? 'La partida ha cambiado en otro dispositivo; vuelve a abrir el reto' : 'Ya completaste este reto');
+    throw new HttpError(409, improving ? 'dailyChangedElsewhere' : 'dailyAlreadyDone');
   }
 
   const { results: played } = await env.DB.prepare('SELECT day FROM daily_runs WHERE player_id = ? AND finished_at IS NOT NULL')
@@ -171,14 +171,14 @@ interface GhostRow {
  * ya lo hayas terminado (para no destripar la solución).
  */
 export async function ghostRuns(env: Env, playerId: string, day: string, friendId: string) {
-  if (friendId === playerId) throw new HttpError(400, 'Elige a otro jugador');
+  if (friendId === playerId) throw new HttpError(400, 'pickAnotherPlayer');
   const shared = await env.DB.prepare(
     `SELECT 1 FROM league_members a JOIN league_members b ON b.league_id = a.league_id AND b.player_id = ?2
      WHERE a.player_id = ?1 LIMIT 1`,
   )
     .bind(playerId, friendId)
     .first();
-  if (!shared) throw new HttpError(403, 'Solo puedes ver partidas de jugadores de tus ligas');
+  if (!shared) throw new HttpError(403, 'onlyLeagueGames');
 
   const { results } = await env.DB.prepare(
     `SELECT r.player_id, p.name, p.hat, r.log, r.time_ms, r.over_par, r.score
@@ -189,8 +189,8 @@ export async function ghostRuns(env: Env, playerId: string, day: string, friendI
     .all<GhostRow>();
   const mine = results.find((r) => r.player_id === playerId) ?? null;
   const theirs = results.find((r) => r.player_id === friendId) ?? null;
-  if (!mine && day >= dayKey(new Date())) throw new HttpError(403, 'Termina el reto de hoy para ver la partida de tus amigos');
-  if (!theirs) throw new HttpError(404, 'Ese jugador no ha terminado este reto');
+  if (!mine && day >= dayKey(new Date())) throw new HttpError(403, 'finishTodayFirst');
+  if (!theirs) throw new HttpError(404, 'friendNotFinished');
 
   const board = dailyLevel(day).board;
   const ghost = (row: GhostRow | null) => {
@@ -213,6 +213,6 @@ export async function ghostRuns(env: Env, playerId: string, day: string, friendI
     };
   };
   const friend = ghost(theirs);
-  if (!friend) throw new HttpError(404, 'No hay partida que ver de ese jugador');
+  if (!friend) throw new HttpError(404, 'noGhost');
   return { me: ghost(mine), friend };
 }

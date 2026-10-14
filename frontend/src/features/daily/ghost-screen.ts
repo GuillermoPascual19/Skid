@@ -15,6 +15,7 @@ import { go, type Route, type Screen } from '../../shared/router';
 import { loadBoard, onKey, openPauseMenu, playLayout } from '../../play/play';
 import { currentMe } from '../profile/profile';
 import type { GhostRun } from './api';
+import { t } from '../../i18n/i18n';
 
 /** De dónde salen las dos partidas: el reto diario de un día o un duelo. */
 export interface GhostSource {
@@ -31,7 +32,7 @@ const FIRST_DELAY = 900;
 const STEP_DELAY = 350;
 
 /** "Par", "+2" o, en retos de antes del golf, los puntos. */
-const resultLabel = (run: GhostRun) => (run.overPar !== null ? golfLabel(run.overPar) : `${run.score ?? 0} pts`);
+const resultLabel = (run: GhostRun) => (run.overPar !== null ? golfLabel(run.overPar) : `${run.score ?? 0} ${t('common.pts')}`);
 
 export function ghostScreen(source: GhostSource): Screen {
   const board = parseBoard(source.rows);
@@ -51,25 +52,28 @@ export function ghostScreen(source: GhostSource): Screen {
 
   const ui = playLayout({
     stats: [
-      { key: 'lead', label: 'Tú' },
-      { key: 'ghost', label: 'Amigo' },
-      { key: 'step', label: 'Golpe' },
+      { key: 'lead', label: t('ghost.you') },
+      { key: 'ghost', label: t('ghost.friend') },
+      { key: 'step', label: t('stats.stroke') },
     ],
     hint: {
-      keys: 'Tu mejor intento contra el suyo · R para verlo otra vez',
-      touch: 'Tu mejor intento contra el suyo · ↺ para verlo otra vez',
+      keys: t('ghost.hintKeys'),
+      touch: t('ghost.hintTouch'),
     },
     onMenu: () =>
       openPauseMenu(mounted, {
-        restartLabel: 'Ver otra vez',
+        restartLabel: t('common.watchAgain'),
         onRestart: () => replay(),
         onExit: () => go(source.back.route),
       }),
     onRestart: () => replay(),
     onSwipe: () => {},
-    restartLabel: 'Ver otra vez',
+    restartLabel: t('common.watchAgain'),
   });
-  ui.setTitle('Fantasma', source.subtitle);
+  ui.setTitle(t('ghost.title'), source.subtitle);
+
+  /** Nombre del otro (o «Amigo» si no eligió ninguno). */
+  const friendName = () => friend?.name ?? t('ghost.friend');
 
   const hud = () => {
     ui.setStat('lead', `${Math.min(step, lead.length)}/${lead.length}`);
@@ -136,11 +140,11 @@ export function ghostScreen(source: GhostSource): Screen {
     if (!me || !friend) return '';
     const a = me.overPar ?? -(me.score ?? 0);
     const b = friend.overPar ?? -(friend.score ?? 0);
-    if (a !== b) return a < b ? '¡Ganas tú!' : `Gana ${friend.name}`;
+    if (a !== b) return a < b ? t('ghost.youWin') : t('ghost.theyWin', { name: friendName() });
     const ta = me.timeMs ?? 0;
     const tb = friend.timeMs ?? 0;
-    if (ta === tb) return '¡Empate!';
-    return ta < tb ? '¡Ganas tú, por tiempo!' : `Gana ${friend.name}, por tiempo`;
+    if (ta === tb) return t('ghost.draw');
+    return ta < tb ? t('ghost.youWinTime') : t('ghost.theyWinTime', { name: friendName() });
   }
 
   function finish() {
@@ -152,17 +156,17 @@ export function ghostScreen(source: GhostSource): Screen {
           'div',
           null,
           h('span', null, who),
-          h('span', null, `${resultLabel(r)} · ${decodeRun(r.path).length} mov.${r.hints ? ` · 💡 ${r.hints}` : ''} · ⏱ ${formatTime(r.timeMs ?? 0)}`),
+          h('span', null, `${resultLabel(r)} · ${t('common.movesShort', { n: decodeRun(r.path).length })}${r.hints ? ` · 💡 ${r.hints}` : ''} · ⏱ ${formatTime(r.timeMs ?? 0)}`),
         );
       const modal = openModal(
         [
           h('p', { class: 'eyebrow' }, source.subtitle),
-          h('h2', null, me ? verdict() : `La partida de ${friend.name}`),
-          h('div', { class: 'breakdown' }, me ? line('Tú', me) : null, line(friend.name ?? 'Amigo', friend)),
+          h('h2', null, me ? verdict() : t('ghost.theirGame', { name: friendName() })),
+          h('div', { class: 'breakdown' }, me ? line(t('ghost.you'), me) : null, line(friendName(), friend)),
           h(
             'div',
             { class: 'row' },
-            h('button', { class: 'btn secondary', onclick: () => (modal.close(), replay()) }, '↺ Ver otra vez'),
+            h('button', { class: 'btn secondary', onclick: () => (modal.close(), replay()) }, `↺ ${t('common.watchAgain')}`),
             h('button', { class: 'btn', onclick: () => go(source.back.route) }, source.back.label),
           ),
         ],
@@ -177,7 +181,7 @@ export function ghostScreen(source: GhostSource): Screen {
     async mount() {
       removeKeys = onKey((e) => {
         if (e.key === 'r' || e.key === 'R') replay();
-        if (e.key === 'Escape') ui.el.querySelector<HTMLButtonElement>('[aria-label=Pausa]')?.click();
+        if (e.key === 'Escape') ui.el.querySelector<HTMLButtonElement>('.pause-btn')?.click();
       });
       let myHat: HatId | null = null;
       try {
@@ -190,13 +194,13 @@ export function ghostScreen(source: GhostSource): Screen {
         return go(source.back.route);
       }
       if (disposed) return;
-      const friendName = friend.name ?? 'Amigo';
+
       lead = decodeRun((me ?? friend).path) as Direction[];
       ghost = me ? (decodeRun(friend.path) as Direction[]) : [];
       // Los nombres en los contadores: el tuyo y el suyo (o solo el suyo).
       const labels = ui.el.querySelectorAll('.stat > span');
-      labels[0].textContent = me ? 'Tú' : friendName;
-      labels[1].textContent = me ? friendName : '—';
+      labels[0].textContent = me ? t('ghost.you') : friendName();
+      labels[1].textContent = me ? friendName() : '—';
       if (!me) ui.setStat('ghost', '—');
       hud();
 
@@ -205,7 +209,7 @@ export function ghostScreen(source: GhostSource): Screen {
       mounted = m;
       m.scene.setBoard(board, state);
       m.scene.setHat(me ? myHat : friend.hat);
-      if (me) m.scene.setGhost({ name: friendName, hat: friend.hat, state });
+      if (me) m.scene.setGhost({ name: friendName(), hat: friend.hat, state });
       schedule(FIRST_DELAY);
     },
     dispose() {

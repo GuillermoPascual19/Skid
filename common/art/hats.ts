@@ -7,21 +7,11 @@
 
 export type HatId = 'beanie' | 'earmuffs' | 'cap' | 'tophat' | 'viking' | 'party' | 'santa' | 'ushanka' | 'wizard' | 'crown';
 
-export const HAT_NAMES: Record<HatId, string> = {
-  beanie: 'Gorro de lana',
-  earmuffs: 'Orejeras',
-  cap: 'Gorra',
-  tophat: 'Sombrero de copa',
-  viking: 'Casco vikingo',
-  party: 'Gorro de fiesta',
-  santa: 'Gorro de Papá Noel',
-  ushanka: 'Gorro polar',
-  wizard: 'Gorro de mago',
-  crown: 'Corona',
-};
+/** Los nombres de los gorros están en los diccionarios del juego (hats.<id>). */
+export const HAT_IDS: readonly HatId[] = ['beanie', 'earmuffs', 'cap', 'tophat', 'viking', 'party', 'santa', 'ushanka', 'wizard', 'crown'];
 
 export function isHatId(value: unknown): value is HatId {
-  return typeof value === 'string' && Object.hasOwn(HAT_NAMES, value); // No `in`: daría por buenos 'constructor', 'toString'…
+  return typeof value === 'string' && (HAT_IDS as readonly string[]).includes(value);
 }
 
 const HATS: Record<HatId, string> = {

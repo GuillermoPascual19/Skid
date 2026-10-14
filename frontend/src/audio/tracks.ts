@@ -10,9 +10,8 @@ export type TrackId = 'calm' | 'aurora' | 'playful' | 'lofi';
 
 export interface MusicTrack {
   readonly id: TrackId;
-  readonly name: string;
+  /** El nombre y la descripción están en los diccionarios (tracks.<id>). */
   readonly emoji: string;
-  readonly description: string;
   /** Duración de un compás, en segundos. */
   readonly barSeconds: number;
   /** Ajuste de volumen para que todas suenen parecido con el mismo control (medido). */
@@ -205,10 +204,10 @@ function lofiBar(ctx: Ctx, out: AudioNode, t: number, index: number, random: () 
 // ------------------------------------------------------------------- Catálogo
 
 export const TRACKS: readonly MusicTrack[] = [
-  { id: 'calm', name: 'Hielo sereno', emoji: '🧊', description: 'Acordes lentos y cajita de música', barSeconds: BAR_S, level: 1, bar: musicBar },
-  { id: 'aurora', name: 'Aurora', emoji: '🌌', description: 'Zumbido que respira y notas con eco', barSeconds: AURORA_BAR, level: 2.3, bar: auroraBar },
-  { id: 'playful', name: 'Copos alegres', emoji: '❄️', description: 'Marimba animada y ritmo ligero', barSeconds: PLAYFUL_BAR, level: 3.7, bar: playfulBar },
-  { id: 'lofi', name: 'Lofi del iglú', emoji: '☕', description: 'Piano eléctrico y batería suave', barSeconds: LOFI_BAR, level: 2.7, bar: lofiBar },
+  { id: 'calm', emoji: '🧊', barSeconds: BAR_S, level: 1, bar: musicBar },
+  { id: 'aurora', emoji: '🌌', barSeconds: AURORA_BAR, level: 2.3, bar: auroraBar },
+  { id: 'playful', emoji: '❄️', barSeconds: PLAYFUL_BAR, level: 3.7, bar: playfulBar },
+  { id: 'lofi', emoji: '☕', barSeconds: LOFI_BAR, level: 2.7, bar: lofiBar },
 ];
 
 export function trackById(id: unknown): MusicTrack {

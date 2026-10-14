@@ -9,6 +9,7 @@
 import { unlockedHats } from '../../common/logic/achievements/achievements';
 import { isHatId } from '../../common/art/hats';
 import { type Env, HttpError, body, cleanText, json } from './http';
+import { errorMessage, requestLocale } from './i18n';
 import { playerAchievements } from './routes/achievements';
 import { finishRun, getRun, ghostRuns, startRun } from './routes/daily';
 import { finishWeekly, getWeekly, startWeekly, weeklyRanking } from './routes/weekly';
@@ -27,7 +28,7 @@ import {
 import { playerProfile } from './routes/players';
 import { playerStats } from './routes/stats';
 import { authenticate, createSession, deleteAccount, googleLogin, logoutEverywhere } from './session';
-import { nameKey, nameProblem, NAME_MAX } from '../../common/logic/players/names';
+import { nameKey, nameProblem, NAME_MAX, NAME_MIN } from '../../common/logic/players/names';
 
 export default {
   async fetch(req, env): Promise<Response> {
@@ -36,9 +37,9 @@ export default {
     try {
       return await handleApi(req, url, env);
     } catch (err) {
-      if (err instanceof HttpError) return json({ error: err.message }, err.status);
+      if (err instanceof HttpError) return json({ error: errorMessage(requestLocale(req), err.key, err.params), code: err.key }, err.status);
       console.error(err);
-      return json({ error: 'Error interno' }, 500);
+      return json({ error: errorMessage(requestLocale(req), 'internal'), code: 'internal' }, 500);
     }
   },
 } satisfies ExportedHandler<Env>;
@@ -53,7 +54,7 @@ async function handleApi(req: Request, url: URL, env: Env): Promise<Response> {
   const session = await authenticate(req, env);
   const { playerId } = session;
   // Límite general por jugador: de sobra para jugar, corta los scripts que machacan la API.
-  if (!(await env.API_RATE_LIMITER.limit({ key: playerId })).success) throw new HttpError(429, 'Demasiadas peticiones. Espera un minuto.');
+  if (!(await env.API_RATE_LIMITER.limit({ key: playerId })).success) throw new HttpError(429, 'tooManyRequests');
 
   if (route === 'POST /auth/google') {
     const { credential } = await body<{ credential?: unknown }>(req);
@@ -67,7 +68,7 @@ async function handleApi(req: Request, url: URL, env: Env): Promise<Response> {
   if (route === 'DELETE /me') {
     // Se pide la palabra exacta: que no se borre una cuenta por una llamada equivocada.
     const { confirm } = await body<{ confirm?: unknown }>(req);
-    if (confirm !== 'BORRAR') throw new HttpError(400, 'Falta la confirmación');
+    if (confirm !== 'BORRAR') throw new HttpError(400, 'missingConfirmation');
     return json(await deleteAccount(env, session));
   }
 
@@ -86,23 +87,23 @@ async function handleApi(req: Request, url: URL, env: Env): Promise<Response> {
   }
   if (route === 'PUT /me/hat') {
     const { hat } = await body<{ hat?: unknown }>(req);
-    if (hat !== null && !isHatId(hat)) throw new HttpError(400, 'Gorro desconocido');
+    if (hat !== null && !isHatId(hat)) throw new HttpError(400, 'unknownHat');
     if (hat !== null && !unlockedHats(await playerAchievements(env, playerId)).has(hat)) {
-      throw new HttpError(403, 'Aún no has desbloqueado ese gorro');
+      throw new HttpError(403, 'hatLocked');
     }
     await env.DB.prepare('UPDATE players SET hat = ? WHERE id = ?').bind(hat, playerId).run();
     return json({ hat });
   }
   if (route === 'PUT /me') {
     const { name } = await body<{ name?: unknown }>(req);
-    const clean = cleanText(name, 1, NAME_MAX, 'El nombre');
+    const clean = cleanText(name, NAME_MIN, NAME_MAX, 'nameLength');
     const problem = nameProblem(clean);
-    if (problem) throw new HttpError(400, problem);
+    if (problem) throw new HttpError(400, problem === 'length' ? 'nameLength' : 'nameChars', { min: NAME_MIN, max: NAME_MAX });
     // Nombres únicos según su clave (sin tildes, mayúsculas ni separadores), para que
     // nadie se haga pasar por otro con un nombre que se ve igual.
     const key = nameKey(clean);
     const taken = await env.DB.prepare('SELECT 1 FROM players WHERE name_key = ? AND id <> ?').bind(key, playerId).first();
-    if (taken) throw new HttpError(409, 'Ese nombre (o uno que se ve igual) ya lo tiene otro jugador. Prueba con otro.');
+    if (taken) throw new HttpError(409, 'nameTaken');
     await env.DB.prepare('UPDATE players SET name = ?, name_key = ? WHERE id = ?').bind(clean, key, playerId).run();
     return json({ name: clean });
   }
@@ -148,28 +149,28 @@ async function handleApi(req: Request, url: URL, env: Env): Promise<Response> {
   if (route === 'POST /leagues/join') {
     // Sin límite se podrían probar códigos hasta acertar con una liga ajena.
     const { success } = await env.JOIN_RATE_LIMITER.limit({ key: playerId });
-    if (!success) throw new HttpError(429, 'Demasiados intentos. Espera un minuto.');
+    if (!success) throw new HttpError(429, 'tooManyAttempts');
     const { code } = await body<{ code?: unknown }>(req);
     return json(await joinLeague(env, playerId, code));
   }
   if ((m = route.match(/^GET \/leagues\/invite\/([A-Za-z0-9]{1,12})$/))) {
     // Comparte límite con unirse: si no, se podrían probar códigos por aquí.
     const { success } = await env.JOIN_RATE_LIMITER.limit({ key: playerId });
-    if (!success) throw new HttpError(429, 'Demasiados intentos. Espera un minuto.');
+    if (!success) throw new HttpError(429, 'tooManyAttempts');
     return json(await leagueInvite(env, playerId, m[1]));
   }
   if ((m = route.match(/^POST \/leagues\/([\w-]+)\/leave$/))) return json(await leaveLeague(env, playerId, m[1]));
   if ((m = route.match(/^GET \/leagues\/([\w-]+)\/ranking$/))) {
     const day = url.searchParams.get('day') ?? '';
-    if (!/^\d{4}-\d{2}-\d{2}$/.test(day)) throw new HttpError(400, 'Día no válido');
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(day)) throw new HttpError(400, 'invalidDay');
     return json(await leagueRanking(env, playerId, m[1], day));
   }
   if ((m = route.match(/^GET \/leagues\/([\w-]+)\/standings$/))) {
     const from = url.searchParams.get('from') ?? '';
     const to = url.searchParams.get('to') ?? '';
-    if (!/^\d{4}-\d{2}-\d{2}$/.test(from) || !/^\d{4}-\d{2}-\d{2}$/.test(to)) throw new HttpError(400, 'Periodo no válido');
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(from) || !/^\d{4}-\d{2}-\d{2}$/.test(to)) throw new HttpError(400, 'invalidPeriod');
     const days = (Date.parse(to) - Date.parse(from)) / 86_400_000;
-    if (days < 0 || days > 31) throw new HttpError(400, 'El periodo debe ser de 1 a 32 días');
+    if (days < 0 || days > 31) throw new HttpError(400, 'periodLength');
     return json(await leagueStandings(env, playerId, m[1], from, to));
   }
 
@@ -179,7 +180,7 @@ async function handleApi(req: Request, url: URL, env: Env): Promise<Response> {
   }
   if (route === 'POST /levels') {
     const { success } = await env.JOIN_RATE_LIMITER.limit({ key: `levels:${playerId}` });
-    if (!success) throw new HttpError(429, 'Demasiados intentos. Espera un minuto.');
+    if (!success) throw new HttpError(429, 'tooManyAttempts');
     return json(await createCustomLevel(env, playerId, await body(req)));
   }
   if ((m = route.match(/^GET \/levels\/([\w-]+)$/))) return json(await getCustomLevel(env, playerId, m[1]));
@@ -198,5 +199,5 @@ async function handleApi(req: Request, url: URL, env: Env): Promise<Response> {
     return json(await rateCustomLevel(env, playerId, m[1], stars));
   }
 
-  throw new HttpError(404, 'No encontrado');
+  throw new HttpError(404, 'notFound');
 }

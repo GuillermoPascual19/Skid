@@ -9,10 +9,11 @@ import { applyMove, isComplete } from '../../../common/logic/engine/move';
 import { solve } from '../../../common/logic/engine/solver';
 import type { BoardHooks } from '../game/BoardScene';
 import type { MountedBoard } from '../game/mount';
-import { h, haptic, openModal, plural, type Modal } from '../shared/dom';
+import { h, haptic, openModal, type Modal } from '../shared/dom';
 import { sfx } from '../audio/sound';
 import { go, type Screen } from '../shared/router';
 import { loadBoard, onKey, openPauseMenu, playLayout, wearHat } from './play';
+import { t, tn } from '../i18n/i18n';
 
 /** Lo que cuenta el servidor tras recibir un intento. */
 export interface AttemptOutcome {
@@ -44,9 +45,9 @@ export interface AttemptScreenOptions {
 }
 
 function headline(over: number): string {
-  if (over === 0) return '¡Al par!';
-  if (over <= 2) return '¡Muy cerca!';
-  return '¡Conseguido!';
+  if (over === 0) return t('golf.headline.par');
+  if (over <= 2) return t('golf.headline.close');
+  return t('golf.headline.done');
 }
 
 export function attemptScreen(opts: AttemptScreenOptions): Screen {
@@ -65,18 +66,18 @@ export function attemptScreen(opts: AttemptScreenOptions): Screen {
 
   const ui = playLayout({
     stats: [
-      { key: 'moves', label: 'Golpes' },
-      { key: 'optimal', label: 'Óptimo', tone: 'gold' },
-      { key: 'best', label: 'Tu mejor' },
+      { key: 'moves', label: t('stats.strokes') },
+      { key: 'optimal', label: t('stats.optimal'), tone: 'gold' },
+      { key: 'best', label: t('stats.yourBest') },
     ],
     hint: {
-      keys: 'Flechas o WASD para moverte · R vuelve a empezar (gratis)',
-      touch: 'Desliza el dedo en cualquier parte · ↺ vuelve a empezar (gratis)',
+      keys: t('play.hintKeysFreeRestart'),
+      touch: t('play.hintTouchFreeRestart'),
     },
-    onMenu: () => openPauseMenu(mounted, { restartLabel: 'Volver a empezar', onRestart: () => restart(), onExit: () => go({ name: 'home' }) }),
+    onMenu: () => openPauseMenu(mounted, { restartLabel: t('play.restart'), onRestart: () => restart(), onExit: () => go({ name: 'home' }) }),
     onRestart: () => restart(),
     onSwipe: (dir) => mounted?.scene.requestMove(dir),
-    restartLabel: 'Volver a empezar',
+    restartLabel: t('play.restart'),
   });
   ui.setTitle(opts.title, opts.subtitle);
 
@@ -127,9 +128,9 @@ export function attemptScreen(opts: AttemptScreenOptions): Screen {
   async function finish() {
     sfx.win();
     const over = Math.max(0, moves - optimal);
-    const note = h('p', { class: 'golf-note' }, 'Guardando…');
+    const note = h('p', { class: 'golf-note' }, t('common.saving'));
     const highlight = h('p', { class: 'level-place', hidden: true });
-    const retry = h('button', { class: 'btn secondary', onclick: () => restart() }, over === 0 ? 'Otra vez' : '↺ Mejorar');
+    const retry = h('button', { class: 'btn secondary', onclick: () => restart() }, over === 0 ? t('golf.again') : `↺ ${t('golf.improve')}`);
     const handIn = opts.handIn
       ? h('button', { class: 'btn block', hidden: true, onclick: () => void doHandIn() }, opts.handIn.label)
       : null;
@@ -156,12 +157,12 @@ export function attemptScreen(opts: AttemptScreenOptions): Screen {
       h('p', { class: 'eyebrow' }, opts.eyebrow),
       h('h2', null, headline(over)),
       h('div', { class: `score-big golf${over === 0 ? ' par' : ''}` }, golfLabel(over)),
-      h('p', { class: 'lead' }, `${plural(moves, 'movimiento', 'movimientos')} · óptimo ${optimal}`),
+      h('p', { class: 'lead' }, `${tn('common.moves', moves)} · ${t('common.optimalN', { n: optimal })}`),
       note,
       highlight,
       h('div', { class: 'row' }, retry, h('button', { class: 'btn ghost', onclick: opts.secondary.onclick }, opts.secondary.label)),
       handIn,
-      h('button', { class: 'link-btn', onclick: () => go({ name: 'home' }) }, 'Volver al inicio'),
+      h('button', { class: 'link-btn', onclick: () => go({ name: 'home' }) }, t('common.backHome')),
     ]);
 
     try {
@@ -170,7 +171,7 @@ export function attemptScreen(opts: AttemptScreenOptions): Screen {
       show(outcome);
       if (handIn) handIn.hidden = closed; // Ya hay marca: se puede entregar.
     } catch (err) {
-      note.textContent = `No se pudo guardar: ${(err as Error).message}`;
+      note.textContent = t('common.saveFailed', { error: (err as Error).message });
       note.classList.add('error');
     }
   }
@@ -182,7 +183,7 @@ export function attemptScreen(opts: AttemptScreenOptions): Screen {
       hud();
       removeKeys = onKey((e) => {
         if (e.key === 'r' || e.key === 'R') restart();
-        if (e.key === 'Escape') ui.el.querySelector<HTMLButtonElement>('[aria-label=Pausa]')?.click();
+        if (e.key === 'Escape') ui.el.querySelector<HTMLButtonElement>('.pause-btn')?.click();
       });
       const m = await loadBoard(ui.boardWrap, board, hooks);
       if (disposed) return m.destroy();

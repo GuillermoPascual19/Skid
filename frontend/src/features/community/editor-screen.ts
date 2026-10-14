@@ -4,7 +4,7 @@
 
 import { penguinSvg } from '../../../../common/art/hats';
 import { elementSvg } from '../../../../common/art/elements';
-import { PORTAL_CHARS } from '../../../../common/logic/engine/board';
+import { BoardError, PORTAL_CHARS } from '../../../../common/logic/engine/board';
 import { checkCustomLevel, CUSTOM_LIMITS, encodeRows } from '../../../../common/logic/community/community';
 import { ELEMENTS, unlockedElements, type ElementId } from '../../../../common/logic/engine/elements';
 import { cellArt } from './board-art';
@@ -14,13 +14,13 @@ import { go, type Screen } from '../../shared/router';
 import { publishCustomLevel } from './api';
 import { type EditorDraft, loadEditorDraft, saveEditorDraft } from './storage';
 import { startingProgress } from '../free-play/storage';
+import { t, te } from '../../i18n/i18n';
 
 type Tool = 'wall' | 'ice' | 'start' | 'piece' | 'snow' | 'arrow' | 'portal' | 'hole';
 
 interface ToolDef {
   readonly id: Tool;
-  readonly label: string;
-  readonly help: string;
+  /** El nombre y la ayuda de cada herramienta están en los diccionarios (editor.tools.<id>). */
   /** Elemento que hay que tener desbloqueado para usar la herramienta. */
   readonly element?: ElementId;
   /** Se puede pintar arrastrando el dedo. */
@@ -28,26 +28,22 @@ interface ToolDef {
 }
 
 const TOOLS: readonly ToolDef[] = [
-  { id: 'wall', label: 'Muro', help: 'Bloques de nieve: el pingüino choca y se para delante. Arrastra para pintar varios.', paint: true },
-  { id: 'ice', label: 'Borrar', help: 'Deja la casilla de hielo normal. Arrastra para borrar varias.', paint: true },
-  { id: 'start', label: 'Pingüino', help: 'Dónde empieza el pingüino. Solo hay uno.' },
-  { id: 'piece', label: 'Pieza', help: 'Pon las piezas en el orden en que hay que recogerlas (hasta 9). Toca una pieza para quitarla.' },
-  { id: 'snow', label: 'Nieve', element: 'snow', help: 'El pingüino se para encima.', paint: true },
-  { id: 'arrow', label: 'Corriente', element: 'arrow', help: 'Gira al pingüino. Toca una corriente ya puesta para cambiar su dirección.' },
-  { id: 'portal', label: 'Teletransporte', element: 'portal', help: 'Van por parejas del mismo color (hasta 5): pon uno y luego su pareja. Toca uno para quitarlo.' },
-  { id: 'hole', label: 'Agujero', element: 'hole', help: 'Quien cae vuelve a la salida (con las piezas que lleve).', paint: true },
+  { id: 'wall', paint: true },
+  { id: 'ice', paint: true },
+  { id: 'start' },
+  { id: 'piece' },
+  { id: 'snow', element: 'snow', paint: true },
+  { id: 'arrow', element: 'arrow' },
+  { id: 'portal', element: 'portal' },
+  { id: 'hole', element: 'hole', paint: true },
 ];
 
 const ARROW_TURN: Record<string, string> = { '>': 'v', v: '<', '<': '^', '^': '>' };
 const DEFAULT_ROWS = ['@......', '.......', '...#...', '.......', '.#...#.', '.......', '......1'];
 
-/** Los mensajes del parser hablan de '@'; en el editor, del pingüino. */
-function friendlyError(message: string): string {
-  if (message.includes('no tiene jugador')) return 'Falta el pingüino';
-  if (message.includes('más de un jugador')) return 'Solo puede haber un pingüino';
-  if (message.includes('no tiene piezas')) return 'Pon al menos una pieza';
-  if (message.includes('teletransporte')) return 'Hay un teletransporte sin pareja';
-  return message;
+/** Por qué no vale el tablero, en el idioma del jugador (los mismos mensajes que da el servidor). */
+function boardProblem(err: unknown): string {
+  return err instanceof BoardError ? te(`board_${err.code}`, err.params) : te('board_invalid');
 }
 
 export function editorScreen(): Screen {
@@ -101,7 +97,7 @@ export function editorScreen(): Screen {
         if (/[1-9]/.test(ch)) next = '.';
         else {
           const pieces = countOf((c) => /[1-9]/.test(c));
-          if (pieces >= CUSTOM_LIMITS.maxPieces) return toast(`Como mucho ${CUSTOM_LIMITS.maxPieces} piezas`);
+          if (pieces >= CUSTOM_LIMITS.maxPieces) return toast(t('editor.maxPieces', { n: CUSTOM_LIMITS.maxPieces }));
           next = String(pieces + 1);
         }
         break;
@@ -117,7 +113,7 @@ export function editorScreen(): Screen {
         // Primero se completa la pareja que esté a medias; si no, se empieza una nueva.
         const uses = (l: string) => countOf((c) => c === l);
         const letter = PORTAL_CHARS.find((l) => uses(l) === 1) ?? PORTAL_CHARS.find((l) => uses(l) === 0);
-        if (!letter) return toast(`Como mucho ${PORTAL_CHARS.length} parejas de teletransportes`);
+        if (!letter) return toast(t('editor.maxPortals', { n: PORTAL_CHARS.length }));
         next = letter;
         break;
       }
@@ -144,10 +140,10 @@ export function editorScreen(): Screen {
   const status = h('p', { class: 'editor-status', role: 'status' });
   const sizeLabel = h('strong');
   const help = h('p', { class: 'editor-help' });
-  const palette = h('div', { class: 'palette', role: 'radiogroup', 'aria-label': 'Herramienta' });
+  const palette = h('div', { class: 'palette', role: 'radiogroup', 'aria-label': t('editor.tool') });
   const nameInput = h('input', {
     class: 'field',
-    placeholder: 'Nombre del nivel',
+    placeholder: t('editor.namePlaceholder'),
     maxLength: CUSTOM_LIMITS.maxName,
     value: name,
     oninput: () => {
@@ -156,8 +152,8 @@ export function editorScreen(): Screen {
       renderStatus();
     },
   });
-  const testBtn = h('button', { class: 'btn secondary', onclick: () => testLevel() }, '▶ Probar');
-  const publishBtn = h('button', { class: 'btn', onclick: () => void publish() }, 'Publicar');
+  const testBtn = h('button', { class: 'btn secondary', onclick: () => testLevel() }, `▶ ${t('editor.test')}`);
+  const publishBtn = h('button', { class: 'btn', onclick: () => void publish() }, t('editor.publish'));
 
   function toolIcon(id: Tool): Node {
     if (id === 'wall') return h('span', { class: 'tool-swatch wall' });
@@ -169,28 +165,28 @@ export function editorScreen(): Screen {
 
   function renderPalette() {
     palette.replaceChildren(
-      ...TOOLS.map((t) => {
-        const locked = t.element !== undefined && !unlocked.has(t.element);
-        const unlockLevel = ELEMENTS.find((e) => e.id === t.element)?.level;
+      ...TOOLS.map((item) => {
+        const locked = item.element !== undefined && !unlocked.has(item.element);
+        const unlockLevel = ELEMENTS.find((e) => e.id === item.element)?.level;
         return h(
           'button',
           {
-            class: `tool ${tool === t.id ? 'active' : ''} ${locked ? 'locked' : ''}`,
+            class: `tool ${tool === item.id ? 'active' : ''} ${locked ? 'locked' : ''}`,
             role: 'radio',
-            'aria-checked': String(tool === t.id),
+            'aria-checked': String(tool === item.id),
             disabled: locked,
-            title: locked ? `Se desbloquea en el nivel ${unlockLevel} del modo libre` : t.help,
+            title: locked ? t('editor.unlocksAt', { n: unlockLevel ?? 0 }) : t(`editor.tools.${item.id}.help`),
             onclick: () => {
-              tool = t.id;
+              tool = item.id;
               renderPalette();
             },
           },
-          h('span', { class: 'tool-icon' }, toolIcon(t.id)),
-          h('span', null, locked ? `🔒 Nv. ${unlockLevel}` : t.label),
+          h('span', { class: 'tool-icon' }, toolIcon(item.id)),
+          h('span', null, locked ? `🔒 ${t('editor.levelShort', { n: unlockLevel ?? 0 })}` : t(`editor.tools.${item.id}.label`)),
         );
       }),
     );
-    help.textContent = TOOLS.find((t) => t.id === tool)!.help;
+    help.textContent = t(`editor.tools.${tool}.help`);
   }
 
   function renderBoard() {
@@ -219,11 +215,11 @@ export function editorScreen(): Screen {
       valid = true;
       status.className = 'editor-status ok';
       status.textContent = proven()
-        ? `✓ Superado. Óptimo: ${solution.length} movimientos. ¡Ya puedes publicarlo!`
-        : `✓ Tiene solución (óptimo: ${solution.length} movimientos). Pruébalo y supéralo para poder publicarlo.`;
+        ? `✓ ${t('editor.status.proven', { n: solution.length })}`
+        : `✓ ${t('editor.status.solvable', { n: solution.length })}`;
     } catch (err) {
       status.className = 'editor-status error';
-      status.textContent = friendlyError((err as Error).message);
+      status.textContent = boardProblem(err);
     }
     testBtn.disabled = !valid;
     publishBtn.disabled = !valid || !proven() || name.trim().length < CUSTOM_LIMITS.minName;
@@ -236,7 +232,7 @@ export function editorScreen(): Screen {
     const cell = cellAt(e);
     if (!cell) return;
     e.preventDefault();
-    painting = !!TOOLS.find((t) => t.id === tool)?.paint;
+    painting = !!TOOLS.find((item) => item.id === tool)?.paint;
     apply(Number(cell.dataset.x), Number(cell.dataset.y));
   });
   board.addEventListener('pointermove', (e) => {
@@ -258,13 +254,13 @@ export function editorScreen(): Screen {
   async function publish() {
     if (!proof.proofLog || !proven()) return;
     const clean = name.trim();
-    if (clean.length < CUSTOM_LIMITS.minName) return toast(`El nombre debe tener al menos ${CUSTOM_LIMITS.minName} letras`);
+    if (clean.length < CUSTOM_LIMITS.minName) return toast(t('editor.nameTooShort', { n: CUSTOM_LIMITS.minName }));
     publishBtn.disabled = true;
     try {
       if (!(await ensureName())) return;
       await publishCustomLevel(clean, rows(), proof.proofLog);
       saveEditorDraft(null);
-      toast('¡Nivel publicado!');
+      toast(t('editor.published'));
       go({ name: 'community', tab: 'mine' });
     } catch (err) {
       toast((err as Error).message);
@@ -277,12 +273,12 @@ export function editorScreen(): Screen {
   function startOver() {
     const modal = openModal(
       [
-        h('h2', null, '¿Empezar de cero?'),
-        h('p', { class: 'lead' }, 'Se borra el tablero que estás creando.'),
+        h('h2', null, t('editor.reset.title')),
+        h('p', { class: 'lead' }, t('editor.reset.text')),
         h(
           'div',
           { class: 'row' },
-          h('button', { class: 'btn ghost', onclick: () => modal.close() }, 'Cancelar'),
+          h('button', { class: 'btn ghost', onclick: () => modal.close() }, t('common.cancel')),
           h(
             'button',
             {
@@ -297,7 +293,7 @@ export function editorScreen(): Screen {
                 renderBoard();
               },
             },
-            'Borrar',
+            t('levels.card.delete'),
           ),
         ),
       ],
@@ -310,8 +306,8 @@ export function editorScreen(): Screen {
       'div',
       { class: 'stepper' },
       h('span', null, label),
-      h('button', { class: 'icon-btn small', 'aria-label': `Menos ${label.toLowerCase()}`, onclick: onMinus }, '−'),
-      h('button', { class: 'icon-btn small', 'aria-label': `Más ${label.toLowerCase()}`, onclick: onPlus }, '+'),
+      h('button', { class: 'icon-btn small', 'aria-label': t('editor.less', { what: label }), onclick: onMinus }, '−'),
+      h('button', { class: 'icon-btn small', 'aria-label': t('editor.more', { what: label }), onclick: onPlus }, '+'),
     );
 
   const el = h(
@@ -320,23 +316,23 @@ export function editorScreen(): Screen {
     h(
       'header',
       { class: 'topbar' },
-      h('button', { class: 'icon-btn', 'aria-label': 'Volver', onclick: () => go({ name: 'community' }) }, '←'),
-      h('div', { class: 'title' }, h('h1', null, 'Crear nivel'), h('p', null, 'Multijugador')),
+      h('button', { class: 'icon-btn', 'aria-label': t('common.back'), onclick: () => go({ name: 'community' }) }, '←'),
+      h('div', { class: 'title' }, h('h1', null, t('levels.create.button')), h('p', null, t('home.community.eyebrow'))),
     ),
     nameInput,
     h(
       'div',
       { class: 'editor-size' },
-      stepper('Ancho', () => resize(width() - 1, height()), () => resize(width() + 1, height())),
+      stepper(t('editor.width'), () => resize(width() - 1, height()), () => resize(width() + 1, height())),
       sizeLabel,
-      stepper('Alto', () => resize(width(), height() - 1), () => resize(width(), height() + 1)),
+      stepper(t('editor.height'), () => resize(width(), height() - 1), () => resize(width(), height() + 1)),
     ),
     board,
     status,
     palette,
     help,
     h('div', { class: 'row' }, testBtn, publishBtn),
-    h('button', { class: 'link-btn', onclick: startOver }, 'Empezar de cero'),
+    h('button', { class: 'link-btn', onclick: startOver }, t('editor.reset.link')),
   );
 
   return {

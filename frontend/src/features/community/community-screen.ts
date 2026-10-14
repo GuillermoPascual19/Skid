@@ -6,16 +6,17 @@ import { penguinSvg } from '../../../../common/art/hats';
 import { ELEMENTS } from '../../../../common/logic/engine/elements';
 import * as online from '../../shared/api';
 import { boardThumb } from './board-art';
-import { h, openModal, plural, share, svg, toast } from '../../shared/dom';
+import { h, openModal, share, svg, toast } from '../../shared/dom';
 import { go, type Screen } from '../../shared/router';
 import { type CustomLevel, type CustomLevelSort, type ReportReason, deleteCustomLevel, getCustomLevel, listCustomLevels, reportCustomLevel } from './api';
 import { loadEditorDraft } from './storage';
 import { openLevelRanking } from './level-ranking';
+import { playerName, t, tn } from '../../i18n/i18n';
 
-const TABS: { id: CustomLevelSort; label: string }[] = [
-  { id: 'top', label: 'Mejor valorados' },
-  { id: 'new', label: 'Nuevos' },
-  { id: 'mine', label: 'Mis niveles' },
+const TABS: { id: CustomLevelSort }[] = [
+  { id: 'top' },
+  { id: 'new' },
+  { id: 'mine' },
 ];
 
 /** Pestaña que se estaba viendo (dura mientras la página esté abierta). */
@@ -28,14 +29,14 @@ export function levelLink(level: CustomLevel): string {
 
 /** Comparte un nivel (menú de compartir del móvil, o copiar el enlace). */
 export function shareLevel(level: CustomLevel): void {
-  const text = level.mine ? `🐧 Prueba mi nivel «${level.name}» en Skid` : `🐧 Prueba el nivel «${level.name}» de ${level.author} en Skid`;
+  const text = `🐧 ${level.mine ? t('levels.share.mine', { name: level.name }) : t('levels.share.theirs', { name: level.name, author: playerName(level.author) })}`;
   void share(`${text}\n${levelLink(level)}`);
 }
 
-const REPORT_REASONS: { id: ReportReason; label: string }[] = [
-  { id: 'name', label: 'Nombre ofensivo o inapropiado' },
-  { id: 'broken', label: 'No se puede jugar bien' },
-  { id: 'other', label: 'Otro motivo' },
+const REPORT_REASONS: { id: ReportReason }[] = [
+  { id: 'name' },
+  { id: 'broken' },
+  { id: 'other' },
 ];
 
 /** Pide el motivo y denuncia el nivel. Se resuelve a true si se envió. */
@@ -44,8 +45,8 @@ export function reportLevel(level: CustomLevel): Promise<boolean> {
     let sent = false;
     const modal = openModal(
       [
-        h('h2', null, 'Denunciar nivel'),
-        h('p', { class: 'lead' }, '¿Qué le pasa a este nivel?'),
+        h('h2', null, t('levels.report.title')),
+        h('p', { class: 'lead' }, t('levels.report.question')),
         ...REPORT_REASONS.map((r) =>
           h(
             'button',
@@ -56,16 +57,16 @@ export function reportLevel(level: CustomLevel): Promise<boolean> {
                   await reportCustomLevel(level.id, r.id);
                   sent = true;
                   modal.close();
-                  toast('Gracias por avisar. Si más jugadores lo denuncian, se ocultará.');
+                  toast(t('levels.report.thanks'));
                 } catch (err) {
                   toast((err as Error).message);
                 }
               },
             },
-            r.label,
+            t(`levels.report.reasons.${r.id}`),
           ),
         ),
-        h('button', { class: 'link-btn', onclick: () => modal.close() }, 'Cancelar'),
+        h('button', { class: 'link-btn', onclick: () => modal.close() }, t('common.cancel')),
       ],
       { dismissable: true, onClose: () => resolve(sent) },
     );
@@ -84,7 +85,7 @@ export function communityScreen(tab?: CustomLevelSort, open?: string): Screen {
 
   const tabs = h('div', { class: 'segmented', role: 'tablist' });
   const list = h('div', { class: 'level-list' });
-  const moreBtn = h('button', { class: 'btn secondary block', hidden: true, onclick: () => void load(true) }, 'Ver más');
+  const moreBtn = h('button', { class: 'btn secondary block', hidden: true, onclick: () => void load(true) }, t('levels.list.more'));
   const draft = loadEditorDraft();
 
   const el = h(
@@ -93,8 +94,8 @@ export function communityScreen(tab?: CustomLevelSort, open?: string): Screen {
     h(
       'header',
       { class: 'topbar' },
-      h('button', { class: 'icon-btn', 'aria-label': 'Volver', onclick: () => go({ name: 'home' }) }, '←'),
-      h('div', { class: 'title' }, h('h1', null, 'Multijugador'), h('p', null, 'Niveles creados por los jugadores')),
+      h('button', { class: 'icon-btn', 'aria-label': t('common.back'), onclick: () => go({ name: 'home' }) }, '←'),
+      h('div', { class: 'title' }, h('h1', null, t('home.community.eyebrow')), h('p', null, t('levels.list.subtitle'))),
     ),
     h(
       'section',
@@ -102,10 +103,10 @@ export function communityScreen(tab?: CustomLevelSort, open?: string): Screen {
       h(
         'div',
         { class: 'info' },
-        h('h2', null, 'Crea tu nivel'),
-        h('p', { class: 'muted' }, draft ? 'Tienes un nivel a medio hacer.' : 'Diséñalo, supéralo y publícalo para que lo jueguen todos.'),
+        h('h2', null, t('levels.create.title')),
+        h('p', { class: 'muted' }, draft ? t('levels.create.draft') : t('levels.create.text')),
       ),
-      h('button', { class: 'btn', onclick: () => go({ name: 'editor' }) }, draft ? 'Seguir' : 'Crear nivel'),
+      h('button', { class: 'btn', onclick: () => go({ name: 'editor' }) }, draft ? t('duels.screen.resume') : t('levels.create.button')),
     ),
     tabs,
     list,
@@ -114,21 +115,21 @@ export function communityScreen(tab?: CustomLevelSort, open?: string): Screen {
 
   function renderTabs() {
     tabs.replaceChildren(
-      ...TABS.map((t) =>
+      ...TABS.map((tab) =>
         h(
           'button',
           {
-            class: t.id === current ? 'active' : '',
+            class: tab.id === current ? 'active' : '',
             role: 'tab',
-            'aria-selected': String(t.id === current),
+            'aria-selected': String(tab.id === current),
             onclick: () => {
-              if (t.id === current) return;
-              current = lastTab = t.id;
+              if (tab.id === current) return;
+              current = lastTab = tab.id;
               renderTabs();
               void load(false);
             },
           },
-          t.label,
+          t(`levels.tabs.${tab.id}`),
         ),
       ),
     );
@@ -147,7 +148,7 @@ export function communityScreen(tab?: CustomLevelSort, open?: string): Screen {
       renderList();
     } catch (err) {
       list.replaceChildren(
-        h('section', { class: 'card empty' }, h('p', { class: 'error' }, (err as Error).message), h('button', { class: 'btn', onclick: () => void load(false) }, 'Reintentar')),
+        h('section', { class: 'card empty' }, h('p', { class: 'error' }, (err as Error).message), h('button', { class: 'btn', onclick: () => void load(false) }, t('common.retry'))),
       );
     } finally {
       loading = false;
@@ -158,7 +159,7 @@ export function communityScreen(tab?: CustomLevelSort, open?: string): Screen {
     moreBtn.hidden = !more;
     if (levels.length === 0) {
       list.replaceChildren(
-        h('p', { class: 'empty' }, current === 'mine' ? 'Aún no has publicado ningún nivel. ¡Crea el primero!' : 'Todavía no hay niveles. ¡Sé el primero en crear uno!'),
+        h('p', { class: 'empty' }, current === 'mine' ? t('levels.list.emptyMine') : t('levels.list.empty')),
       );
       return;
     }
@@ -166,41 +167,41 @@ export function communityScreen(tab?: CustomLevelSort, open?: string): Screen {
   }
 
   function levelCard(level: CustomLevel): HTMLElement {
-    const rating = level.rating === null ? 'Sin valorar' : `★ ${level.rating.toFixed(1)} (${level.ratingCount})`;
-    const icons = ELEMENTS.filter((e) => level.elements.includes(e.id)).map((e) => h('span', { class: 'mini-element', title: e.name }, svg(elementSvg(e.id))));
+    const rating = level.rating === null ? t('levels.card.unrated') : `★ ${level.rating.toFixed(1)} (${level.ratingCount})`;
+    const icons = ELEMENTS.filter((e) => level.elements.includes(e.id)).map((e) => h('span', { class: 'mini-element', title: t(`elements.${e.id}.name`) }, svg(elementSvg(e.id))));
     return h(
       'article',
       { class: `card level-card ${level.myBest !== null && !level.mine ? 'done' : ''}` },
       h(
         'button',
-        { class: 'level-open', 'aria-label': `Jugar ${level.name}`, onclick: () => go({ name: 'custom', level }) },
+        { class: 'level-open', 'aria-label': t('levels.card.play', { name: level.name }), onclick: () => go({ name: 'custom', level }) },
         h('div', { class: 'level-thumb' }, svg(boardThumb(level.rows))),
         h(
           'div',
           { class: 'level-info' },
           h('strong', { class: 'level-name' }, level.name),
-          h('span', { class: 'level-author' }, h('span', { class: 'mini-penguin' }, svg(penguinSvg(level.authorHat))), level.mine ? 'Tú' : level.author),
+          h('span', { class: 'level-author' }, h('span', { class: 'mini-penguin' }, svg(penguinSvg(level.authorHat))), level.mine ? t('ghost.you') : playerName(level.author)),
           h(
             'span',
             { class: 'level-meta' },
             h('span', { class: level.rating === null ? 'muted' : 'rating' }, rating),
-            h('span', null, `Óptimo ${level.optimal}`),
-            h('span', null, plural(level.plays, 'jugador', 'jugadores')),
+            h('span', null, `${t('stats.optimal')} ${level.optimal}`),
+            h('span', null, tn('levels.card.players', level.plays)),
             ...icons,
           ),
         ),
-        level.mine ? null : level.myBest !== null ? h('span', { class: 'done-badge', title: `Tu mejor marca: ${level.myBest}` }, '✓') : null,
+        level.mine ? null : level.myBest !== null ? h('span', { class: 'done-badge', title: t('levels.card.yourBest', { n: level.myBest }) }, '✓') : null,
       ),
-      level.hidden ? h('p', { class: 'hidden-note' }, '🚫 Oculto por denuncias: solo lo ves tú.') : null,
+      level.hidden ? h('p', { class: 'hidden-note' }, `🚫 ${t('levels.card.hidden')}`) : null,
       h(
         'div',
         { class: 'level-actions' },
-        h('button', { class: 'link-btn', onclick: () => void openLevelRanking(level.id, level.name) }, '🏆 Ranking'),
-        h('button', { class: 'link-btn', onclick: () => shareLevel(level) }, 'Compartir'),
+        h('button', { class: 'link-btn', onclick: () => void openLevelRanking(level.id, level.name) }, `🏆 ${t('nav.ranking')}`),
+        h('button', { class: 'link-btn', onclick: () => shareLevel(level) }, t('common.share')),
         level.mine
-          ? h('button', { class: 'link-btn danger', onclick: () => confirmDelete(level) }, 'Borrar')
+          ? h('button', { class: 'link-btn danger', onclick: () => confirmDelete(level) }, t('levels.card.delete'))
           : level.reported
-            ? h('span', { class: 'muted reported' }, 'Denunciado')
+            ? h('span', { class: 'muted reported' }, t('levels.card.reported'))
             : h(
                 'button',
                 {
@@ -211,7 +212,7 @@ export function communityScreen(tab?: CustomLevelSort, open?: string): Screen {
                     renderList();
                   },
                 },
-                'Denunciar',
+                t('levels.card.report'),
               ),
       ),
     );
@@ -220,12 +221,12 @@ export function communityScreen(tab?: CustomLevelSort, open?: string): Screen {
   function confirmDelete(level: CustomLevel) {
     const modal = openModal(
       [
-        h('h2', null, '¿Borrar el nivel?'),
-        h('p', { class: 'lead' }, `"${level.name}" desaparecerá para todos, con sus valoraciones.`),
+        h('h2', null, t('levels.delete.title')),
+        h('p', { class: 'lead' }, t('levels.delete.text', { name: level.name })),
         h(
           'div',
           { class: 'row' },
-          h('button', { class: 'btn ghost', onclick: () => modal.close() }, 'Cancelar'),
+          h('button', { class: 'btn ghost', onclick: () => modal.close() }, t('common.cancel')),
           h(
             'button',
             {
@@ -236,13 +237,13 @@ export function communityScreen(tab?: CustomLevelSort, open?: string): Screen {
                   await deleteCustomLevel(level.id);
                   levels = levels.filter((l) => l.id !== level.id);
                   renderList();
-                  toast('Nivel borrado');
+                  toast(t('levels.delete.done'));
                 } catch (err) {
                   toast((err as Error).message);
                 }
               },
             },
-            'Borrar',
+            t('levels.card.delete'),
           ),
         ),
       ],
@@ -265,7 +266,7 @@ export function communityScreen(tab?: CustomLevelSort, open?: string): Screen {
     mount() {
       renderTabs();
       if (!online.onlineEnabled) {
-        list.replaceChildren(h('section', { class: 'card empty' }, 'El multijugador necesita el ranking online.'));
+        list.replaceChildren(h('section', { class: 'card empty' }, t('levels.list.needsOnline')));
         return;
       }
       void load(false);

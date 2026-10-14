@@ -99,7 +99,7 @@ async function duelResponse(env: Env, duel: DuelRow, playerId: string) {
     const done = run?.best_moves != null;
     return {
       id,
-      name: player?.name ?? 'Anónimo',
+      name: player?.name ?? null,
       hat: isHatId(player?.hat) ? player.hat : null,
       started: !!run,
       finished: done,
@@ -141,25 +141,25 @@ async function duelResponse(env: Env, duel: DuelRow, playerId: string) {
 
 async function loadDuel(env: Env, id: string): Promise<DuelRow> {
   const duel = await env.DB.prepare('SELECT * FROM duels WHERE id = ?').bind(id).first<DuelRow>();
-  if (!duel) throw new HttpError(404, 'Ese duelo no existe');
+  if (!duel) throw new HttpError(404, 'duelNotFound');
   return duel;
 }
 
 /** El duelo, si eres uno de sus dos jugadores. */
 async function myDuel(env: Env, playerId: string, id: string): Promise<DuelRow> {
   const duel = await loadDuel(env, id);
-  if (duel.challenger_id !== playerId && duel.opponent_id !== playerId) throw new HttpError(404, 'Ese duelo no existe');
+  if (duel.challenger_id !== playerId && duel.opponent_id !== playerId) throw new HttpError(404, 'duelNotFound');
   return duel;
 }
 
 /** Reta a un amigo de tus ligas (`opponentId`) o crea un duelo abierto para compartir por enlace (null). */
 export async function createDuel(env: Env, playerId: string, input: { difficulty?: unknown; opponentId?: unknown }) {
   await requireName(env, playerId);
-  if (!isDuelDifficulty(input.difficulty)) throw new HttpError(400, 'Dificultad no válida');
+  if (!isDuelDifficulty(input.difficulty)) throw new HttpError(400, 'invalidDifficulty');
   const opponentId = input.opponentId ?? null;
   if (opponentId !== null) {
-    if (typeof opponentId !== 'string' || opponentId === playerId) throw new HttpError(400, 'Rival no válido');
-    if (!(await sharesLeague(env, playerId, opponentId))) throw new HttpError(403, 'Solo puedes retar por nombre a jugadores de tus ligas');
+    if (typeof opponentId !== 'string' || opponentId === playerId) throw new HttpError(400, 'invalidRival');
+    if (!(await sharesLeague(env, playerId, opponentId))) throw new HttpError(403, 'onlyLeagueRivals');
   }
   const now = Date.now();
   const active = await env.DB.prepare(
@@ -167,7 +167,7 @@ export async function createDuel(env: Env, playerId: string, input: { difficulty
   )
     .bind(playerId, now)
     .first<{ n: number }>();
-  if ((active?.n ?? 0) >= MAX_ACTIVE_DUELS) throw new HttpError(429, `Ya tienes ${MAX_ACTIVE_DUELS} duelos en marcha. Espera a que terminen.`);
+  if ((active?.n ?? 0) >= MAX_ACTIVE_DUELS) throw new HttpError(429, 'maxDuels', { n: MAX_ACTIVE_DUELS });
 
   const seed = crypto.getRandomValues(new Uint32Array(1))[0];
   const level = duelLevel(input.difficulty, seed);
@@ -198,7 +198,7 @@ export async function listDuels(env: Env, playerId: string) {
 export async function getDuel(env: Env, playerId: string, id: string) {
   const duel = await loadDuel(env, id);
   if (duel.challenger_id === playerId || duel.opponent_id === playerId) return { duel: await duelResponse(env, duel, playerId), invite: null };
-  if (duel.opponent_id !== null || duel.expires_at <= Date.now()) throw new HttpError(404, 'Este duelo ya no está disponible');
+  if (duel.opponent_id !== null || duel.expires_at <= Date.now()) throw new HttpError(404, 'duelUnavailable');
   const challenger = await env.DB.prepare('SELECT id, name, hat FROM players WHERE id = ?').bind(duel.challenger_id).first<PlayerRow>();
   return {
     duel: null,
@@ -206,7 +206,7 @@ export async function getDuel(env: Env, playerId: string, id: string) {
       id: duel.id,
       difficulty: duel.difficulty,
       expiresAt: duel.expires_at,
-      challenger: { name: challenger?.name ?? 'Anónimo', hat: isHatId(challenger?.hat) ? challenger.hat : null },
+      challenger: { name: challenger?.name ?? null, hat: isHatId(challenger?.hat) ? challenger.hat : null },
     },
   };
 }
@@ -215,32 +215,32 @@ export async function getDuel(env: Env, playerId: string, id: string) {
 export async function acceptDuel(env: Env, playerId: string, id: string) {
   await requireName(env, playerId);
   const duel = await loadDuel(env, id);
-  if (duel.challenger_id === playerId) throw new HttpError(400, 'No puedes aceptar tu propio duelo');
-  if (duel.expires_at <= Date.now()) throw new HttpError(409, 'Este duelo ya ha terminado');
+  if (duel.challenger_id === playerId) throw new HttpError(400, 'ownDuel');
+  if (duel.expires_at <= Date.now()) throw new HttpError(409, 'duelOver');
   const update = await env.DB.prepare('UPDATE duels SET opponent_id = ? WHERE id = ? AND opponent_id IS NULL').bind(playerId, id).run();
-  if (!update.meta.changes && duel.opponent_id !== playerId) throw new HttpError(409, 'Este duelo ya tiene rival');
+  if (!update.meta.changes && duel.opponent_id !== playerId) throw new HttpError(409, 'duelHasRival');
   return duelResponse(env, await loadDuel(env, id), playerId);
 }
 
 /** El rival rechaza el duelo: termina sin ganador. */
 export async function declineDuel(env: Env, playerId: string, id: string) {
   const duel = await myDuel(env, playerId, id);
-  if (duel.opponent_id !== playerId) throw new HttpError(400, 'Solo puede rechazarlo a quien retan');
+  if (duel.opponent_id !== playerId) throw new HttpError(400, 'onlyChallengedCanDecline');
   const played = await env.DB.prepare('SELECT 1 FROM duel_runs WHERE duel_id = ? AND player_id = ?').bind(id, playerId).first();
-  if (played) throw new HttpError(409, 'Ya has empezado a jugarlo');
+  if (played) throw new HttpError(409, 'alreadyStarted');
   await env.DB.prepare('UPDATE duels SET declined_at = ? WHERE id = ? AND declined_at IS NULL').bind(Date.now(), id).run();
   return duelResponse(env, await loadDuel(env, id), playerId);
 }
 
 /** Se puede jugar hasta entregar tu marca, mientras el duelo siga en marcha. */
 async function checkPlayable(env: Env, duel: DuelRow, playerId: string): Promise<void> {
-  if (duel.declined_at !== null) throw new HttpError(409, 'Este duelo se rechazó');
-  if (!duel.opponent_id) throw new HttpError(409, 'Este duelo aún no tiene rival');
-  if (duel.expires_at <= Date.now()) throw new HttpError(409, 'Este duelo ya ha terminado');
+  if (duel.declined_at !== null) throw new HttpError(409, 'duelDeclined');
+  if (!duel.opponent_id) throw new HttpError(409, 'duelNoRival');
+  if (duel.expires_at <= Date.now()) throw new HttpError(409, 'duelOver');
   const mine = await env.DB.prepare('SELECT done_at FROM duel_runs WHERE duel_id = ? AND player_id = ?')
     .bind(duel.id, playerId)
     .first<{ done_at: number | null }>();
-  if (mine?.done_at != null) throw new HttpError(409, 'Ya entregaste tu marca en este duelo');
+  if (mine?.done_at != null) throw new HttpError(409, 'duelHandedIn');
 }
 
 /** Empieza a jugar: desde aquí cuenta tu tiempo. */
@@ -256,23 +256,23 @@ export async function finishDuel(env: Env, playerId: string, id: string, log: un
   const duel = await myDuel(env, playerId, id);
   await checkPlayable(env, duel, playerId);
   if (typeof log !== 'string' || log.length === 0 || log.length > MAX_LOG_LENGTH || /[XH]/.test(log)) {
-    throw new HttpError(400, 'Registro no válido');
+    throw new HttpError(400, 'invalidLog');
   }
   const run = await env.DB.prepare('SELECT started_at, best_moves FROM duel_runs WHERE duel_id = ? AND player_id = ?')
     .bind(id, playerId)
     .first<{ started_at: number; best_moves: number | null }>();
-  if (!run) throw new HttpError(409, 'No has empezado este duelo');
+  if (!run) throw new HttpError(409, 'duelNotStarted');
 
   let replay;
   try {
     replay = replayRun(parseBoard(decodeRows(duel.rows)), decodeRun(log));
   } catch (err) {
-    throw new HttpError(400, `Registro no válido: ${(err as Error).message}`);
+    throw new HttpError(400, 'invalidLog');
   }
-  if (!replay.completed) throw new HttpError(400, 'El registro no completa el duelo');
+  if (!replay.completed) throw new HttpError(400, 'logIncomplete');
   const now = Date.now();
   // Más rápido que las animaciones = enviado con un script, sin jugar.
-  if (now - run.started_at < minPlayTimeMs(replay) * 0.9) throw new HttpError(400, 'Partida demasiado rápida para haberse jugado en el juego');
+  if (now - run.started_at < minPlayTimeMs(replay) * 0.9) throw new HttpError(400, 'tooFast');
 
   const improved = run.best_moves === null || replay.moves < run.best_moves;
   await env.DB.prepare(
@@ -292,7 +292,7 @@ export async function handInDuel(env: Env, playerId: string, id: string) {
   const update = await env.DB.prepare('UPDATE duel_runs SET done_at = ? WHERE duel_id = ? AND player_id = ? AND best_moves IS NOT NULL AND done_at IS NULL')
     .bind(Date.now(), id, playerId)
     .run();
-  if (!update.meta.changes) throw new HttpError(409, 'Termina el tablero al menos una vez antes de entregar');
+  if (!update.meta.changes) throw new HttpError(409, 'finishBeforeHandIn');
   return duelResponse(env, duel, playerId);
 }
 
@@ -300,7 +300,7 @@ export async function handInDuel(env: Env, playerId: string, id: string) {
 export async function duelGhost(env: Env, playerId: string, id: string) {
   const duel = await myDuel(env, playerId, id);
   const view = await duelResponse(env, duel, playerId);
-  if (view.status !== 'finished') throw new HttpError(409, 'El duelo aún no ha terminado');
+  if (view.status !== 'finished') throw new HttpError(409, 'duelNotOver');
   const { results } = await env.DB.prepare('SELECT player_id, best_log, best_time_ms, best_moves FROM duel_runs WHERE duel_id = ?')
     .bind(id)
     .all<{ player_id: string; best_log: string | null; best_time_ms: number | null; best_moves: number | null }>();
@@ -318,6 +318,6 @@ export async function duelGhost(env: Env, playerId: string, id: string) {
     };
   };
   const friend = ghostOf(view.rival);
-  if (!friend) throw new HttpError(404, 'Tu rival no llegó a terminarlo');
+  if (!friend) throw new HttpError(404, 'rivalDidntFinish');
   return { rows: view.rows, me: ghostOf(view.me), friend };
 }

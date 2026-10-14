@@ -3,6 +3,7 @@
 import { api } from '../../shared/api';
 import type { HatId } from '../../../../common/art/hats';
 import type { DailyResult } from './storage';
+import { t } from '../../i18n/i18n';
 
 export interface ServerRun {
   /** Instantes en ms, con el reloj del servidor. */
@@ -26,7 +27,7 @@ export async function getDaily(day: string): Promise<ServerRun | null> {
 /** Empieza el reto (el cronómetro del servidor arranca aquí). */
 export async function startDaily(day: string): Promise<ServerRun> {
   const { run } = await api<{ run: ServerRun | null }>('POST', `/daily/${day}/start`);
-  if (!run) throw new Error('No se pudo empezar el reto');
+  if (!run) throw new Error(t('daily.startFailed'));
   return run;
 }
 

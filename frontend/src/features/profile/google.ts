@@ -5,6 +5,7 @@ import * as online from '../../shared/api';
 import { toast } from '../../shared/dom';
 import { resetProfile } from './profile';
 import { clearDaily } from '../daily/storage';
+import { locale, t } from '../../i18n/i18n';
 
 interface GoogleIdApi {
   initialize(options: {
@@ -37,11 +38,11 @@ function loadGis(clientId: string): Promise<GoogleIdApi> {
     script.async = true;
     script.onload = () => {
       const api = window.google?.accounts.id;
-      if (!api) return reject(new Error('Google no respondió'));
+      if (!api) return reject(new Error(t('google.noResponse')));
       api.initialize({ client_id: clientId, callback: ({ credential }) => onCredential?.(credential), ux_mode: 'popup' });
       resolve(api);
     };
-    script.onerror = () => reject(new Error('No se pudo cargar el login de Google'));
+    script.onerror = () => reject(new Error(t('google.loadFailed')));
     document.head.append(script);
   }).catch((err) => {
     gis = null;
@@ -80,7 +81,7 @@ export async function renderGoogleButton(
       size: 'large',
       shape: 'pill',
       text: 'continue_with',
-      locale: 'es',
+      locale: locale(),
       width: Math.min(Math.max(container.clientWidth, 220), 400),
     });
     return true;

@@ -5,10 +5,11 @@ import { dailyLevel } from '../../../../common/logic/daily/daily';
 import { applyMove } from '../../../../common/logic/engine/move';
 import type { BoardHooks } from '../../game/BoardScene';
 import type { MountedBoard } from '../../game/mount';
-import { formatDay, h, openModal, plural } from '../../shared/dom';
+import { formatDay, h, openModal } from '../../shared/dom';
 import { sfx } from '../../audio/sound';
 import { go, type Screen } from '../../shared/router';
 import { loadBoard, onKey, openPauseMenu, playLayout, wearHat } from '../../play/play';
+import { t, tn } from '../../i18n/i18n';
 
 /** Pausa antes del primer movimiento y entre uno y otro (ms). */
 const FIRST_DELAY = 800;
@@ -30,24 +31,24 @@ export function solutionScreen(day: string): Screen {
 
   const ui = playLayout({
     stats: [
-      { key: 'step', label: 'Movimiento' },
-      { key: 'optimal', label: 'Óptimo', tone: 'gold' },
+      { key: 'step', label: t('stats.move') },
+      { key: 'optimal', label: t('stats.optimal'), tone: 'gold' },
     ],
     hint: {
-      keys: 'Mira cómo se resuelve · R para verla otra vez',
-      touch: 'Mira cómo se resuelve · ↺ para verla otra vez',
+      keys: t('solution.hintKeys'),
+      touch: t('solution.hintTouch'),
     },
     onMenu: () =>
       openPauseMenu(mounted, {
-        restartLabel: 'Ver otra vez',
+        restartLabel: t('common.watchAgain'),
         onRestart: () => replay(),
         onExit: () => go({ name: 'home' }),
       }),
     onRestart: () => replay(),
     onSwipe: () => {},
-    restartLabel: 'Ver otra vez',
+    restartLabel: t('common.watchAgain'),
   });
-  ui.setTitle('Solución', `Reto · ${formatDay(day)}`);
+  ui.setTitle(t('solution.title'), t('ghost.dailySubtitle', { day: formatDay(day) }));
 
   // Los movimientos ya hechos, como flechas, debajo del tablero.
   const trail = h('p', { class: 'solution-trail', 'aria-live': 'polite' });
@@ -100,14 +101,14 @@ export function solutionScreen(day: string): Screen {
     mounted?.scene.time.delayedCall(700, () => {
       const modal = openModal(
         [
-          h('p', { class: 'eyebrow' }, `Reto · ${formatDay(day)}`),
-          h('h2', null, `Así se hace en ${plural(solution.length, 'movimiento', 'movimientos')}`),
+          h('p', { class: 'eyebrow' }, t('ghost.dailySubtitle', { day: formatDay(day) })),
+          h('h2', null, t('solution.done', { moves: tn('common.moves', solution.length) })),
           h('p', { class: 'solution-trail big' }, ...solution.map((dir) => h('span', { class: 'done' }, ARROW[dir]))),
           h(
             'div',
             { class: 'row' },
-            h('button', { class: 'btn secondary', onclick: () => (modal.close(), replay()) }, '↺ Ver otra vez'),
-            h('button', { class: 'btn', onclick: () => go({ name: 'home' }) }, 'Volver al inicio'),
+            h('button', { class: 'btn secondary', onclick: () => (modal.close(), replay()) }, `↺ ${t('common.watchAgain')}`),
+            h('button', { class: 'btn', onclick: () => go({ name: 'home' }) }, t('common.backHome')),
           ),
         ],
         { dismissable: true },
@@ -122,7 +123,7 @@ export function solutionScreen(day: string): Screen {
       hud();
       removeKeys = onKey((e) => {
         if (e.key === 'r' || e.key === 'R') replay();
-        if (e.key === 'Escape') ui.el.querySelector<HTMLButtonElement>('[aria-label=Pausa]')?.click();
+        if (e.key === 'Escape') ui.el.querySelector<HTMLButtonElement>('.pause-btn')?.click();
       });
       const m = await loadBoard(ui.boardWrap, board, hooks);
       if (disposed) return m.destroy();

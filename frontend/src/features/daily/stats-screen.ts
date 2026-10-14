@@ -4,10 +4,11 @@ import { dayKey, shiftDay } from '../../../../common/logic/daily/daily';
 import { FREEZE_EVERY, MAX_FREEZES } from '../../../../common/logic/daily/streaks';
 import * as online from '../../shared/api';
 import { openDaily } from './daily';
-import { formatDay, h, plural } from '../../shared/dom';
+import { formatDay, h } from '../../shared/dom';
 import { currentName } from '../profile/profile';
 import { go, type Screen } from '../../shared/router';
 import { type PlayerStats, getStats } from './api';
+import { intlLocale, t, tn } from '../../i18n/i18n';
 
 const SVG_NS = 'http://www.w3.org/2000/svg';
 
@@ -20,8 +21,8 @@ export function statsScreen(): Screen {
     h(
       'header',
       { class: 'topbar' },
-      h('button', { class: 'icon-btn', 'aria-label': 'Volver', onclick: () => go({ name: 'home' }) }, '←'),
-      h('div', { class: 'title' }, h('h1', null, 'Tus estadísticas'), subtitle),
+      h('button', { class: 'icon-btn', 'aria-label': t('common.back'), onclick: () => go({ name: 'home' }) }, '←'),
+      h('div', { class: 'title' }, h('h1', null, t('stats.screen.title')), subtitle),
     ),
     body,
   );
@@ -30,17 +31,17 @@ export function statsScreen(): Screen {
 
   async function load() {
     if (!online.onlineEnabled) {
-      body.replaceChildren(h('section', { class: 'card empty' }, 'Las estadísticas necesitan el ranking online.'));
+      body.replaceChildren(h('section', { class: 'card empty' }, t('stats.screen.needsOnline')));
       return;
     }
     try {
       const [stats, name] = await Promise.all([getStats(), currentName().catch(() => null)]);
       if (disposed) return;
-      subtitle.textContent = name ? `Reto diario · ${name}` : 'Reto diario';
+      subtitle.textContent = name ? `${t('home.daily.eyebrow')} · ${name}` : t('home.daily.eyebrow');
       render(stats);
     } catch (err) {
       body.replaceChildren(
-        h('section', { class: 'card empty' }, h('p', { class: 'error' }, (err as Error).message), h('button', { class: 'btn', onclick: load }, 'Reintentar')),
+        h('section', { class: 'card empty' }, h('p', { class: 'error' }, (err as Error).message), h('button', { class: 'btn', onclick: load }, t('common.retry'))),
       );
     }
   }
@@ -51,13 +52,13 @@ export function statsScreen(): Screen {
       h(
         'div',
         { class: 'tiles' },
-        tile('Retos jugados', s.played),
-        tile('Mejor puntuación', s.bestScore ?? '—', s.perfect > 0 ? `⭐ ${plural(s.perfect, 'perfecto', 'perfectos')}` : null),
-        tile('Media', s.averageScore ?? '—'),
-        tile('Días ganados', s.wins, s.wins > 0 ? '🏆 1.º en tu liga' : null),
+        tile(t('stats.screen.played'), s.played),
+        tile(t('stats.screen.bestScore'), s.bestScore ?? '—', s.perfect > 0 ? `⭐ ${tn('stats.screen.perfect', s.perfect)}` : null),
+        tile(t('stats.screen.average'), s.averageScore ?? '—'),
+        tile(t('stats.screen.daysWon'), s.wins, s.wins > 0 ? `🏆 ${t('stats.screen.firstInLeague')}` : null),
       ),
-      h('section', { class: 'card chart-card' }, h('h2', null, 'Calendario'), streakCalendar(s.calendar)),
-      h('section', { class: 'card chart-card' }, h('h2', null, 'Últimos 30 días'), scoreChart(s.history)),
+      h('section', { class: 'card chart-card' }, h('h2', null, t('stats.screen.calendar')), streakCalendar(s.calendar)),
+      h('section', { class: 'card chart-card' }, h('h2', null, t('stats.screen.last30')), scoreChart(s.history)),
     );
   }
 
@@ -76,8 +77,8 @@ function streakCard(s: PlayerStats): HTMLElement {
     status = h(
       'div',
       { class: 'streak-status' },
-      h('span', null, s.currentStreak > 0 ? `Juega hoy para no perder tu racha de ${plural(s.currentStreak, 'día', 'días')}.` : 'Juega el reto de hoy para empezar una racha.'),
-      h('button', { class: 'btn small', onclick: openDaily }, 'Jugar'),
+      h('span', null, s.currentStreak > 0 ? t('stats.streak.keep', { days: tn('common.days', s.currentStreak) }) : t('stats.streak.start')),
+      h('button', { class: 'btn small', onclick: openDaily }, t('common.play')),
     );
   }
   return h(
@@ -88,8 +89,8 @@ function streakCard(s: PlayerStats): HTMLElement {
       'div',
       null,
       h('div', { class: 'streak-number' }, String(s.currentStreak)),
-      h('p', { class: 'streak-label' }, s.currentStreak === 1 ? 'día seguido' : 'días seguidos'),
-      h('p', { class: 'muted' }, `Mejor racha: ${plural(s.bestStreak, 'día', 'días')}`),
+      h('p', { class: 'streak-label' }, tn('stats.streak.label', s.currentStreak)),
+      h('p', { class: 'muted' }, t('stats.streak.best', { days: tn('common.days', s.bestStreak) })),
     ),
     freezeRow(s.freezes ?? 0),
     status,
@@ -101,18 +102,22 @@ function freezeRow(freezes: number): HTMLElement {
   const shields = Array.from({ length: MAX_FREEZES }, (_, i) => h('span', { class: `shield ${i < freezes ? 'on' : ''}` }, '🛡️'));
   return h(
     'div',
-    { class: 'freeze-row', title: 'Si un día no juegas, se gasta un protector y la racha sigue.' },
+    { class: 'freeze-row', title: t('stats.freeze.title') },
     h('span', { class: 'shields', 'aria-hidden': 'true' }, ...shields),
     h(
       'span',
       null,
-      h('strong', null, `${freezes} de ${MAX_FREEZES} protectores`),
-      h('small', null, `Ganas uno cada ${FREEZE_EVERY} días seguidos. Si un día no juegas, se gasta uno y la racha sigue.`),
+      h('strong', null, t('stats.freeze.count', { n: freezes, max: MAX_FREEZES })),
+      h('small', null, t('stats.freeze.how', { every: FREEZE_EVERY })),
     ),
   );
 }
 
-const WEEKDAYS = ['L', 'M', 'X', 'J', 'V', 'S', 'D'];
+/** Iniciales de los días de la semana, de lunes a domingo, en el idioma del jugador. */
+const weekdays = () =>
+  Array.from({ length: 7 }, (_, i) =>
+    new Intl.DateTimeFormat(intlLocale(), { weekday: 'narrow', timeZone: 'UTC' }).format(new Date(Date.UTC(2024, 0, 1 + i))),
+  );
 
 /** Primer día del mes de `day`, desplazado `months` meses. */
 function monthStart(day: string, months = 0): string {
@@ -135,22 +140,22 @@ function streakCalendar(calendar: PlayerStats['calendar'] | undefined): HTMLElem
   let month = last;
 
   const title = h('strong', { class: 'cal-title' });
-  const prev = h('button', { class: 'icon-btn small', 'aria-label': 'Mes anterior' }, '‹');
-  const next = h('button', { class: 'icon-btn small', 'aria-label': 'Mes siguiente' }, '›');
+  const prev = h('button', { class: 'icon-btn small', 'aria-label': t('stats.calendar.prev') }, '‹');
+  const next = h('button', { class: 'icon-btn small', 'aria-label': t('stats.calendar.next') }, '›');
   const grid = h('div', { class: 'cal-grid', role: 'grid' });
 
   const render = () => {
-    const label = new Intl.DateTimeFormat('es-ES', { month: 'long', year: 'numeric', timeZone: 'UTC' }).format(new Date(`${month}T12:00:00Z`));
+    const label = new Intl.DateTimeFormat(intlLocale(), { month: 'long', year: 'numeric', timeZone: 'UTC' }).format(new Date(`${month}T12:00:00Z`));
     title.textContent = label.charAt(0).toUpperCase() + label.slice(1);
     prev.disabled = month <= first;
     next.disabled = month >= last;
 
     const offset = (new Date(`${month}T12:00:00Z`).getUTCDay() + 6) % 7; // Lunes = 0.
-    const cells: HTMLElement[] = WEEKDAYS.map((d) => h('span', { class: 'cal-head', 'aria-hidden': 'true' }, d));
+    const cells: HTMLElement[] = weekdays().map((d) => h('span', { class: 'cal-head', 'aria-hidden': 'true' }, d));
     for (let i = 0; i < offset; i++) cells.push(h('span', { class: 'cal-day empty' }));
     for (let day = month; day.slice(0, 7) === month.slice(0, 7); day = shiftDay(day, 1)) {
       const state = won.has(day) ? 'won' : played.has(day) ? 'played' : frozen.has(day) ? 'frozen' : day > today ? 'future' : 'missed';
-      const text = { won: 'ganado', played: 'jugado', frozen: 'salvado por un protector', future: '', missed: 'sin jugar' }[state];
+      const text = { won: t('stats.calendar.won'), played: t('stats.calendar.played'), frozen: t('stats.calendar.frozen'), future: '', missed: t('stats.calendar.missed') }[state];
       cells.push(
         h(
           'span',
@@ -171,9 +176,9 @@ function streakCalendar(calendar: PlayerStats['calendar'] | undefined): HTMLElem
     h(
       'div',
       { class: 'legend' },
-      h('span', null, h('i', { class: 'swatch' }), 'Jugado'),
-      h('span', null, h('i', { class: 'swatch won' }), 'Día ganado'),
-      h('span', null, '🛡️ Protector usado'),
+      h('span', null, h('i', { class: 'swatch' }), t('stats.legend.played')),
+      h('span', null, h('i', { class: 'swatch won' }), t('stats.legend.won')),
+      h('span', null, `🛡️ ${t('stats.legend.freeze')}`),
     ),
     h('div', { class: 'cal-nav' }, prev, title, next),
     grid,
@@ -192,7 +197,7 @@ function svgEl<K extends keyof SVGElementTagNameMap>(tag: K, attrs: Record<strin
 
 /** Fecha corta: "7 oct". */
 function shortDay(day: string): string {
-  return new Intl.DateTimeFormat('es-ES', { day: 'numeric', month: 'short', timeZone: 'UTC' }).format(new Date(`${day}T12:00:00Z`)).replace('.', '');
+  return new Intl.DateTimeFormat(intlLocale(), { day: 'numeric', month: 'short', timeZone: 'UTC' }).format(new Date(`${day}T12:00:00Z`)).replace('.', '');
 }
 
 /**
@@ -211,7 +216,7 @@ export function scoreChart(history: PlayerStats['history']): HTMLElement {
   const base = pad.top + plotH;
   const y = (score: number) => base - (score / 1000) * plotH;
 
-  const svg = svgEl('svg', { viewBox: `0 0 ${W} ${H}`, class: 'score-chart', role: 'img', 'aria-label': 'Puntuación de los últimos 30 días' });
+  const svg = svgEl('svg', { viewBox: `0 0 ${W} ${H}`, class: 'score-chart', role: 'img', 'aria-label': t('stats.chart.label') });
 
   for (const tick of [0, 500, 1000]) {
     svg.append(svgEl('line', { x1: pad.left, x2: W - pad.right, y1: y(tick), y2: y(tick), class: 'grid' }));
@@ -225,7 +230,7 @@ export function scoreChart(history: PlayerStats['history']): HTMLElement {
     const d = history[i];
     tooltip.replaceChildren(
       h('strong', null, formatDay(d.day)),
-      h('span', null, d.score === null ? 'No jugado' : `${d.score} pts${d.won ? ' · 🏆 ganado' : ''}`),
+      h('span', null, d.score === null ? t('stats.chart.notPlayed') : `${d.score} ${t('common.pts')}${d.won ? ` · 🏆 ${t('stats.calendar.won')}` : ''}`),
     );
     tooltip.style.left = `${((pad.left + i * slot + slot / 2) / W) * 100}%`;
     tooltip.hidden = false;
@@ -259,7 +264,7 @@ export function scoreChart(history: PlayerStats['history']): HTMLElement {
 
   for (const i of [0, Math.floor((history.length - 1) / 2), history.length - 1]) {
     const label = svgEl('text', { x: pad.left + i * slot + slot / 2, y: H - 6, class: 'tick', 'text-anchor': i === 0 ? 'start' : i === history.length - 1 ? 'end' : 'middle' });
-    label.textContent = i === history.length - 1 ? 'hoy' : shortDay(history[i].day);
+    label.textContent = i === history.length - 1 ? t('stats.chart.today') : shortDay(history[i].day);
     svg.append(label);
   }
 
@@ -275,21 +280,21 @@ export function scoreChart(history: PlayerStats['history']): HTMLElement {
     h(
       'div',
       { class: 'legend' },
-      h('span', null, h('i', { class: 'swatch' }), 'Puntuación'),
-      h('span', null, h('i', { class: 'swatch won' }), 'Día ganado'),
-      h('span', null, h('i', { class: 'swatch missed' }), 'Sin jugar'),
+      h('span', null, h('i', { class: 'swatch' }), t('stats.legend.score')),
+      h('span', null, h('i', { class: 'swatch won' }), t('stats.legend.won')),
+      h('span', null, h('i', { class: 'swatch missed' }), t('stats.legend.missed')),
     ),
     chart,
     h(
       'details',
       { class: 'chart-table' },
-      h('summary', null, 'Ver los días en una lista'),
+      h('summary', null, t('stats.chart.asList')),
       played.length === 0
-        ? h('p', { class: 'muted' }, 'Aún no hay retos en estos 30 días.')
+        ? h('p', { class: 'muted' }, t('stats.chart.empty'))
         : h(
             'table',
             null,
-            h('thead', null, h('tr', null, h('th', null, 'Día'), h('th', null, 'Puntos'), h('th', null, ''))),
+            h('thead', null, h('tr', null, h('th', null, t('stats.chart.day')), h('th', null, t('stats.chart.points')), h('th', null, ''))),
             h(
               'tbody',
               null,

@@ -3,11 +3,13 @@
 
 import { penguinSvg, type HatId } from '../../../../common/art/hats';
 import { golfLabel } from '../../../../common/logic/daily/score';
-import { h, openModal, plural, svg } from '../../shared/dom';
+import { h, openModal, svg } from '../../shared/dom';
+import { playerName, t, tn } from '../../i18n/i18n';
 
 export interface GolfRankingEntry {
   id: string;
-  name: string;
+  /** null si no ha elegido nombre (se muestra «Anónimo»). */
+  name: string | null;
   hat: HatId | null;
   /** Puesto (los empatados comparten puesto). */
   position: number;
@@ -37,8 +39,8 @@ function row(entry: GolfRankingEntry): HTMLElement {
     h(
       'span',
       { class: 'who' },
-      h('strong', null, entry.name + (entry.isMe ? ' (tú)' : '')),
-      h('small', null, [plural(entry.moves, 'movimiento', 'movimientos'), entry.isAuthor ? '✏️ autor' : null].filter(Boolean).join(' · ')),
+      h('strong', null, entry.isMe ? t('ranking.me', { name: playerName(entry.name) }) : playerName(entry.name)),
+      h('small', null, [tn('common.moves', entry.moves), entry.isAuthor ? `✏️ ${t('ranking.author')}` : null].filter(Boolean).join(' · ')),
     ),
     h('span', { class: `pts golf${entry.overPar === 0 ? ' par' : ''}` }, golfLabel(entry.overPar)),
   );
@@ -52,10 +54,10 @@ export async function openGolfRanking(opts: {
   summary: (ranking: GolfRanking) => string;
   empty: string;
 }): Promise<void> {
-  const list = h('ul', { class: 'ranking level-ranking' }, h('li', { class: 'empty' }, 'Cargando…'));
+  const list = h('ul', { class: 'ranking level-ranking' }, h('li', { class: 'empty' }, t('common.loading')));
   const summary = h('p', { class: 'muted' });
   const modal = openModal(
-    [h('p', { class: 'eyebrow' }, opts.eyebrow), h('h2', null, opts.title), summary, list, h('button', { class: 'btn block', onclick: () => modal.close() }, 'Cerrar')],
+    [h('p', { class: 'eyebrow' }, opts.eyebrow), h('h2', null, opts.title), summary, list, h('button', { class: 'btn block', onclick: () => modal.close() }, t('common.close'))],
     { dismissable: true },
   );
   try {

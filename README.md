@@ -21,6 +21,8 @@ y niveles creados por los jugadores.
   compartir y denunciar.
 - Guía «Cómo se juega», modo oscuro, música y efectos sintetizados, y login con Google para jugar en
   varios dispositivos.
+- En seis idiomas: español, inglés, alemán, francés, portugués e italiano. Usa el del navegador y
+  se cambia desde el inicio.
 
 ## Tecnologías
 
@@ -83,6 +85,7 @@ frontend/                  el juego en el navegador (Vite)
       guide/               guía «Cómo se juega» y aviso de novedades
     play/                  partida común a todos los modos (pausa, gestos, teclas) y la
                            partida «al mejor intento» (reto semanal y duelos)
+    i18n/                  t() para los textos y un diccionario por idioma (locales/)
     game/                  tablero en Phaser: escena, dibujo de casillas, efectos, paleta
     audio/                 música y efectos sintetizados, y sus controles
     shared/                piezas comunes: dom, router, celebración, conexión, almacenamiento y tema
@@ -92,6 +95,7 @@ backend/                   el Worker de Cloudflare: sirve el juego (dist/) y la 
     http.ts                errores, respuestas y validación de la entrada
     session.ts             sesiones, login con Google, cerrar sesión y borrar la cuenta
     google.ts              verificación de los tokens de Google
+    i18n.ts                idioma de cada petición para los mensajes de error
     routes/                un archivo por apartado: daily, weekly, duels, leagues, levels,
                            players, stats, achievements
   migrations/              esquema de la base de datos D1 (0001 a 0012)
@@ -104,6 +108,7 @@ common/                    lo que usan los dos; sin APIs del navegador ni import
     achievements/          logros
     community/             validación de niveles creados por jugadores
     players/               reglas de los nombres
+  i18n/                    idiomas y mensajes de error del servidor en cada uno
   art/                     dibujos SVG (pingüino, gorros, elementos)
 tests/                     backend/ y common/, con el mismo árbol que el código
 .github/workflows/         despliegue automático
@@ -173,6 +178,13 @@ fuera) y compila el juego a `dist/`.
   (`common/logic/players/names.ts`).
 - Trampas: el servidor reproduce cada partida y rechaza las imposibles o enviadas sin jugar, pero no
   puede saber si alguien ha calculado la solución por su cuenta (el juego entero corre en el navegador).
+
+## Idiomas
+
+El español (`frontend/src/i18n/locales/es.ts`) es la referencia: los demás diccionarios tienen que
+tener las mismas claves, y si falta alguna `pnpm run build` falla. La lógica compartida no lleva
+textos: devuelve códigos (`BoardError`, `nameProblem`…) y cada lado los traduce. El servidor responde
+los errores en el idioma de la cabecera `X-Skid-Lang` (o `Accept-Language`).
 
 ## Publicar en Cloudflare
 

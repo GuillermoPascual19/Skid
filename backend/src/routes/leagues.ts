@@ -38,9 +38,9 @@ export async function createLeague(env: Env, playerId: string, name: unknown): P
   await requireName(env, playerId);
   const created = await env.DB.prepare('SELECT COUNT(*) AS n FROM leagues WHERE created_by = ?').bind(playerId).first<{ n: number }>();
   if ((created?.n ?? 0) >= MAX_LEAGUES_PER_PLAYER) {
-    throw new HttpError(429, `Ya has creado ${MAX_LEAGUES_PER_PLAYER} ligas, que es el máximo`);
+    throw new HttpError(429, 'maxLeagues', { n: MAX_LEAGUES_PER_PLAYER });
   }
-  const clean = cleanText(name, 2, 30, 'El nombre de la liga');
+  const clean = cleanText(name, 2, 30, 'leagueNameLength');
   const id = crypto.randomUUID();
   for (let attempt = 0; attempt < 5; attempt++) {
     const code = randomCode();
@@ -54,14 +54,14 @@ export async function createLeague(env: Env, playerId: string, name: unknown): P
       if (!String(err).includes('UNIQUE')) throw err; // Código repetido: se prueba otro.
     }
   }
-  throw new HttpError(500, 'No se pudo crear la liga');
+  throw new HttpError(500, 'leagueCreateFailed');
 }
 
 export async function joinLeague(env: Env, playerId: string, code: unknown): Promise<LeagueRow> {
   await requireName(env, playerId);
   const clean = typeof code === 'string' ? code.trim().toUpperCase() : '';
   const league = await env.DB.prepare('SELECT id, name, code FROM leagues WHERE code = ?').bind(clean).first<LeagueRow>();
-  if (!league) throw new HttpError(404, 'No existe ninguna liga con ese código');
+  if (!league) throw new HttpError(404, 'leagueNotFound');
   await env.DB.prepare('INSERT OR IGNORE INTO league_members (league_id, player_id) VALUES (?, ?)').bind(league.id, playerId).run();
   return league;
 }
@@ -78,14 +78,14 @@ export async function leagueInvite(env: Env, playerId: string, code: string) {
   )
     .bind(code.trim().toUpperCase(), playerId)
     .first<{ name: string; members: number; member: number }>();
-  if (!league) throw new HttpError(404, 'No existe ninguna liga con ese código');
+  if (!league) throw new HttpError(404, 'leagueNotFound');
   return { name: league.name, members: league.members, alreadyMember: league.member === 1 };
 }
 
 /** Sales de una liga: dejas de ver a los demás y ellos a ti. Si se queda vacía, se borra. */
 export async function leaveLeague(env: Env, playerId: string, leagueId: string) {
   const result = await env.DB.prepare('DELETE FROM league_members WHERE league_id = ? AND player_id = ?').bind(leagueId, playerId).run();
-  if (!result.meta.changes) throw new HttpError(404, 'No perteneces a esa liga');
+  if (!result.meta.changes) throw new HttpError(404, 'notLeagueMember');
   await env.DB.prepare('DELETE FROM leagues WHERE id = ? AND NOT EXISTS (SELECT 1 FROM league_members WHERE league_id = ?)').bind(leagueId, leagueId).run();
   return { ok: true };
 }
@@ -179,7 +179,7 @@ async function requireMember(env: Env, playerId: string, leagueId: string): Prom
   const member = await env.DB.prepare('SELECT 1 FROM league_members WHERE league_id = ? AND player_id = ?')
     .bind(leagueId, playerId)
     .first();
-  if (!member) throw new HttpError(403, 'No perteneces a esta liga');
+  if (!member) throw new HttpError(403, 'notLeagueMember');
 }
 
 interface StandingRow {

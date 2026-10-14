@@ -1,7 +1,7 @@
 // Logros y gorros: pantalla para ver el progreso y elegir gorro, y celebración
 // de los logros recién desbloqueados.
 
-import { HAT_NAMES, penguinSvg, type HatId } from '../../../../common/art/hats';
+import { penguinSvg, type HatId } from '../../../../common/art/hats';
 import { ACHIEVEMENTS } from '../../../../common/logic/achievements/achievements';
 import * as online from '../../shared/api';
 import { celebrate } from '../../shared/celebrate';
@@ -10,6 +10,7 @@ import { setCachedHat } from '../profile/profile';
 import { go, type Screen } from '../../shared/router';
 import { type Achievements, getAchievements, setHat } from './api';
 import { markAchievementsSeen, seenAchievements } from './storage';
+import { t } from '../../i18n/i18n';
 
 export function achievementsScreen(): Screen {
   const subtitle = h('p');
@@ -20,8 +21,8 @@ export function achievementsScreen(): Screen {
     h(
       'header',
       { class: 'topbar' },
-      h('button', { class: 'icon-btn', 'aria-label': 'Volver', onclick: () => go({ name: 'home' }) }, '←'),
-      h('div', { class: 'title' }, h('h1', null, 'Logros'), subtitle),
+      h('button', { class: 'icon-btn', 'aria-label': t('common.back'), onclick: () => go({ name: 'home' }) }, '←'),
+      h('div', { class: 'title' }, h('h1', null, t('nav.achievements')), subtitle),
     ),
     body,
   );
@@ -31,7 +32,7 @@ export function achievementsScreen(): Screen {
 
   async function load() {
     if (!online.onlineEnabled) {
-      body.replaceChildren(h('section', { class: 'card empty' }, 'Los logros necesitan el ranking online.'));
+      body.replaceChildren(h('section', { class: 'card empty' }, t('achievementsScreen.needsOnline')));
       return;
     }
     try {
@@ -41,7 +42,7 @@ export function achievementsScreen(): Screen {
       render();
     } catch (err) {
       body.replaceChildren(
-        h('section', { class: 'card empty' }, h('p', { class: 'error' }, (err as Error).message), h('button', { class: 'btn', onclick: load }, 'Reintentar')),
+        h('section', { class: 'card empty' }, h('p', { class: 'error' }, (err as Error).message), h('button', { class: 'btn', onclick: load }, t('common.retry'))),
       );
     }
   }
@@ -53,7 +54,7 @@ export function achievementsScreen(): Screen {
       data = { ...data, hat };
       setCachedHat(hat);
       render();
-      toast(hat ? `¡${HAT_NAMES[hat]} puesto!` : 'Sin gorro');
+      toast(hat ? t('achievementsScreen.wearing', { hat: t(`hats.${hat}`) }) : t('achievementsScreen.noHat'));
     } catch (err) {
       toast((err as Error).message);
     }
@@ -63,7 +64,7 @@ export function achievementsScreen(): Screen {
     if (!data) return;
     const { hat, items } = data;
     const unlocked = items.filter((i) => i.unlocked).length;
-    subtitle.textContent = `${unlocked} de ${items.length} desbloqueados`;
+    subtitle.textContent = t('achievementsScreen.unlocked', { n: unlocked, total: items.length });
 
     body.replaceChildren(
       h(
@@ -73,10 +74,10 @@ export function achievementsScreen(): Screen {
         h(
           'div',
           null,
-          h('p', { class: 'eyebrow' }, 'Tu pingüino'),
-          h('h2', null, hat ? HAT_NAMES[hat] : 'Sin gorro'),
-          h('p', { class: 'muted' }, 'Tus amigos lo ven en el ranking.'),
-          hat ? h('button', { class: 'link-btn', onclick: () => wear(null) }, 'Quitar gorro') : null,
+          h('p', { class: 'eyebrow' }, t('achievementsScreen.yourPenguin')),
+          h('h2', null, hat ? t(`hats.${hat}`) : t('achievementsScreen.noHat')),
+          h('p', { class: 'muted' }, t('achievementsScreen.friendsSee')),
+          hat ? h('button', { class: 'link-btn', onclick: () => wear(null) }, t('achievementsScreen.removeHat')) : null,
         ),
       ),
       h(
@@ -92,10 +93,10 @@ export function achievementsScreen(): Screen {
             h(
               'div',
               { class: 'achievement-info' },
-              h('strong', null, def.name),
-              h('span', { class: 'muted' }, def.description),
+              h('strong', null, t(`achievements.${def.id}.name`)),
+              h('span', { class: 'muted' }, t(`achievements.${def.id}.description`)),
               p.unlocked
-                ? h('small', null, `🎁 ${HAT_NAMES[def.hat]}`)
+                ? h('small', null, `🎁 ${t(`hats.${def.hat}`)}`)
                 : h(
                     'div',
                     { class: 'meter', role: 'progressbar', 'aria-valuemin': 0, 'aria-valuemax': p.target, 'aria-valuenow': p.current },
@@ -105,9 +106,9 @@ export function achievementsScreen(): Screen {
             ),
             p.unlocked
               ? wearing
-                ? h('span', { class: 'chip wearing' }, '✓ Puesto')
-                : h('button', { class: 'btn small secondary', onclick: () => wear(def.hat) }, 'Ponérmelo')
-              : h('span', { class: 'lock', 'aria-label': 'Bloqueado' }, '🔒'),
+                ? h('span', { class: 'chip wearing' }, `✓ ${t('achievementsScreen.worn')}`)
+                : h('button', { class: 'btn small secondary', onclick: () => wear(def.hat) }, t('achievementsScreen.wear'))
+              : h('span', { class: 'lock', 'aria-label': t('achievementsScreen.locked') }, '🔒'),
           );
         }),
       ),
@@ -140,10 +141,10 @@ export async function celebrateNewAchievements(onHat: (hat: HatId) => void): Pro
     const goToAchievements = await celebrate({
       icon: '🎁',
       iconSvg: penguinSvg(fresh.at(-1)!.hat),
-      eyebrow: '¡Logros nuevos!',
-      title: `Has desbloqueado ${fresh.length} gorros`,
-      text: fresh.map((d) => d.name).join(' · '),
-      button: 'Ver mis gorros',
+      eyebrow: t('achievementsScreen.newMany'),
+      title: t('achievementsScreen.unlockedHats', { n: fresh.length }),
+      text: fresh.map((d) => t(`achievements.${d.id}.name`)).join(' · '),
+      button: t('achievementsScreen.seeHats'),
     });
     if (goToAchievements) go({ name: 'achievements' });
     return;
@@ -153,10 +154,10 @@ export async function celebrateNewAchievements(onHat: (hat: HatId) => void): Pro
     const wantsIt = await celebrate({
       icon: '🎁',
       iconSvg: penguinSvg(def.hat),
-      eyebrow: '¡Logro nuevo!',
-      title: def.name,
-      text: `${def.description} Has desbloqueado: ${HAT_NAMES[def.hat]}.`,
-      button: 'Ponérmelo',
+      eyebrow: t('achievementsScreen.newOne'),
+      title: t(`achievements.${def.id}.name`),
+      text: t('achievementsScreen.newOneText', { description: t(`achievements.${def.id}.description`), hat: t(`hats.${def.hat}`) }),
+      button: t('achievementsScreen.wear'),
     });
     if (wantsIt) {
       try {

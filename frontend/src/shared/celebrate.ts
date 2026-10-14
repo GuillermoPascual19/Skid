@@ -3,6 +3,7 @@
 
 import { sfx } from '../audio/sound';
 import { h, haptic, openModal, svg } from './dom';
+import { t } from '../i18n/i18n';
 
 const CONFETTI_COLORS = ['#ffc93c', '#ff7a45', '#2b8fd6', '#2bb673', '#ff8fa3', '#a78bfa', '#ffffff'];
 
@@ -30,7 +31,7 @@ export function celebrate(c: Celebration): Promise<boolean> {
         h('p', { class: 'eyebrow' }, c.eyebrow),
         h('h2', null, c.title),
         h('p', { class: 'lead' }, c.text),
-        h('button', { class: 'btn big block', onclick: () => ((confirmed = true), modal.close()) }, c.button ?? '¡Genial!'),
+        h('button', { class: 'btn big block', onclick: () => ((confirmed = true), modal.close()) }, c.button ?? t('common.great')),
       ],
       {
         dismissable: true,

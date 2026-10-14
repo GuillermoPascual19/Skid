@@ -15,6 +15,7 @@ import { sfx } from '../../audio/sound';
 import { go, type Screen } from '../../shared/router';
 import { loadBoard, onKey, openPauseMenu, playLayout, wearHat } from '../../play/play';
 import { MILESTONES, claimElementIntro, claimMilestone, saveProgress, startingProgress } from './storage';
+import { t, tn } from '../../i18n/i18n';
 
 export function levelsScreen(): Screen {
   const progress = startingProgress();
@@ -33,15 +34,15 @@ export function levelsScreen(): Screen {
 
   const ui = playLayout({
     stats: [
-      { key: 'moves', label: 'Movimientos' },
-      { key: 'optimal', label: 'Óptimo', tone: 'gold' },
+      { key: 'moves', label: t('stats.moves') },
+      { key: 'optimal', label: t('stats.optimal'), tone: 'gold' },
     ],
-    hint: { keys: 'Flechas o WASD para moverte · R reinicia', touch: 'Desliza el dedo en cualquier parte de la pantalla' },
+    hint: { keys: t('play.hintKeys'), touch: t('play.hintTouch') },
     onMenu: () =>
-      openPauseMenu(mounted, { restartLabel: 'Reiniciar', onRestart: () => restart(), onExit: () => go({ name: 'home' }) }),
+      openPauseMenu(mounted, { restartLabel: t('play.reset'), onRestart: () => restart(), onExit: () => go({ name: 'home' }) }),
     onRestart: () => restart(),
     onSwipe: (dir) => mounted?.scene.requestMove(dir),
-    restartLabel: 'Reiniciar',
+    restartLabel: t('play.reset'),
     onHint: () => showHint(),
   });
 
@@ -49,13 +50,13 @@ export function levelsScreen(): Screen {
   function showHint() {
     if (finished || !mounted) return;
     const [next] = solve(board, state) ?? [];
-    if (!next) return toast('Sin salida desde aquí: reinicia el nivel');
+    if (!next) return toast(t('free.stuck'));
     mounted.scene.showHint(next);
     sfx.hint();
   }
 
   const hud = () => {
-    ui.setTitle(`Nivel ${level}`, 'Modo libre');
+    ui.setTitle(t('common.levelN', { n: level }), t('home.free.eyebrow'));
     ui.setStat('moves', moves, moves > optimal ? 'warn' : undefined);
     ui.setStat('optimal', optimal);
   };
@@ -103,10 +104,10 @@ export function levelsScreen(): Screen {
       await celebrate({
         icon: '🧊',
         iconSvg: elementSvg(e.id),
-        eyebrow: '¡Nuevo en el hielo!',
-        title: e.name,
-        text: e.description,
-        button: '¡A probarlo!',
+        eyebrow: t('free.newElement'),
+        title: t(`elements.${e.id}.name`),
+        text: t(`elements.${e.id}.description`),
+        button: t('free.tryIt'),
       });
       celebrating = false;
       if (disposed) return;
@@ -132,13 +133,13 @@ export function levelsScreen(): Screen {
       celebrating = true;
       await celebrate({
         icon: done >= 100 ? '👑' : done >= 75 ? '💎' : done >= 50 ? '🏆' : '⭐',
-        eyebrow: `Nivel ${done} superado`,
-        title: done >= 100 ? '¡Leyenda del hielo!' : '¡Enhorabuena!',
+        eyebrow: t('free.milestone.eyebrow', { n: done }),
+        title: done >= 100 ? t('free.milestone.legend') : t('free.milestone.congrats'),
         text:
           done >= 100
-            ? '¡Has superado 100 niveles! Pocos pingüinos han llegado tan lejos.'
-            : `Ya llevas ${done} niveles. Los siguientes serán aún más difíciles.`,
-        button: 'Continuar',
+            ? t('free.milestone.hundred')
+            : t('free.milestone.text', { n: done }),
+        button: t('play.continue'),
       });
       celebrating = false;
       if (disposed || level !== done || !finished) return;
@@ -151,13 +152,13 @@ export function levelsScreen(): Screen {
     const stars = starsFor(moves, optimal);
     result = openModal([
       h('div', { class: 'stars' }, ...[0, 1, 2].map((i) => starSvg(i < stars))),
-      h('h2', null, `¡Nivel ${level} superado!`),
-      h('p', { class: 'lead' }, `${moves} movimientos · óptimo ${optimal}`),
+      h('h2', null, t('free.levelBeaten', { n: level })),
+      h('p', { class: 'lead' }, `${tn('common.moves', moves)} · ${t('common.optimalN', { n: optimal })}`),
       h(
         'div',
         { class: 'row' },
-        h('button', { class: 'btn ghost', onclick: () => restart() }, 'Repetir'),
-        h('button', { class: 'btn', onclick: () => load(level + 1) }, 'Siguiente →'),
+        h('button', { class: 'btn ghost', onclick: () => restart() }, t('levels.play.repeat')),
+        h('button', { class: 'btn', onclick: () => load(level + 1) }, `${t('free.next')} →`),
       ),
     ]);
   }
@@ -169,7 +170,7 @@ export function levelsScreen(): Screen {
       hud();
       removeKeys = onKey((e) => {
         if (e.key === 'r' || e.key === 'R') restart();
-        if (e.key === 'Escape') ui.el.querySelector<HTMLButtonElement>('[aria-label=Pausa]')?.click();
+        if (e.key === 'Escape') ui.el.querySelector<HTMLButtonElement>('.pause-btn')?.click();
       });
       document.addEventListener('keydown', nextOnEnter);
       const m = await loadBoard(ui.boardWrap, board, hooks);

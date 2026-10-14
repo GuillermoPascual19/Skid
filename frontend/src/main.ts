@@ -21,6 +21,7 @@ import { achievementsScreen } from './features/achievements/achievements-screen'
 import { playerScreen } from './features/profile/player-screen';
 import { go, setRoutes } from './shared/router';
 import { applyTheme } from './shared/theme';
+import { initI18n, t } from './i18n/i18n';
 
 const FONT_FAMILY = '"Baloo 2"';
 
@@ -60,20 +61,20 @@ setRoutes({
   solution: (route) => solutionScreen(route.day),
   ghost: (route) =>
     ghostScreen({
-      subtitle: `Reto · ${formatDay(route.day)}`,
+      subtitle: t('ghost.dailySubtitle', { day: formatDay(route.day) }),
       rows: dailyLevel(route.day).rows,
       load: () => getGhost(route.day, route.friendId),
-      back: { label: 'Ranking', route: { name: 'ranking' } },
+      back: { label: t('nav.ranking'), route: { name: 'ranking' } },
     }),
   weekly: (route) => weeklyScreen(route.info),
   duels: (route) => duelsScreen(route.open),
   duel: (route) => duelScreen(route.duel),
   duelGhost: (route) =>
     ghostScreen({
-      subtitle: `Duelo · ${difficultyLabel(route.duel.difficulty)}`,
+      subtitle: t('ghost.duelSubtitle', { difficulty: difficultyLabel(route.duel.difficulty) }),
       rows: route.duel.rows,
       load: () => getDuelGhost(route.duel.id),
-      back: { label: 'Duelos', route: { name: 'duels' } },
+      back: { label: t('nav.duels'), route: { name: 'duels' } },
     }),
   ranking: (route) => rankingScreen(route),
   stats: () => statsScreen(),
@@ -86,6 +87,7 @@ setRoutes({
 });
 
 applyTheme();
+await initI18n(); // Antes de pintar nada: todos los textos salen del idioma elegido.
 snow();
 installAudio();
 await waitForFonts();
