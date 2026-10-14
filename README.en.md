@@ -15,7 +15,8 @@ friends, and levels made by the players.
 - **Daily challenge**: the same board for everyone; whoever does it in the fewest moves wins. With
   streaks, streak freezes, the solution once you finish, and a friend's ghost.
 - **Weekly challenge**: a big, hard board from Monday to Sunday, with a ranking among friends.
-- **Duels**: challenge a friend (or anyone, with a link) to the same brand-new board.
+- **Live duels**: challenge a friend (or anyone, with a link) and play the same brand-new board at
+  the same time.
 - **Leagues**: daily and weekly rankings with your friends, and monthly seasons whose champion
   wins that month's hat; emoji reactions to your friends' challenges; achievements unlock more
   hats.
@@ -80,7 +81,7 @@ frontend/                  the game in the browser (Vite)
       free-play/           free play
       daily/               daily challenge, stats, solution and a friend's ghost
       weekly/              weekly challenge
-      duels/               duels: challenge, accept, play, result and rematch
+      duels/               duels: challenge, waiting room, live game, result and rematch
       ranking/             leagues, seasons, reactions and move-based rankings (levels,
                            weekly challenge)
       achievements/        achievements and hats
@@ -102,13 +103,13 @@ backend/                   the Cloudflare Worker: serves the game (dist/) and th
     i18n.ts                each request's language for error messages
     routes/                one file per feature: daily, weekly, duels, leagues, seasons,
                            reactions, levels, players, stats, achievements
-  migrations/              D1 database schema (0001 to 0014)
+  migrations/              D1 database schema (0001 to 0015)
 common/                    used by both; no browser APIs and no imports from outside
   logic/                   pure rules: the server replays games with this very same code
     engine/                board, movement, solver, generator, elements, randomness
     daily/                 daily challenge, league points and streaks
     weekly/                weekly challenge
-    duels/                 duels: difficulties and who wins
+    duels/                 duels: difficulties, timings and who wins
     achievements/          achievements
     leagues/               seasons (dates, podium and each month's hat) and reactions
     community/             validation of player-made levels
@@ -157,14 +158,17 @@ anything from outside) and builds the game to `dist/`.
 - Challenge a friend from your leagues, or anyone with a link (`?duelo=`), and pick the difficulty
   (free-play levels 6, 12 and 32). The server generates the board when the duel is created and
   stores it.
-- Each player plays as many times as they like, with no hints, and hands in their best score. The
-  duel ends when both have handed in or after 48 hours; until then you can't see the other player's
-  score. Fewer moves wins and, on a tie, the faster player (from when they started until their best
-  attempt).
-- Afterwards: the ghost with both best attempts, and a rematch.
+- Duels are live. Both players wait in the duel room; while it's open, the game pings the server
+  every 2 s (`POST /duels/:id/here`). When both are there, the server sets the start time, the same
+  for both, after a 4 s countdown. They have 48 hours to meet.
+- One attempt, no hints: you can restart, but the clock keeps running. When you finish, your result
+  is sent and you wait for your rival; their result stays hidden until both have finished (or 20
+  minutes have passed). Fewer moves wins and, on a tie, the faster player.
+- The room stays in the URL (`?duelo=`): if the phone reloads the page when you come back from
+  WhatsApp, you land back in it.
+- Afterwards: the ghost with both attempts, and a rematch.
 - Logic in `common/logic/duels/`, server in `backend/src/routes/duels.ts` and the game in
-  `frontend/src/features/duels/`. The "best attempt" game is shared with the weekly challenge
-  (`frontend/src/play/attempt-screen.ts`).
+  `frontend/src/features/duels/` (the room in `duel-room.ts`, the game in `duel-play.ts`).
 
 ## Seasons
 

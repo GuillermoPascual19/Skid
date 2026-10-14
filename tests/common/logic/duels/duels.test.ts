@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { duelLevel, duelWinner, isDuelDifficulty } from '../../../../common/logic/duels/duels';
+import { duelLevel, duelVerdict, duelWinner, isDuelDifficulty } from '../../../../common/logic/duels/duels';
 import { countDeadEnds } from '../../../../common/logic/engine/solver';
 
 describe('duelos', () => {
@@ -32,5 +32,12 @@ describe('duelos', () => {
     expect(duelWinner(null, { moves: 30, timeMs: 1 })).toBe('b');
     expect(duelWinner({ moves: 30, timeMs: 1 }, null)).toBe('a');
     expect(duelWinner(null, null)).toBe('draw');
+  });
+
+  it('dice qué decidió el duelo', () => {
+    expect(duelVerdict({ moves: 12, timeMs: 90_000 }, { moves: 13, timeMs: 10_000 })).toEqual({ winner: 'a', by: 'moves' });
+    expect(duelVerdict({ moves: 12, timeMs: 90_000 }, { moves: 12, timeMs: 60_000 })).toEqual({ winner: 'b', by: 'time' });
+    expect(duelVerdict(null, { moves: 30, timeMs: 1 })).toEqual({ winner: 'b', by: 'noShow' });
+    expect(duelVerdict({ moves: 12, timeMs: 1 }, { moves: 12, timeMs: 1 })).toEqual({ winner: 'draw', by: null });
   });
 });

@@ -82,7 +82,7 @@ export const errors: ErrorMessages = {
   alreadyStarted: 'Du hast schon angefangen, es zu spielen',
   duelDeclined: 'Dieses Duell wurde abgelehnt',
   duelNoRival: 'Dieses Duell hat noch keinen Gegner',
-  duelHandedIn: 'Du hast dein Ergebnis für dieses Duell schon abgegeben',
+  duelHandedIn: 'Du hast dieses Duell schon beendet',
   finishBeforeHandIn: 'Schaff das Spielfeld mindestens einmal, bevor du abgibst',
   duelNotStarted: 'Du hast dieses Duell nicht begonnen',
   duelNotOver: 'Das Duell ist noch nicht vorbei',

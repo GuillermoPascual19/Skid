@@ -1,11 +1,12 @@
-// Pantalla de duelos: retar a alguien y tus duelos (te toca, esperando al rival y terminados).
-// Con `open` (el id de un enlace ?duelo=) enseña la invitación o el duelo.
+// Pantalla de duelos: retar a alguien y tus duelos (te esperan, esperando al rival
+// y terminados). Cada duelo se juega en su sala. Con `open` (el id de un enlace
+// ?duelo=) se va directamente a ella.
 
 import { movesLabel } from '../../shared/result';
-import { h, toast } from '../../shared/dom';
+import { h } from '../../shared/dom';
 import { go, type Screen } from '../../shared/router';
-import { type Duel, getDuel, listDuels } from './api';
-import { avatar, rivalName, confirmDecline, difficultyLabel, myTurn, openInvite, openNewDuel, outcomeText, playDuel, shareDuel, showDuelResult, timeLeft } from './duels';
+import { type Duel, listDuels } from './api';
+import { avatar, rivalName, confirmDecline, difficultyLabel, enterRoom, myTurn, openNewDuel, outcomeText, shareDuel, showDuelResult, timeLeft } from './duels';
 import { playerName, t } from '../../i18n/i18n';
 
 export function duelsScreen(open?: string): Screen {
@@ -32,20 +33,21 @@ export function duelsScreen(open?: string): Screen {
     let detail: string;
     if (over) detail = outcomeText(duel);
     else if (duel.status === 'open') detail = t('duels.screen.noOneYet');
-    else if (turn)
-      detail = duel.me.finished
-        ? t('duels.screen.notHandedIn', { mark: movesLabel(duel.optimal + (duel.me.overPar ?? 0)) })
-        : rival?.handedIn
-          ? t('duels.play.rivalHandedIn', { name: rivalName(duel) })
-          : t('duels.screen.yourTurn');
-    else detail = t('duels.screen.waitingFor', { name: rivalName(duel) });
+    else if (duel.status === 'playing')
+      detail = duel.me.handedIn
+        ? t('duels.screen.notHandedIn', { mark: movesLabel(duel.me.moves ?? duel.optimal) })
+        : t('duels.screen.yourTurn');
+    else detail = rival?.present ? `⚡ ${t('duels.room.rivalHere', { name: rivalName(duel) })}` : t('duels.screen.waitingFor', { name: rivalName(duel) });
 
     const actions: (HTMLElement | null)[] = [];
-    if (turn) actions.push(h('button', { class: 'btn small', onclick: () => void playDuel(duel) }, duel.me.started ? t('duels.screen.resume') : t('common.play')));
-    if (turn && duel.role === 'opponent' && !duel.me.started) {
+    if (!over) {
+      const label = duel.status === 'playing' ? (duel.me.handedIn ? t('duels.room.see') : t('duels.screen.resume')) : t('duels.room.enter');
+      actions.push(h('button', { class: `btn small ${turn ? '' : 'secondary'}`, onclick: () => enterRoom(duel) }, label));
+    }
+    if (duel.status === 'waiting' && duel.role === 'opponent') {
       actions.push(h('button', { class: 'link-btn', onclick: () => confirmDecline(duel, () => void load()) }, t('duels.decline.button')));
     }
-    if (duel.status === 'open') actions.push(h('button', { class: 'btn small secondary', onclick: () => shareDuel(duel) }, t('duels.screen.shareLink')));
+    if (duel.status === 'open') actions.push(h('button', { class: 'link-btn', onclick: () => shareDuel(duel) }, t('duels.screen.shareLink')));
     if (over) actions.push(h('button', { class: 'btn small ghost', onclick: () => showDuelResult(duel, () => void load()) }, t('duels.screen.seeResult')));
 
     return h(
@@ -73,7 +75,7 @@ export function duelsScreen(open?: string): Screen {
       const duels = await listDuels();
       if (disposed) return;
       const turn = myTurn(duels);
-      const waiting = duels.filter((d) => !turn.includes(d) && (d.status === 'open' || d.status === 'playing'));
+      const waiting = duels.filter((d) => !turn.includes(d) && (d.status === 'open' || d.status === 'waiting' || d.status === 'playing'));
       const over = duels.filter((d) => d.status === 'finished' || d.status === 'declined');
       const sections = [section(t('duels.screen.sectionTurn'), turn), section(t('duels.screen.sectionWaiting'), waiting), section(t('duels.screen.sectionOver'), over)].filter(
         (s) => s !== null,
@@ -88,26 +90,11 @@ export function duelsScreen(open?: string): Screen {
     }
   }
 
-  /** El enlace ?duelo=: la invitación si es para ti, o el duelo si ya juegas en él. */
-  async function openLink(id: string) {
-    try {
-      const { duel, invite } = await getDuel(id);
-      if (disposed) return;
-      if (invite) return openInvite(invite, (accepted) => void playDuel(accepted));
-      if (!duel) return;
-      if (duel.status === 'finished' || duel.status === 'declined') showDuelResult(duel, () => void load());
-      else if (duel.status === 'playing' && !duel.me.handedIn) void playDuel(duel);
-      else if (duel.status === 'open') shareDuel(duel);
-    } catch (err) {
-      toast((err as Error).message);
-    }
-  }
-
   return {
     el,
     mount() {
+      if (open) return enterRoom({ id: open });
       void load();
-      if (open) void openLink(open);
     },
     dispose() {
       disposed = true;

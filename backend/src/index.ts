@@ -13,7 +13,7 @@ import { errorMessage, requestLocale } from './i18n';
 import { playerAchievements } from './routes/achievements';
 import { finishRun, getRun, ghostRuns, startRun } from './routes/daily';
 import { finishWeekly, getWeekly, startWeekly, weeklyRanking } from './routes/weekly';
-import { acceptDuel, createDuel, declineDuel, duelGhost, finishDuel, getDuel, handInDuel, listDuels, listFriends, startDuel } from './routes/duels';
+import { acceptDuel, createDuel, declineDuel, duelGhost, finishDuel, getDuel, here, listDuels, listFriends } from './routes/duels';
 import { createLeague, dailyWins, joinLeague, leagueInvite, leagueRanking, leagueStandings, leaveLeague, myLeagues } from './routes/leagues';
 import {
   createCustomLevel,
@@ -146,9 +146,8 @@ async function handleApi(req: Request, url: URL, env: Env): Promise<Response> {
   if ((m = route.match(/^GET \/duels\/([\w-]+)$/))) return json(await getDuel(env, playerId, m[1]));
   if ((m = route.match(/^POST \/duels\/([\w-]+)\/accept$/))) return json(await acceptDuel(env, playerId, m[1]));
   if ((m = route.match(/^POST \/duels\/([\w-]+)\/decline$/))) return json(await declineDuel(env, playerId, m[1]));
-  if ((m = route.match(/^POST \/duels\/([\w-]+)\/start$/))) return json(await startDuel(env, playerId, m[1]));
+  if ((m = route.match(/^POST \/duels\/([\w-]+)\/here$/))) return json(await here(env, playerId, m[1]));
   if ((m = route.match(/^GET \/duels\/([\w-]+)\/ghost$/))) return json(await duelGhost(env, playerId, m[1]));
-  if ((m = route.match(/^POST \/duels\/([\w-]+)\/done$/))) return json(await handInDuel(env, playerId, m[1]));
   if ((m = route.match(/^POST \/duels\/([\w-]+)\/finish$/))) {
     const { log } = await body<{ log?: unknown }>(req);
     return json(await finishDuel(env, playerId, m[1], log));

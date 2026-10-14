@@ -1,4 +1,4 @@
-// Partida «al mejor intento» (reto semanal y duelos): cada intento empieza de
+// Partida «al mejor intento» (reto semanal): cada intento empieza de
 // cero, al terminarlo se envía al servidor y este se queda con el mejor. Sin pistas.
 // Lo propio de cada modo (a dónde se envía y qué se cuenta al terminar) llega en `opts`.
 

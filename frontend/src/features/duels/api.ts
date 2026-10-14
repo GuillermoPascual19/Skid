@@ -17,10 +17,12 @@ export interface DuelSide {
   /** null si no ha elegido nombre (se muestra «Anónimo»). */
   name: string | null;
   hat: HatId | null;
+  /** Está en la sala ahora mismo. */
+  present: boolean;
   started: boolean;
-  /** Ha terminado el tablero al menos una vez. */
+  /** Ha terminado el tablero. */
   finished: boolean;
-  /** Ha entregado su marca (ya no juega más). */
+  /** Ha terminado su intento (ya no juega más). */
   handedIn: boolean;
   moves: number | null;
   timeMs: number | null;
@@ -35,13 +37,22 @@ export interface Duel {
   rows: string[];
   createdAt: number;
   expiresAt: number;
+  /** Cuándo empieza (o empezó) la partida, con el reloj del servidor; null si aún no han coincidido en la sala. */
+  startsAt: number | null;
+  /** Hora del servidor al responder (para cuadrar la cuenta atrás con el reloj de este dispositivo). */
+  serverNow: number;
   role: 'challenger' | 'opponent';
-  /** open: nadie ha aceptado el enlace · playing · finished (entregaron los dos o pasaron 48 h) · declined. */
-  status: 'open' | 'playing' | 'finished' | 'declined';
+  /**
+   * open: nadie ha aceptado el enlace · waiting: aún no habéis coincidido en la sala ·
+   * playing: empezado (o en la cuenta atrás) · finished: terminasteis los dos o se acabó el tiempo · declined.
+   */
+  status: 'open' | 'waiting' | 'playing' | 'finished' | 'declined';
   me: DuelSide;
   /** null si es un duelo abierto que nadie ha aceptado. */
   rival: DuelSide | null;
   outcome: 'win' | 'lose' | 'draw' | null;
+  /** Qué decidió el duelo: menos movimientos, el tiempo (a igualdad) o que uno no terminó. */
+  decidedBy: 'moves' | 'time' | 'noShow' | null;
 }
 
 /** Lo que ve quien abre el enlace de un duelo abierto (el tablero, al aceptarlo). */
@@ -77,17 +88,13 @@ export function declineDuel(id: string): Promise<Duel> {
   return api('POST', `/duels/${encodeURIComponent(id)}/decline`);
 }
 
-export function startDuel(id: string): Promise<Duel> {
-  return api('POST', `/duels/${encodeURIComponent(id)}/start`);
+/** Sigues en la sala; cuando estáis los dos, el servidor fija la hora de empezar. */
+export function duelHere(id: string): Promise<Duel> {
+  return api('POST', `/duels/${encodeURIComponent(id)}/here`);
 }
 
 export function finishDuel(id: string, log: string): Promise<{ duel: Duel; attemptMoves: number; improved: boolean }> {
   return api('POST', `/duels/${encodeURIComponent(id)}/finish`, { log });
-}
-
-/** Entregas tu marca: ya no juegas más. */
-export function handInDuel(id: string): Promise<Duel> {
-  return api('POST', `/duels/${encodeURIComponent(id)}/done`);
 }
 
 export function getDuelGhost(id: string): Promise<{ me: GhostRun | null; friend: GhostRun }> {
