@@ -16,6 +16,10 @@ concurrency:
 jobs:
   deploy:
     runs-on: ubuntu-latest
+    # Entorno de GitHub: cada despliegue queda en «Deployments» con el enlace al juego.
+    environment:
+      name: production
+      url: https://skid.gpm-854.workers.dev
     env:
       # Secrets del repositorio (Settings > Secrets and variables > Actions).
       CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
