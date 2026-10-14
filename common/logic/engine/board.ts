@@ -85,6 +85,33 @@ export function samePos(a: Pos, b: Pos): boolean {
   return a.x === b.x && a.y === b.y;
 }
 
+/** Por qué un tablero no es válido. Cada lado (juego y servidor) lo traduce al idioma del jugador. */
+export type BoardProblem =
+  | 'empty'
+  | 'rowWidth'
+  | 'manyPlayers'
+  | 'duplicatePiece'
+  | 'unknownChar'
+  | 'noPlayer'
+  | 'noPieces'
+  | 'missingPiece'
+  | 'portalPair'
+  | 'invalid'
+  | 'size'
+  | 'loops'
+  | 'unsolvable'
+  | 'tooEasy';
+
+/** Error de un tablero mal formado o que no se puede publicar, con su código y sus datos. */
+export class BoardError extends Error {
+  constructor(
+    readonly code: BoardProblem,
+    readonly params: Record<string, string | number> = {},
+  ) {
+    super(code);
+  }
+}
+
 /**
  * Convierte un tablero escrito como array de strings:
  *   #  muro
@@ -96,14 +123,14 @@ export function samePos(a: Pos, b: Pos): boolean {
  *   a-e  teletransporte: cada letra, exactamente dos veces (una pareja)
  *   O  agujero en el hielo
  *
- * Lanza un Error si el tablero no es rectangular, contiene caracteres
+ * Lanza un BoardError si el tablero no es rectangular, contiene caracteres
  * desconocidos, no tiene exactamente un '@', las piezas no son 1..n sin
  * huecos ni repeticiones, o algún teletransporte no tiene pareja.
  */
 export function parseBoard(rows: readonly string[]): Board {
-  if (rows.length === 0) throw new Error('El tablero está vacío');
+  if (rows.length === 0) throw new BoardError('empty');
   const width = rows[0].length;
-  if (width === 0) throw new Error('El tablero está vacío');
+  if (width === 0) throw new BoardError('empty');
 
   const cells: Cell[][] = [];
   const pieceMap = new Map<number, Pos>();
@@ -112,7 +139,7 @@ export function parseBoard(rows: readonly string[]): Board {
 
   rows.forEach((row, y) => {
     if (row.length !== width) {
-      throw new Error(`Fila ${y} mide ${row.length}, se esperaba ${width}`);
+      throw new BoardError('rowWidth', { row: y + 1, length: row.length, width });
     }
     const line: Cell[] = [];
     [...row].forEach((ch, x) => {
@@ -125,32 +152,32 @@ export function parseBoard(rows: readonly string[]): Board {
       line.push('ice');
       if (ch === '.') return;
       if (ch === '@') {
-        if (start) throw new Error('El tablero tiene más de un jugador (@)');
+        if (start) throw new BoardError('manyPlayers');
         start = { x, y };
       } else if (ch >= '1' && ch <= '9') {
         const order = Number(ch);
-        if (pieceMap.has(order)) throw new Error(`Pieza ${order} repetida`);
+        if (pieceMap.has(order)) throw new BoardError('duplicatePiece', { piece: order });
         pieceMap.set(order, { x, y });
       } else {
-        throw new Error(`Carácter desconocido '${ch}' en (${x}, ${y})`);
+        throw new BoardError('unknownChar', { char: ch, x, y });
       }
     });
     cells.push(line);
   });
 
-  if (!start) throw new Error('El tablero no tiene jugador (@)');
-  if (pieceMap.size === 0) throw new Error('El tablero no tiene piezas');
+  if (!start) throw new BoardError('noPlayer');
+  if (pieceMap.size === 0) throw new BoardError('noPieces');
 
   const pieces: Piece[] = [];
   for (let order = 1; order <= pieceMap.size; order++) {
     const pos = pieceMap.get(order);
-    if (!pos) throw new Error(`Falta la pieza ${order}: deben ir de 1 a ${pieceMap.size}`);
+    if (!pos) throw new BoardError('missingPiece', { piece: order, count: pieceMap.size });
     pieces.push({ order, pos });
   }
 
   const portals: (readonly [Pos, Pos])[] = [];
-  for (const [ch, ends] of [...portalMap].sort(([a], [b]) => a.localeCompare(b))) {
-    if (ends.length !== 2) throw new Error(`El teletransporte '${ch}' aparece ${ends.length} veces: debe ser una pareja`);
+  for (const [, ends] of [...portalMap].sort(([a], [b]) => a.localeCompare(b))) {
+    if (ends.length !== 2) throw new BoardError('portalPair', { count: ends.length });
     portals.push([ends[0], ends[1]]);
   }
 

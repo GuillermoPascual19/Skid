@@ -11,10 +11,13 @@ export const NAME_MAX = 20;
  */
 const NAME_PATTERN = /^[\p{Script=Latin}\d][\p{Script=Latin}\d ._'-]*$/u;
 
+/** Por qué no vale un nombre (cada lado lo traduce): longitud o caracteres. */
+export type NameProblem = 'length' | 'chars';
+
 /** null si el nombre vale; si no, por qué no. Se espera ya limpio de espacios de más. */
-export function nameProblem(name: string): string | null {
-  if (name.length < NAME_MIN || name.length > NAME_MAX) return `El nombre debe tener entre ${NAME_MIN} y ${NAME_MAX} caracteres`;
-  if (!NAME_PATTERN.test(name)) return 'Usa solo letras, números, espacios y . _ \' - (empezando por letra o número)';
+export function nameProblem(name: string): NameProblem | null {
+  if (name.length < NAME_MIN || name.length > NAME_MAX) return 'length';
+  if (!NAME_PATTERN.test(name)) return 'chars';
   return null;
 }
 

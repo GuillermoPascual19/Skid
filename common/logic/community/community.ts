@@ -1,7 +1,7 @@
 // Niveles de la comunidad: los crean los jugadores con el editor y los puede
 // jugar cualquiera. El juego y el servidor usan estas mismas comprobaciones.
 
-import { parseBoard, type Board, type Direction } from '../engine/board.ts';
+import { BoardError, parseBoard, type Board, type Direction } from '../engine/board.ts';
 import { decodeRun, replayRun } from '../daily/daily.ts';
 import { elementOf, type ElementId } from '../engine/elements.ts';
 import { hasLoops, solve } from '../engine/solver.ts';
@@ -34,19 +34,19 @@ export function decodeRows(text: string): string[] {
 /**
  * Comprueba que un nivel se puede publicar: tamaño dentro de los límites,
  * tablero bien formado, con solución y sin bucles de corrientes. Lanza un
- * Error con el motivo si no.
+ * BoardError con el motivo si no.
  */
 export function checkCustomLevel(rows: unknown): CheckedLevel {
-  if (!Array.isArray(rows) || !rows.every((r) => typeof r === 'string')) throw new Error('Tablero no válido');
+  if (!Array.isArray(rows) || !rows.every((r) => typeof r === 'string')) throw new BoardError('invalid');
   const { minSize, maxWidth, maxHeight } = CUSTOM_LIMITS;
   if (rows.length < minSize || rows.length > maxHeight || rows[0].length < minSize || rows[0].length > maxWidth) {
-    throw new Error(`El tablero debe medir entre ${minSize}×${minSize} y ${maxWidth}×${maxHeight}`);
+    throw new BoardError('size', { min: minSize, maxWidth, maxHeight });
   }
   const board = parseBoard(rows);
-  if (hasLoops(board)) throw new Error('Hay corrientes que forman un bucle sin fin');
+  if (hasLoops(board)) throw new BoardError('loops');
   const solution = solve(board);
-  if (!solution) throw new Error('El nivel no tiene solución');
-  if (solution.length < 2) throw new Error('Demasiado fácil: se resuelve en un movimiento');
+  if (!solution) throw new BoardError('unsolvable');
+  if (solution.length < 2) throw new BoardError('tooEasy');
 
   const elements = new Set<ElementId>();
   for (const row of board.cells) {

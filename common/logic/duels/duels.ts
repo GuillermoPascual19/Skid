@@ -6,11 +6,11 @@ import { generateLevel, type GeneratedLevel } from '../engine/generator.ts';
 
 export type DuelDifficulty = 'easy' | 'medium' | 'hard';
 
-/** Dificultad → nivel del modo libre con el que se genera el tablero. */
-export const DUEL_DIFFICULTIES: Record<DuelDifficulty, { readonly level: number; readonly label: string }> = {
-  easy: { level: 6, label: 'Fácil' },
-  medium: { level: 12, label: 'Media' },
-  hard: { level: 32, label: 'Difícil' },
+/** Dificultad → nivel del modo libre con el que se genera el tablero (los nombres, en los diccionarios del juego). */
+export const DUEL_DIFFICULTIES: Record<DuelDifficulty, { readonly level: number }> = {
+  easy: { level: 6 },
+  medium: { level: 12 },
+  hard: { level: 32 },
 };
 
 export function isDuelDifficulty(value: unknown): value is DuelDifficulty {

@@ -9,6 +9,7 @@ import { h, isTouch, openModal } from '../shared/dom';
 import { sfx } from '../audio/sound';
 import { soundSettings } from '../audio/audio-controls';
 import { currentMe } from '../features/profile/profile';
+import { t } from '../i18n/i18n';
 
 // ------------------------------------------------------------------ Layout
 
@@ -62,7 +63,7 @@ export function playLayout(opts: {
   const stuck = h(
     'div',
     { class: 'stuck', role: 'status', hidden: true },
-    h('span', null, '🧊 Sin salida: desde aquí ya no se puede terminar.'),
+    h('span', null, `🧊 ${t('play.stuck')}`),
     h('button', { class: 'btn small', onclick: opts.onRestart }, opts.restartLabel),
   );
 
@@ -75,9 +76,9 @@ export function playLayout(opts: {
     h(
       'header',
       { class: 'topbar' },
-      h('button', { class: 'icon-btn', 'aria-label': 'Pausa', title: 'Pausa', onclick: opts.onMenu }, '⏸'),
+      h('button', { class: 'icon-btn pause-btn', 'aria-label': t('play.pause'), title: t('play.pause'), onclick: opts.onMenu }, '⏸'),
       h('div', { class: 'title' }, title, subtitle),
-      opts.onHint ? h('button', { class: 'icon-btn hint-btn', 'aria-label': 'Pista', title: 'Pista', onclick: opts.onHint }, '💡', hintBadge) : null,
+      opts.onHint ? h('button', { class: 'icon-btn hint-btn', 'aria-label': t('play.hint'), title: t('play.hint'), onclick: opts.onHint }, '💡', hintBadge) : null,
       h('button', { class: 'icon-btn', 'aria-label': opts.restartLabel, title: opts.restartLabel, onclick: opts.onRestart }, '↺'),
     ),
     stats,
@@ -155,10 +156,10 @@ export function openPauseMenu(
   mounted?.scene.pause();
   const modal = openModal(
     [
-      h('h2', null, 'Pausa'),
+      h('h2', null, t('play.pause')),
       opts.note ? h('p', { class: 'pause-note' }, opts.note) : null,
       // Las acciones arriba, siempre a la vista; los ajustes de sonido debajo.
-      h('button', { class: 'btn big block', onclick: () => modal.close() }, '▶ Continuar'),
+      h('button', { class: 'btn big block', onclick: () => modal.close() }, `▶ ${t('play.continue')}`),
       h(
         'div',
         { class: 'row' },
@@ -175,9 +176,9 @@ export function openPauseMenu(
               `↺ ${opts.restartLabel}`,
             )
           : null,
-        h('button', { class: 'btn secondary', onclick: opts.onExit }, 'Salir al inicio'),
+        h('button', { class: 'btn secondary', onclick: opts.onExit }, t('play.exit')),
       ),
-      h('p', { class: 'eyebrow pause-section' }, 'Sonido'),
+      h('p', { class: 'eyebrow pause-section' }, t('sound.title')),
       ...soundSettings({ compact: true }),
     ],
     { dismissable: true, onClose: () => mounted?.scene.resume() },

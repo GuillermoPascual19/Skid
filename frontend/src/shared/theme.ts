@@ -4,13 +4,14 @@
 
 import { h, toast } from './dom';
 import { read, write } from './storage';
+import { t } from '../i18n/i18n';
 
 export type ThemeChoice = 'auto' | 'light' | 'dark';
 
 const THEME_KEY = 'skid.theme.v1';
 const ORDER: ThemeChoice[] = ['auto', 'dark', 'light'];
 const ICON: Record<ThemeChoice, string> = { auto: '🌗', dark: '🌙', light: '☀️' };
-const LABEL: Record<ThemeChoice, string> = { auto: 'Tema: automático (como el sistema)', dark: 'Tema: oscuro', light: 'Tema: claro' };
+const LABEL: Record<ThemeChoice, () => string> = { auto: () => t('theme.auto'), dark: () => t('theme.dark'), light: () => t('theme.light') };
 /** Color de la barra del navegador en el móvil (el del cielo de arriba). */
 const BAR_COLOR = { light: '#7cc8f7', dark: '#0b1626' };
 
@@ -43,15 +44,15 @@ export function themeButton(): HTMLButtonElement {
   const paint = () => {
     const choice = themeChoice();
     button.textContent = ICON[choice];
-    button.title = LABEL[choice];
-    button.setAttribute('aria-label', `${LABEL[choice]}. Pulsa para cambiarlo`);
+    button.title = LABEL[choice]();
+    button.setAttribute('aria-label', t('theme.change', { theme: LABEL[choice]() }));
   };
   button.addEventListener('click', () => {
     const next = ORDER[(ORDER.indexOf(themeChoice()) + 1) % ORDER.length];
     write(THEME_KEY, next);
     applyTheme();
     paint();
-    toast(LABEL[next]);
+    toast(LABEL[next]());
   });
   paint();
   return button;

@@ -4,6 +4,7 @@
 import { getAudioSettings, onAudioSettings, setAudioSettings, type AudioSettings } from './sound';
 import { TRACKS } from './tracks';
 import { h, openModal } from '../shared/dom';
+import { t } from '../i18n/i18n';
 
 export interface AudioControls {
   readonly el: HTMLElement;
@@ -17,13 +18,13 @@ export function audioToggles(): AudioControls {
   const musicBtn = h('button', { class: 'audio-btn', onclick: openSoundPanel });
   const paint = (s: AudioSettings) => {
     sfxBtn.textContent = s.sfx ? '🔊' : '🔇';
-    sfxBtn.setAttribute('aria-label', s.sfx ? 'Desactivar efectos de sonido' : 'Activar efectos de sonido');
+    sfxBtn.setAttribute('aria-label', s.sfx ? t('sound.sfxOff') : t('sound.sfxOn'));
     sfxBtn.setAttribute('aria-pressed', String(s.sfx));
-    sfxBtn.title = s.sfx ? 'Efectos: sí' : 'Efectos: no';
+    sfxBtn.title = s.sfx ? t('sound.sfxYes') : t('sound.sfxNo');
     musicBtn.textContent = '🎵';
     musicBtn.classList.toggle('off', !s.music);
-    musicBtn.setAttribute('aria-label', 'Volumen de la música');
-    musicBtn.title = s.music ? `Música: ${Math.round(s.musicVolume * 100)} %` : 'Música: no';
+    musicBtn.setAttribute('aria-label', t('sound.musicVolume'));
+    musicBtn.title = s.music ? t('sound.musicAt', { percent: Math.round(s.musicVolume * 100) }) : t('sound.musicNo');
   };
   paint(getAudioSettings());
   return { el: h('div', { class: 'audio-toggles' }, sfxBtn, musicBtn), dispose: onAudioSettings(paint) };
@@ -37,7 +38,7 @@ export function soundSettings({ compact = false }: { compact?: boolean } = {}): 
   const s = getAudioSettings();
   const percent = (v: number) => `${Math.round(v * 100)} %`;
 
-  const volumeLabel = h('strong', null, s.music ? percent(s.musicVolume) : 'Apagada');
+  const volumeLabel = h('strong', null, s.music ? percent(s.musicVolume) : t('sound.off'));
   const slider = h('input', {
     type: 'range',
     class: 'volume',
@@ -45,12 +46,12 @@ export function soundSettings({ compact = false }: { compact?: boolean } = {}): 
     max: 100,
     step: 5,
     value: String(s.music ? Math.round(s.musicVolume * 100) : 0),
-    'aria-label': 'Volumen de la música',
+    'aria-label': t('sound.musicVolume'),
   });
   const paintSlider = () => {
     const v = Number(slider.value);
     slider.style.setProperty('--fill', `${v}%`);
-    volumeLabel.textContent = v === 0 ? 'Apagada' : `${v} %`;
+    volumeLabel.textContent = v === 0 ? t('sound.off') : `${v} %`;
   };
   slider.addEventListener('input', () => {
     paintSlider();
@@ -76,7 +77,7 @@ export function soundSettings({ compact = false }: { compact?: boolean } = {}): 
         },
       },
       h('span', { class: 'track-emoji', 'aria-hidden': 'true' }, track.emoji),
-      h('span', { class: 'track-text' }, h('strong', null, track.name), h('small', null, track.description)),
+      h('span', { class: 'track-text' }, h('strong', null, t(`tracks.${track.id}.name`)), h('small', null, t(`tracks.${track.id}.description`))),
     ),
   );
   const paintTracks = () => {
@@ -90,7 +91,7 @@ export function soundSettings({ compact = false }: { compact?: boolean } = {}): 
     }
   };
   // Compacta (menú de pausa): cuadrícula de 2×2 sin descripciones, para que quepa todo.
-  const trackList = h('div', { class: `tracks ${compact ? 'compact' : ''}`, role: 'radiogroup', 'aria-label': 'Música' }, ...options);
+  const trackList = h('div', { class: `tracks ${compact ? 'compact' : ''}`, role: 'radiogroup', 'aria-label': t('sound.music') }, ...options);
   // Flechas para moverse entre opciones, como en cualquier grupo de opciones.
   trackList.addEventListener('keydown', (e) => {
     if (!['ArrowDown', 'ArrowUp', 'ArrowRight', 'ArrowLeft'].includes(e.key)) return;
@@ -102,24 +103,24 @@ export function soundSettings({ compact = false }: { compact?: boolean } = {}): 
   });
   paintTracks();
 
-  const sfxSwitch = h('input', { type: 'checkbox', class: 'switch', checked: s.sfx, 'aria-label': 'Efectos de sonido' });
+  const sfxSwitch = h('input', { type: 'checkbox', class: 'switch', checked: s.sfx, 'aria-label': t('sound.sfx') });
   sfxSwitch.addEventListener('change', () => setAudioSettings({ sfx: sfxSwitch.checked }));
 
   return [
     h(
       'div',
       { class: 'sound-row' },
-      h('div', { class: 'sound-label' }, h('span', null, '🎵 Música'), volumeLabel),
+      h('div', { class: 'sound-label' }, h('span', null, `🎵 ${t('sound.music')}`), volumeLabel),
       h('div', { class: 'volume-row' }, h('span', { 'aria-hidden': 'true' }, '🔈'), slider, h('span', { 'aria-hidden': 'true' }, '🔊')),
       trackList,
     ),
-    h('label', { class: 'sound-row switch-row' }, h('span', null, '🔔 Efectos'), sfxSwitch),
+    h('label', { class: 'sound-row switch-row' }, h('span', null, `🔔 ${t('sound.effects')}`), sfxSwitch),
   ];
 }
 
 /** Panel de sonido de la portada. */
 export function openSoundPanel(): void {
-  const modal = openModal([h('h2', null, 'Sonido'), ...soundSettings(), h('button', { class: 'btn block', onclick: () => modal.close() }, 'Listo')], {
+  const modal = openModal([h('h2', null, t('sound.title')), ...soundSettings(), h('button', { class: 'btn block', onclick: () => modal.close() }, t('common.done'))], {
     dismissable: true,
   });
 }

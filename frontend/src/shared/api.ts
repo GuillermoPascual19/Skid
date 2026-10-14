@@ -1,3 +1,4 @@
+import { locale, t, te } from '../i18n/i18n';
 // Conexión con el servidor (backend/, en Cloudflare): sesión, token y login con
 // Google. Las llamadas de cada apartado están en su carpeta (features/*/api.ts).
 // La API está en /api del mismo dominio. Con VITE_API_BASE= vacía (p. ej. en .env.local),
@@ -40,14 +41,16 @@ async function request<T>(method: string, path: string, body?: unknown, token?: 
       headers: {
         ...(body !== undefined ? { 'Content-Type': 'application/json' } : {}),
         ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        // El servidor contesta los errores en el idioma del jugador.
+        'X-Skid-Lang': locale(),
       },
       body: body !== undefined ? JSON.stringify(body) : undefined,
     });
   } catch {
-    throw new Error('Sin conexión con el servidor');
+    throw new Error(t('common.offline'));
   }
   const data = (await res.json().catch(() => ({}))) as T & { error?: string };
-  if (!res.ok && res.status !== 401) throw new Error(data.error ?? `Error ${res.status}`);
+  if (!res.ok && res.status !== 401) throw new Error(data.error ?? t('common.httpError', { status: res.status }));
   return { status: res.status, data };
 }
 
@@ -71,7 +74,7 @@ export async function api<T>(method: string, path: string, body?: unknown): Prom
   memoryToken = null;
   writeToken(null);
   const second = await request<T>(method, path, body, await session());
-  if (second.status === 401) throw new Error('Sesión no válida');
+  if (second.status === 401) throw new Error(te('invalidSession'));
   return second.data;
 }
 

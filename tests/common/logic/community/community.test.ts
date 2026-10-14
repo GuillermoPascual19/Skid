@@ -13,24 +13,24 @@ describe('checkCustomLevel', () => {
   });
 
   it('rechaza tamaños fuera de los límites', () => {
-    expect(() => checkCustomLevel(['@1.', '...', '...'])).toThrow(/entre 4×4/);
-    expect(() => checkCustomLevel(Array(13).fill('@'.padEnd(5, '.')))).toThrow(/entre/);
+    expect(() => checkCustomLevel(['@1.', '...', '...'])).toThrow('size');
+    expect(() => checkCustomLevel(Array(13).fill('@'.padEnd(5, '.')))).toThrow('size');
   });
 
   it('rechaza lo que no es una lista de filas', () => {
-    expect(() => checkCustomLevel('@...')).toThrow(/no válido/);
-    expect(() => checkCustomLevel([1, 2, 3, 4])).toThrow(/no válido/);
+    expect(() => checkCustomLevel('@...')).toThrow('invalid');
+    expect(() => checkCustomLevel([1, 2, 3, 4])).toThrow('invalid');
   });
 
   it('rechaza tableros sin solución, de un movimiento o con bucles', () => {
-    expect(() => checkCustomLevel(['@#..', '##..', '....', '...1'])).toThrow(/no tiene solución/);
-    expect(() => checkCustomLevel(['@..1', '....', '....', '....'])).toThrow(/un movimiento/);
-    expect(() => checkCustomLevel(['>..v.', '.....', '^..<.', '@....', '.1...'])).toThrow(/bucle/);
+    expect(() => checkCustomLevel(['@#..', '##..', '....', '...1'])).toThrow('unsolvable');
+    expect(() => checkCustomLevel(['@..1', '....', '....', '....'])).toThrow('tooEasy');
+    expect(() => checkCustomLevel(['>..v.', '.....', '^..<.', '@....', '.1...'])).toThrow('loops');
   });
 
   it('los errores del tablero llegan tal cual (sin pingüino, teletransporte sin pareja)', () => {
-    expect(() => checkCustomLevel(['....', '....', '....', '...1'])).toThrow(/jugador/);
-    expect(() => checkCustomLevel(['@a..', '....', '....', '...1'])).toThrow(/pareja/);
+    expect(() => checkCustomLevel(['....', '....', '....', '...1'])).toThrow('noPlayer');
+    expect(() => checkCustomLevel(['@a..', '....', '....', '...1'])).toThrow('portalPair');
   });
 });
 

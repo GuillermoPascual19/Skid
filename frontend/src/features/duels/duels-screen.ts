@@ -5,7 +5,8 @@ import { golfLabel } from '../../../../common/logic/daily/score';
 import { h, toast } from '../../shared/dom';
 import { go, type Screen } from '../../shared/router';
 import { type Duel, getDuel, listDuels } from './api';
-import { avatar, confirmDecline, difficultyLabel, myTurn, openInvite, openNewDuel, outcomeText, playDuel, shareDuel, showDuelResult, timeLeft } from './duels';
+import { avatar, rivalName, confirmDecline, difficultyLabel, myTurn, openInvite, openNewDuel, outcomeText, playDuel, shareDuel, showDuelResult, timeLeft } from './duels';
+import { playerName, t } from '../../i18n/i18n';
 
 export function duelsScreen(open?: string): Screen {
   const body = h('div', { class: 'duels-body' }, h('p', { class: 'empty' }, 'Cargando…'));
@@ -17,10 +18,10 @@ export function duelsScreen(open?: string): Screen {
     h(
       'header',
       { class: 'topbar' },
-      h('button', { class: 'icon-btn', 'aria-label': 'Volver', onclick: () => go({ name: 'home' }) }, '←'),
-      h('div', { class: 'title' }, h('h1', null, 'Duelos'), h('p', null, 'Reta a un amigo al mismo tablero')),
+      h('button', { class: 'icon-btn', 'aria-label': t('common.back'), onclick: () => go({ name: 'home' }) }, '←'),
+      h('div', { class: 'title' }, h('h1', null, t('nav.duels')), h('p', null, t('duels.screen.subtitle'))),
     ),
-    h('button', { class: 'btn big block', onclick: () => void openNewDuel(() => void load()) }, '⚔️ Nuevo duelo'),
+    h('button', { class: 'btn big block', onclick: () => void openNewDuel(() => void load()) }, `⚔️ ${t('duels.new.eyebrow')}`),
     body,
   );
 
@@ -30,17 +31,22 @@ export function duelsScreen(open?: string): Screen {
     const turn = duel.status === 'playing' && !duel.me.handedIn;
     let detail: string;
     if (over) detail = outcomeText(duel);
-    else if (duel.status === 'open') detail = 'Nadie ha aceptado el enlace todavía';
-    else if (turn) detail = duel.me.finished ? `Tu mejor: ${golfLabel(duel.me.overPar ?? 0)} · sin entregar` : rival?.handedIn ? `${rival.name} ya ha entregado su marca` : 'Te toca jugar';
-    else detail = `Esperando a ${rival?.name ?? 'tu rival'}`;
+    else if (duel.status === 'open') detail = t('duels.screen.noOneYet');
+    else if (turn)
+      detail = duel.me.finished
+        ? t('duels.screen.notHandedIn', { mark: golfLabel(duel.me.overPar ?? 0) })
+        : rival?.handedIn
+          ? t('duels.play.rivalHandedIn', { name: rivalName(duel) })
+          : t('duels.screen.yourTurn');
+    else detail = t('duels.screen.waitingFor', { name: rivalName(duel) });
 
     const actions: (HTMLElement | null)[] = [];
-    if (turn) actions.push(h('button', { class: 'btn small', onclick: () => void playDuel(duel) }, duel.me.started ? 'Seguir' : 'Jugar'));
+    if (turn) actions.push(h('button', { class: 'btn small', onclick: () => void playDuel(duel) }, duel.me.started ? t('duels.screen.resume') : t('common.play')));
     if (turn && duel.role === 'opponent' && !duel.me.started) {
-      actions.push(h('button', { class: 'link-btn', onclick: () => confirmDecline(duel, () => void load()) }, 'Rechazar'));
+      actions.push(h('button', { class: 'link-btn', onclick: () => confirmDecline(duel, () => void load()) }, t('duels.decline.button')));
     }
-    if (duel.status === 'open') actions.push(h('button', { class: 'btn small secondary', onclick: () => shareDuel(duel) }, 'Compartir enlace'));
-    if (over) actions.push(h('button', { class: 'btn small ghost', onclick: () => showDuelResult(duel, () => void load()) }, 'Ver resultado'));
+    if (duel.status === 'open') actions.push(h('button', { class: 'btn small secondary', onclick: () => shareDuel(duel) }, t('duels.screen.shareLink')));
+    if (over) actions.push(h('button', { class: 'btn small ghost', onclick: () => showDuelResult(duel, () => void load()) }, t('duels.screen.seeResult')));
 
     return h(
       'article',
@@ -49,7 +55,7 @@ export function duelsScreen(open?: string): Screen {
       h(
         'div',
         { class: 'duel-info' },
-        h('strong', null, rival ? rival.name : 'Duelo por enlace'),
+        h('strong', null, rival ? playerName(rival.name) : t('duels.screen.linkDuel')),
         h('small', null, [difficultyLabel(duel.difficulty), over ? null : timeLeft(duel.expiresAt)].filter(Boolean).join(' · ')),
         h('span', { class: 'duel-detail' }, detail),
       ),
@@ -69,11 +75,13 @@ export function duelsScreen(open?: string): Screen {
       const turn = myTurn(duels);
       const waiting = duels.filter((d) => !turn.includes(d) && (d.status === 'open' || d.status === 'playing'));
       const over = duels.filter((d) => d.status === 'finished' || d.status === 'declined');
-      const sections = [section('Te toca', turn), section('Esperando al rival', waiting), section('Terminados', over)].filter((s) => s !== null);
+      const sections = [section(t('duels.screen.sectionTurn'), turn), section(t('duels.screen.sectionWaiting'), waiting), section(t('duels.screen.sectionOver'), over)].filter(
+        (s) => s !== null,
+      );
       body.replaceChildren(
         ...(sections.length
           ? sections
-          : [h('section', { class: 'card empty' }, h('div', { style: 'font-size: 44px' }, '⚔️'), h('p', { class: 'muted' }, 'Aún no tienes duelos. ¡Reta a un amigo!'))]),
+          : [h('section', { class: 'card empty' }, h('div', { style: 'font-size: 44px' }, '⚔️'), h('p', { class: 'muted' }, t('duels.screen.empty')))]),
       );
     } catch (err) {
       body.replaceChildren(h('p', { class: 'error' }, (err as Error).message));

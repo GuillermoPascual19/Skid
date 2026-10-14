@@ -16,8 +16,8 @@ describe('parseBoard con elementos', () => {
   });
 
   it('un teletransporte sin pareja es un error', () => {
-    expect(() => parseBoard(['@a.1'])).toThrow(/pareja/);
-    expect(() => parseBoard(['@aaa1'])).toThrow(/pareja/);
+    expect(() => parseBoard(['@a.1'])).toThrow('portalPair');
+    expect(() => parseBoard(['@aaa1'])).toThrow('portalPair');
   });
 });
 

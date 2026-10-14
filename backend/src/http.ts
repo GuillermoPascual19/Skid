@@ -1,5 +1,8 @@
 // Utilidades HTTP comunes: entorno, sesión autenticada, errores con código y validación de la entrada.
 
+import type { ErrorKey } from '../../common/i18n/errors/es';
+import type { MessageParams } from '../../common/i18n/format';
+
 export interface Env {
   DB: D1Database;
   ASSETS: Fetcher;
@@ -18,12 +21,17 @@ export interface Session {
   readonly tokenHash: string;
 }
 
+/**
+ * Error con su código HTTP y la clave de su mensaje (common/i18n/errors): el
+ * mensaje se traduce al idioma del jugador al responder (ver index.ts).
+ */
 export class HttpError extends Error {
   constructor(
     readonly status: number,
-    message: string,
+    readonly key: ErrorKey,
+    readonly params: MessageParams = {},
   ) {
-    super(message);
+    super(key);
   }
 }
 
@@ -45,19 +53,19 @@ const MAX_BODY_BYTES = 32 * 1024;
 
 export async function body<T>(req: Request): Promise<T> {
   // Se corta antes de leerlo entero: un cuerpo enorme gastaría memoria y CPU del Worker.
-  if (Number(req.headers.get('Content-Length') ?? 0) > MAX_BODY_BYTES) throw new HttpError(413, 'Petición demasiado grande');
+  if (Number(req.headers.get('Content-Length') ?? 0) > MAX_BODY_BYTES) throw new HttpError(413, 'requestTooLarge');
   const text = await req.text();
-  if (text.length > MAX_BODY_BYTES) throw new HttpError(413, 'Petición demasiado grande');
+  if (text.length > MAX_BODY_BYTES) throw new HttpError(413, 'requestTooLarge');
   try {
     return JSON.parse(text) as T;
   } catch {
-    throw new HttpError(400, 'Cuerpo no válido');
+    throw new HttpError(400, 'invalidBody');
   }
 }
 
-export function cleanText(value: unknown, min: number, max: number, what: string): string {
-  // Sin caracteres de control y con espacios normalizados.
+/** Texto sin caracteres de control y con espacios normalizados; si no mide entre min y max, lanza `lengthError` (con min y max). */
+export function cleanText(value: unknown, min: number, max: number, lengthError: ErrorKey): string {
   const text = typeof value === 'string' ? value.replace(/[\p{Cc}\p{Cf}]/gu, '').replace(/\s+/g, ' ').trim() : '';
-  if (text.length < min || text.length > max) throw new HttpError(400, `${what} debe tener entre ${min} y ${max} caracteres`);
+  if (text.length < min || text.length > max) throw new HttpError(400, lengthError, { min, max });
   return text;
 }

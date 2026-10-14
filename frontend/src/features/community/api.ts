@@ -12,7 +12,8 @@ export interface CustomLevel {
   optimal: number;
   elements: ElementId[];
   createdAt: number;
-  author: string;
+  /** null si el autor no ha elegido nombre (se muestra «Anónimo»). */
+  author: string | null;
   authorId: string;
   authorHat: HatId | null;
   /** Es un nivel tuyo. */

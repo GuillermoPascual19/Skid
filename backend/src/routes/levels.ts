@@ -1,7 +1,7 @@
 // Niveles de la comunidad: listado, publicar, superar, ranking, valorar, denunciar y borrar.
 
 import { isHatId } from '../../../common/art/hats';
-import { parseBoard } from '../../../common/logic/engine/board';
+import { BoardError, parseBoard } from '../../../common/logic/engine/board';
 import { checkCustomLevel, CUSTOM_LIMITS, decodeRows, encodeRows, movesToFinish } from '../../../common/logic/community/community';
 import { type Env, HttpError, cleanText } from '../http';
 import { requireName } from './players';
@@ -58,7 +58,7 @@ function customLevelResponse(row: CustomLevelRow, playerId: string) {
     optimal: row.optimal,
     elements: row.elements ? row.elements.split(',') : [],
     createdAt: row.created_at,
-    author: row.author ?? 'Anónimo',
+    author: row.author,
     authorId: row.author_id,
     authorHat: isHatId(row.author_hat) ? row.author_hat : null,
     mine: row.author_id === playerId,
@@ -80,7 +80,7 @@ export async function listCustomLevels(env: Env, playerId: string, sort: string,
     new: 'created_at DESC',
     mine: 'created_at DESC',
   }[sort];
-  if (!order) throw new HttpError(400, 'Orden no válido');
+  if (!order) throw new HttpError(400, 'invalidSort');
   // Los ocultos por denuncias solo los ve su autor (en "Mis niveles").
   const where = sort === 'mine' ? 'author_id = ?1' : `reports < ${REPORTS_TO_HIDE}`;
   const { results } = await env.DB.prepare(`SELECT * FROM (${CUSTOM_LEVEL_SELECT}) WHERE ${where} ORDER BY ${order} LIMIT ?2 OFFSET ?3`)
@@ -94,17 +94,17 @@ export async function listCustomLevels(env: Env, playerId: string, sort: string,
 
 export async function getCustomLevel(env: Env, playerId: string, id: string) {
   const row = await env.DB.prepare(`${CUSTOM_LEVEL_SELECT} WHERE l.id = ?2`).bind(playerId, id).first<CustomLevelRow>();
-  if (!row) throw new HttpError(404, 'Ese nivel ya no existe');
-  if (row.reports >= REPORTS_TO_HIDE && row.author_id !== playerId) throw new HttpError(404, 'Este nivel se ha ocultado por denuncias');
+  if (!row) throw new HttpError(404, 'levelNotFound');
+  if (row.reports >= REPORTS_TO_HIDE && row.author_id !== playerId) throw new HttpError(404, 'levelHidden');
   return customLevelResponse(row, playerId);
 }
 
 /** Denuncia un nivel ajeno. Cada jugador cuenta una vez por nivel. */
 export async function reportCustomLevel(env: Env, playerId: string, id: string, reason: unknown) {
-  if (typeof reason !== 'string' || !REPORT_REASONS.includes(reason)) throw new HttpError(400, 'Motivo no válido');
+  if (typeof reason !== 'string' || !REPORT_REASONS.includes(reason)) throw new HttpError(400, 'invalidReason');
   const level = await env.DB.prepare('SELECT author_id FROM custom_levels WHERE id = ?').bind(id).first<{ author_id: string }>();
-  if (!level) throw new HttpError(404, 'Ese nivel ya no existe');
-  if (level.author_id === playerId) throw new HttpError(403, 'No puedes denunciar tus propios niveles');
+  if (!level) throw new HttpError(404, 'levelNotFound');
+  if (level.author_id === playerId) throw new HttpError(403, 'cantReportOwn');
   await env.DB.prepare('INSERT OR IGNORE INTO custom_level_reports (level_id, player_id, reason, created_at) VALUES (?, ?, ?, ?)')
     .bind(id, playerId, reason, Date.now())
     .run();
@@ -114,23 +114,24 @@ export async function reportCustomLevel(env: Env, playerId: string, id: string, 
 /** Publica un nivel. Hay que mandar también cómo lo superó el autor (`log`). */
 export async function createCustomLevel(env: Env, playerId: string, input: { name?: unknown; rows?: unknown; log?: unknown }) {
   await requireName(env, playerId);
-  const name = cleanText(input.name, CUSTOM_LIMITS.minName, CUSTOM_LIMITS.maxName, 'El nombre del nivel');
+  const name = cleanText(input.name, CUSTOM_LIMITS.minName, CUSTOM_LIMITS.maxName, 'levelNameLength');
   let checked;
   try {
     checked = checkCustomLevel(input.rows);
   } catch (err) {
-    throw new HttpError(400, (err as Error).message);
+    // El motivo, traducible: board_size, board_unsolvable…
+    throw err instanceof BoardError ? new HttpError(400, `board_${err.code}`, err.params) : new HttpError(400, 'board_invalid');
   }
   const moves = movesToFinish(checked.board, input.log);
-  if (moves === null) throw new HttpError(400, 'Antes de publicarlo tienes que superarlo tú');
+  if (moves === null) throw new HttpError(400, 'beatItFirst');
 
   const count = await env.DB.prepare('SELECT COUNT(*) AS n FROM custom_levels WHERE author_id = ?').bind(playerId).first<{ n: number }>();
   if ((count?.n ?? 0) >= MAX_CUSTOM_LEVELS_PER_PLAYER) {
-    throw new HttpError(429, `Ya has publicado ${MAX_CUSTOM_LEVELS_PER_PLAYER} niveles, que es el máximo. Borra alguno para publicar otro.`);
+    throw new HttpError(429, 'maxLevels', { n: MAX_CUSTOM_LEVELS_PER_PLAYER });
   }
   const rows = encodeRows(input.rows as string[]);
   const duplicate = await env.DB.prepare('SELECT 1 FROM custom_levels WHERE rows = ?').bind(rows).first();
-  if (duplicate) throw new HttpError(409, 'Ya hay un nivel publicado exactamente igual');
+  if (duplicate) throw new HttpError(409, 'duplicateLevel');
 
   const id = crypto.randomUUID();
   const now = Date.now();
@@ -152,9 +153,9 @@ export async function createCustomLevel(env: Env, playerId: string, input: { nam
 /** Apunta que el jugador ha superado el nivel (se queda con su mejor marca). */
 export async function finishCustomLevel(env: Env, playerId: string, id: string, log: unknown) {
   const level = await env.DB.prepare('SELECT rows FROM custom_levels WHERE id = ?').bind(id).first<{ rows: string }>();
-  if (!level) throw new HttpError(404, 'Ese nivel ya no existe');
+  if (!level) throw new HttpError(404, 'levelNotFound');
   const moves = movesToFinish(parseBoard(decodeRows(level.rows)), log);
-  if (moves === null) throw new HttpError(400, 'El registro no completa el nivel');
+  if (moves === null) throw new HttpError(400, 'logIncomplete');
   await env.DB.prepare(
     `INSERT INTO custom_level_runs (level_id, player_id, best_moves, finished_at, best_at) VALUES (?1, ?2, ?3, ?4, ?4)
      ON CONFLICT (level_id, player_id) DO UPDATE SET
@@ -196,7 +197,7 @@ export async function customLevelRanking(env: Env, playerId: string, id: string)
   ]);
   const entry = (r: LevelRankingRow) => ({
     id: r.player_id,
-    name: r.name ?? 'Anónimo',
+    name: r.name,
     hat: isHatId(r.hat) ? r.hat : null,
     position: r.pos,
     moves: r.best_moves,
@@ -214,7 +215,7 @@ export async function customLevelRanking(env: Env, playerId: string, id: string)
 
 /** Valora un nivel de 1 a 5. Solo si lo has superado y no es tuyo. */
 export async function rateCustomLevel(env: Env, playerId: string, id: string, stars: unknown) {
-  if (typeof stars !== 'number' || !Number.isInteger(stars) || stars < 1 || stars > 5) throw new HttpError(400, 'La valoración va de 1 a 5');
+  if (typeof stars !== 'number' || !Number.isInteger(stars) || stars < 1 || stars > 5) throw new HttpError(400, 'ratingRange');
   const row = await env.DB.prepare(
     `SELECT l.author_id, r.best_moves FROM custom_levels l
      LEFT JOIN custom_level_runs r ON r.level_id = l.id AND r.player_id = ?1
@@ -222,9 +223,9 @@ export async function rateCustomLevel(env: Env, playerId: string, id: string, st
   )
     .bind(playerId, id)
     .first<{ author_id: string; best_moves: number | null }>();
-  if (!row) throw new HttpError(404, 'Ese nivel ya no existe');
-  if (row.author_id === playerId) throw new HttpError(403, 'No puedes valorar tus propios niveles');
-  if (row.best_moves === null) throw new HttpError(403, 'Supera el nivel para poder valorarlo');
+  if (!row) throw new HttpError(404, 'levelNotFound');
+  if (row.author_id === playerId) throw new HttpError(403, 'cantRateOwn');
+  if (row.best_moves === null) throw new HttpError(403, 'beatToRate');
   await env.DB.prepare('UPDATE custom_level_runs SET rating = ? WHERE level_id = ? AND player_id = ?').bind(stars, id, playerId).run();
   return getCustomLevel(env, playerId, id);
 }
@@ -232,6 +233,6 @@ export async function rateCustomLevel(env: Env, playerId: string, id: string, st
 export async function deleteCustomLevel(env: Env, playerId: string, id: string) {
   // D1 cuenta también las partidas que se borran en cascada: basta con que cambie algo.
   const result = await env.DB.prepare('DELETE FROM custom_levels WHERE id = ? AND author_id = ?').bind(id, playerId).run();
-  if (!result.meta.changes) throw new HttpError(404, 'No tienes ningún nivel con ese id');
+  if (!result.meta.changes) throw new HttpError(404, 'noSuchOwnLevel');
   return { ok: true };
 }

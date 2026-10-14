@@ -16,6 +16,7 @@ import { loadBoard, onKey, openPauseMenu, playLayout, wearHat } from '../../play
 import { finishCustomLevel, getLevelRanking, rateCustomLevel, type CustomLevel } from './api';
 import { openLevelRanking } from './level-ranking';
 import { loadEditorDraft, saveEditorDraft } from './storage';
+import { playerName, t, tn } from '../../i18n/i18n';
 
 /**
  * Partida de un nivel de la comunidad (`level`) o prueba de uno en el editor
@@ -40,21 +41,24 @@ export function customLevelScreen(source: { level: CustomLevel } | { testRows: s
 
   const ui = playLayout({
     stats: [
-      { key: 'moves', label: 'Movimientos' },
-      { key: 'optimal', label: 'Óptimo', tone: 'gold' },
+      { key: 'moves', label: t('stats.moves') },
+      { key: 'optimal', label: t('stats.optimal'), tone: 'gold' },
     ],
-    hint: { keys: 'Flechas o WASD para moverte · R reinicia', touch: 'Desliza el dedo en cualquier parte de la pantalla' },
+    hint: { keys: t('play.hintKeys'), touch: t('play.hintTouch') },
     onMenu: () =>
       openPauseMenu(mounted, {
-        restartLabel: 'Reiniciar',
+        restartLabel: t('play.reset'),
         onRestart: () => restart(),
         onExit: back,
       }),
     onRestart: () => restart(),
     onSwipe: (dir) => mounted?.scene.requestMove(dir),
-    restartLabel: 'Reiniciar',
+    restartLabel: t('play.reset'),
   });
-  ui.setTitle(testing ? 'Prueba tu nivel' : level!.name, testing ? 'Supéralo para poder publicarlo' : `de ${level!.mine ? 'ti' : level!.author}`);
+  ui.setTitle(
+    testing ? t('levels.play.testTitle') : level!.name,
+    testing ? t('levels.play.testSubtitle') : level!.mine ? t('levels.play.byYou') : t('levels.play.by', { name: playerName(level!.author) }),
+  );
 
   const hud = () => {
     ui.setStat('moves', moves, moves > optimal ? 'warn' : undefined);
@@ -104,8 +108,8 @@ export function customLevelScreen(source: { level: CustomLevel } | { testRows: s
     const stars = starsFor(moves, optimal);
     const header = [
       h('div', { class: 'stars' }, ...[0, 1, 2].map((i) => starSvg(i < stars))),
-      h('h2', null, '¡Nivel superado!'),
-      h('p', { class: 'lead' }, `${moves} movimientos · óptimo ${optimal}`),
+      h('h2', null, t('levels.play.beaten')),
+      h('p', { class: 'lead' }, `${tn('common.moves', moves)} · ${t('common.optimalN', { n: optimal })}`),
     ];
 
     if (testing) {
@@ -113,12 +117,12 @@ export function customLevelScreen(source: { level: CustomLevel } | { testRows: s
       if (draft) saveEditorDraft({ ...draft, proofLog: log, proofRows: encodeRows(rows) });
       result = openModal([
         ...header,
-        h('p', { class: 'muted' }, 'Ya puedes publicarlo. Si lo cambias, tendrás que superarlo otra vez.'),
+        h('p', { class: 'muted' }, t('levels.play.canPublish')),
         h(
           'div',
           { class: 'row' },
-          h('button', { class: 'btn ghost', onclick: () => restart() }, 'Repetir'),
-          h('button', { class: 'btn', onclick: () => go({ name: 'editor' }) }, 'Volver al editor'),
+          h('button', { class: 'btn ghost', onclick: () => restart() }, t('levels.play.repeat')),
+          h('button', { class: 'btn', onclick: () => go({ name: 'editor' }) }, t('levels.play.backToEditor')),
         ),
       ]);
       return;
@@ -126,23 +130,23 @@ export function customLevelScreen(source: { level: CustomLevel } | { testRows: s
 
     // El voto va en su propio recuadro: que no se confunda con las estrellas del resultado.
     const rating = h('div', { class: 'rate' });
-    const status = h('p', { class: 'rate-status' }, 'Guardando tu marca…');
-    const boxTitle = h('p', { class: 'eyebrow' }, 'Valora este nivel');
+    const status = h('p', { class: 'rate-status' }, t('levels.play.savingMark'));
+    const boxTitle = h('p', { class: 'eyebrow' }, t('levels.rate.title'));
     const rateBox = h('section', { class: 'rate-box' }, boxTitle, status, rating);
     const showRating = (lvl: CustomLevel) => {
       if (lvl.mine) {
-        boxTitle.textContent = 'Tu nivel';
-        status.textContent = 'Lo valoran los demás jugadores al superarlo.';
+        boxTitle.textContent = t('levels.rate.yours');
+        status.textContent = t('levels.rate.othersRate');
         return rating.replaceChildren();
       }
-      status.textContent = lvl.myRating ? '¡Gracias! Puedes cambiar tu voto.' : '¿Qué te ha parecido?';
+      status.textContent = lvl.myRating ? t('levels.rate.thanks') : t('levels.rate.question');
       rating.replaceChildren(
         ...[1, 2, 3, 4, 5].map((n) =>
           h(
             'button',
             {
               class: `rate-star ${lvl.myRating !== null && n <= lvl.myRating ? 'on' : ''}`,
-              'aria-label': `${n} ${n === 1 ? 'estrella' : 'estrellas'}`,
+              'aria-label': tn('levels.rate.stars', n),
               onclick: async () => {
                 try {
                   level = await rateCustomLevel(lvl.id, n);
@@ -167,14 +171,14 @@ export function customLevelScreen(source: { level: CustomLevel } | { testRows: s
       h(
         'div',
         { class: 'row' },
-        h('button', { class: 'btn ghost', onclick: () => restart() }, 'Repetir'),
-        h('button', { class: 'btn', onclick: back }, 'Más niveles'),
+        h('button', { class: 'btn ghost', onclick: () => restart() }, t('levels.play.repeat')),
+        h('button', { class: 'btn', onclick: back }, t('levels.play.more')),
       ),
       h(
         'div',
         { class: 'row' },
-        h('button', { class: 'link-btn', onclick: () => void openLevelRanking(level!.id, level!.name) }, '🏆 Ver ranking'),
-        h('button', { class: 'link-btn', onclick: () => shareLevel(level!) }, 'Compartir nivel'),
+        h('button', { class: 'link-btn', onclick: () => void openLevelRanking(level!.id, level!.name) }, `🏆 ${t('levels.play.seeRanking')}`),
+        h('button', { class: 'link-btn', onclick: () => shareLevel(level!) }, t('levels.play.share')),
       ),
     ]);
 
@@ -187,10 +191,10 @@ export function customLevelScreen(source: { level: CustomLevel } | { testRows: s
         const ranking = await getLevelRanking(saved.id).catch(() => null);
         if (!ranking?.me || disposed) return;
         const { me, total } = ranking;
-        place.textContent = `🏆 Puesto ${me.position} de ${total}${me.moves < moves ? ` · tu mejor marca: ${me.moves}` : ''}`;
+        place.textContent = `🏆 ${t('levels.play.place', { position: me.position, total })}${me.moves < moves ? ` · ${t('levels.play.yourBestMark', { n: me.moves })}` : ''}`;
         place.hidden = false;
       })
-      .catch((err) => (status.textContent = `No se pudo guardar: ${(err as Error).message}`));
+      .catch((err) => (status.textContent = t('common.saveFailed', { error: (err as Error).message })));
   }
 
   let removeKeys = () => {};
@@ -200,7 +204,7 @@ export function customLevelScreen(source: { level: CustomLevel } | { testRows: s
       hud();
       removeKeys = onKey((e) => {
         if (e.key === 'r' || e.key === 'R') restart();
-        if (e.key === 'Escape') ui.el.querySelector<HTMLButtonElement>('[aria-label=Pausa]')?.click();
+        if (e.key === 'Escape') ui.el.querySelector<HTMLButtonElement>('.pause-btn')?.click();
       });
       const m = await loadBoard(ui.boardWrap, board, hooks);
       if (disposed) return m.destroy();

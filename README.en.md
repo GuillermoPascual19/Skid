@@ -21,6 +21,8 @@ friends, and levels made by the players.
   ranking, sharing and reporting.
 - A "How to play" guide, dark mode, synthesized music and sound effects, and Google sign-in to play
   on several devices.
+- In six languages: Spanish, English, German, French, Portuguese and Italian. It picks the browser's
+  language and can be changed from the home screen.
 
 ## Tech stack
 
@@ -83,6 +85,7 @@ frontend/                  the game in the browser (Vite)
       guide/               "How to play" guide and what's-new notice
     play/                  the game screen shared by every mode (pause, gestures, keys) and the
                            "best attempt" game (weekly challenge and duels)
+    i18n/                  t() for texts and one dictionary per language (locales/)
     game/                  the Phaser board: scene, tile drawing, effects, palette
     audio/                 synthesized music and effects, and their controls
     shared/                shared pieces: dom, router, celebrations, connection, storage and theme
@@ -92,6 +95,7 @@ backend/                   the Cloudflare Worker: serves the game (dist/) and th
     http.ts                errors, responses and input validation
     session.ts             sessions, Google sign-in, signing out and deleting the account
     google.ts              Google token verification
+    i18n.ts                each request's language for error messages
     routes/                one file per feature: daily, weekly, duels, leagues, levels,
                            players, stats, achievements
   migrations/              D1 database schema (0001 to 0012)
@@ -104,6 +108,7 @@ common/                    used by both; no browser APIs and no imports from out
     achievements/          achievements
     community/             validation of player-made levels
     players/               player name rules
+  i18n/                    languages and the server's error messages in each one
   art/                     SVG drawings (penguin, hats, elements)
 tests/                     backend/ and common/, mirroring the code tree
 .github/workflows/         automatic deployment
@@ -177,6 +182,13 @@ anything from outside) and builds the game to `dist/`.
 - Cheating: the server replays every game and rejects impossible ones or ones sent without playing,
   but it can't know whether someone worked out the solution on their own (the whole game runs in the
   browser).
+
+## Languages
+
+Spanish (`frontend/src/i18n/locales/es.ts`) is the reference: the other dictionaries must have the
+same keys, and `pnpm run build` fails if one is missing. Shared logic carries no text: it returns codes
+(`BoardError`, `nameProblem`…) and each side translates them. The server answers errors in the
+language of the `X-Skid-Lang` header (or `Accept-Language`).
 
 ## Deploying to Cloudflare
 

@@ -7,7 +7,7 @@ import { playerStats } from './stats';
 
 export async function requireName(env: Env, playerId: string): Promise<void> {
   const row = await env.DB.prepare('SELECT name FROM players WHERE id = ?').bind(playerId).first<{ name: string | null }>();
-  if (!row?.name) throw new HttpError(400, 'Elige un nombre primero');
+  if (!row?.name) throw new HttpError(400, 'nameRequired');
 }
 
 /**
@@ -25,12 +25,12 @@ export async function playerProfile(env: Env, viewerId: string, targetId: string
   )
     .bind(viewerId, targetId)
     .all<{ name: string }>();
-  if (!isMe && shared.length === 0) throw new HttpError(403, 'Solo puedes ver el perfil de jugadores de tus ligas');
+  if (!isMe && shared.length === 0) throw new HttpError(403, 'onlyLeagueProfiles');
 
   const player = await env.DB.prepare('SELECT name, hat FROM players WHERE id = ?')
     .bind(targetId)
     .first<{ name: string | null; hat: string | null }>();
-  if (!player) throw new HttpError(404, 'No existe ese jugador');
+  if (!player) throw new HttpError(404, 'playerNotFound');
 
   const [stats, achievements, headToHead] = await Promise.all([
     playerStats(env, targetId),

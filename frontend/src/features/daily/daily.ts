@@ -5,13 +5,14 @@
 import { dailyLevel, dayKey, decodeRun, replayRun } from '../../../../common/logic/daily/daily';
 import { golfLabel } from '../../../../common/logic/daily/score';
 import * as online from '../../shared/api';
-import { formatDay, formatTime, h, openModal, plural, share, toast } from '../../shared/dom';
+import { formatDay, formatTime, h, openModal, share, toast } from '../../shared/dom';
 import { celebrate } from '../../shared/celebrate';
 import { ensureName } from '../profile/profile';
 import { openGuide } from '../guide/guide';
 import { go } from '../../shared/router';
 import { type ServerRun, getDaily, startDaily } from './api';
 import { type DailyRecord, type DailyResult, loadDaily, saveDaily } from './storage';
+import { t, tn } from '../../i18n/i18n';
 
 export function today(): string {
   return dayKey(new Date());
@@ -70,25 +71,25 @@ export async function openDaily(): Promise<void> {
 }
 
 function showIntro(day: string): void {
-  const start = h('button', { class: 'btn big block' }, 'Empezar');
+  const start = h('button', { class: 'btn big block' }, t('daily.intro.start'));
   const error = h('p', { class: 'error', hidden: true });
   const modal = openModal(
     [
-      h('p', { class: 'eyebrow' }, 'Reto diario'),
+      h('p', { class: 'eyebrow' }, t('home.daily.eyebrow')),
       h('h2', null, formatDay(day)),
       h(
         'ul',
         { class: 'rules' },
-        h('li', null, h('b', null, '⛳'), h('span', null, 'Cada movimiento es un golpe. Tu resultado es lo que te pasas del óptimo: «Par» si lo clavas, «+2» con dos de más.')),
-        h('li', null, h('b', null, '↺'), h('span', null, 'Volver a empezar es gratis y cuenta tu mejor intento. Puedes seguir mejorándolo durante todo el día.')),
-        h('li', null, h('b', null, '💡'), h('span', null, 'Si te atascas, pide una pista: te dice el siguiente movimiento y suma un golpe.')),
-        h('li', null, h('b', null, '⏱'), h('span', null, 'El reloj empieza al pulsar Empezar y no se para. A igualdad de golpes, gana quien tarda menos.')),
-        h('li', null, h('b', null, '🎯'), h('span', null, 'El mismo tablero para todos tus amigos.')),
+        h('li', null, h('b', null, '⛳'), h('span', null, t('daily.intro.golf'))),
+        h('li', null, h('b', null, '↺'), h('span', null, t('daily.intro.restart'))),
+        h('li', null, h('b', null, '💡'), h('span', null, t('daily.intro.hint'))),
+        h('li', null, h('b', null, '⏱'), h('span', null, t('daily.intro.clock'))),
+        h('li', null, h('b', null, '🎯'), h('span', null, t('daily.intro.same'))),
       ),
       error,
       start,
-      h('button', { class: 'link-btn', onclick: () => openGuide('daily') }, 'Ver todas las reglas'),
-      h('button', { class: 'link-btn', onclick: () => modal.close() }, 'Ahora no'),
+      h('button', { class: 'link-btn', onclick: () => openGuide('daily') }, t('daily.intro.allRules')),
+      h('button', { class: 'link-btn', onclick: () => modal.close() }, t('common.notNow')),
     ],
     { dismissable: true },
   );
@@ -114,12 +115,12 @@ export function shareText(day: string, r: DailyResult): string {
   const link = `${location.origin}${location.pathname}`;
   const golf = r.overPar ?? null;
   return [
-    `🐧 Skid · reto del ${formatDay(day)}`,
-    golf !== null ? `⛳ ${golfLabel(golf)}${golf === 0 ? ' 🎯' : ''}` : `⭐ ${r.score} puntos`,
+    `🐧 ${t('daily.share.title', { day: formatDay(day) })}`,
+    golf !== null ? `⛳ ${golfLabel(golf)}${golf === 0 ? ' 🎯' : ''}` : `⭐ ${t('daily.share.points', { n: r.score })}`,
     golf !== null
-      ? `🧊 ${r.moves} mov. (óptimo ${r.optimal})${r.hints ? ` · 💡 ${r.hints}` : ''} · ⏱ ${formatTime(r.timeMs)}`
-      : `🧊 ${r.moves} mov. (óptimo ${r.optimal}) · ↺ ${r.retries}${r.hints ? ` · 💡 ${r.hints}` : ''} · ⏱ ${formatTime(r.timeMs)}`,
-    r.streak && r.streak > 1 ? `🔥 Racha de ${r.streak} días` : null,
+      ? `🧊 ${t('daily.share.moves', { n: r.moves, optimal: r.optimal })}${r.hints ? ` · 💡 ${r.hints}` : ''} · ⏱ ${formatTime(r.timeMs)}`
+      : `🧊 ${t('daily.share.moves', { n: r.moves, optimal: r.optimal })} · ↺ ${r.retries}${r.hints ? ` · 💡 ${r.hints}` : ''} · ⏱ ${formatTime(r.timeMs)}`,
+    r.streak && r.streak > 1 ? `🔥 ${t('daily.share.streak', { days: tn('common.days', r.streak) })}` : null,
     link,
   ]
     .filter((line) => line !== null)
@@ -138,13 +139,10 @@ export async function celebrateStreak(r: DailyResult): Promise<void> {
   if (!r.streak || !isStreakMilestone(r.streak)) return;
   await celebrate({
     icon: '🔥',
-    eyebrow: 'Racha del reto diario',
-    title: `¡${r.streak} días seguidos!`,
-    text:
-      r.streak >= 30
-        ? 'Eres constante como un glaciar. Pocos pingüinos llegan tan lejos.'
-        : 'Vuelve mañana para que siga creciendo. Cada 7 días ganas un protector de racha 🛡️.',
-    button: '¡Seguimos!',
+    eyebrow: t('daily.streak.eyebrow'),
+    title: t('daily.streak.title', { n: r.streak }),
+    text: r.streak >= 30 ? t('daily.streak.long') : t('daily.streak.short'),
+    button: t('daily.streak.button'),
   });
 }
 
@@ -174,12 +172,12 @@ export function openSolution(day: string, r: DailyResult): void {
   if (!canImprove(day, r)) return go({ name: 'solution', day });
   const modal = openModal(
     [
-      h('h2', null, '¿Ver la solución?'),
-      h('p', { class: 'lead' }, `Si la ves, te quedas con tu ${golfLabel(r.overPar!)} y ya no podrás mejorarlo hoy.`),
+      h('h2', null, t('daily.solution.confirmTitle')),
+      h('p', { class: 'lead' }, t('daily.solution.confirmText', { result: golfLabel(r.overPar!) })),
       h(
         'div',
         { class: 'row' },
-        h('button', { class: 'btn ghost', onclick: () => modal.close() }, 'Cancelar'),
+        h('button', { class: 'btn ghost', onclick: () => modal.close() }, t('common.cancel')),
         h(
           'button',
           {
@@ -190,7 +188,7 @@ export function openSolution(day: string, r: DailyResult): void {
               go({ name: 'solution', day });
             },
           },
-          'Ver solución',
+          t('daily.solution.see'),
         ),
       ),
     ],
@@ -199,10 +197,10 @@ export function openSolution(day: string, r: DailyResult): void {
 }
 
 function golfHeadline(over: number): string {
-  if (over === 0) return '¡Al par!';
-  if (over === 1) return '¡Casi perfecto!';
-  if (over <= 3) return '¡Muy bien!';
-  return '¡Completado!';
+  if (over === 0) return t('golf.headline.par');
+  if (over === 1) return t('daily.result.almost');
+  if (over <= 3) return t('daily.result.veryGood');
+  return t('daily.result.done');
 }
 
 export function showDailyResult(day: string, r: DailyResult, opts: { error?: string; retry?: () => void; note?: string } = {}): void {
@@ -211,40 +209,40 @@ export function showDailyResult(day: string, r: DailyResult, opts: { error?: str
   const strokes = r.optimal + over;
   const modal = openModal(
     [
-      h('p', { class: 'eyebrow' }, `Reto · ${formatDay(day)}`),
+      h('p', { class: 'eyebrow' }, t('ghost.dailySubtitle', { day: formatDay(day) })),
       h('h2', null, golfHeadline(over)),
       h('div', { class: `score-big golf${over === 0 ? ' par' : ''}` }, golfLabel(over)),
       opts.note ? h('p', { class: 'golf-note' }, opts.note) : null,
-      r.streak ? h('p', { class: 'streak-line' }, `🔥 Racha de ${plural(r.streak, 'día', 'días')}`) : null,
-      r.freezeEarned ? h('p', { class: 'freeze-line' }, '🛡️ ¡Protector de racha ganado! Si un día no juegas, tu racha no se rompe.') : null,
+      r.streak ? h('p', { class: 'streak-line' }, `🔥 ${t('daily.share.streak', { days: tn('common.days', r.streak) })}`) : null,
+      r.freezeEarned ? h('p', { class: 'freeze-line' }, `🛡️ ${t('daily.result.freezeEarned')}`) : null,
       h(
         'div',
         { class: 'breakdown' },
-        h('div', null, h('span', null, 'Óptimo'), h('span', null, plural(r.optimal, 'golpe', 'golpes'))),
+        h('div', null, h('span', null, t('stats.optimal')), h('span', null, tn('common.strokes', r.optimal))),
         h(
           'div',
           null,
-          h('span', null, r.hints ? `Tu mejor intento (con ${plural(r.hints, 'pista', 'pistas')})` : 'Tu mejor intento'),
-          h('span', null, plural(strokes, 'golpe', 'golpes')),
+          h('span', null, r.hints ? t('daily.result.bestWithHints', { hints: tn('common.hints', r.hints) }) : t('daily.result.best')),
+          h('span', null, tn('common.strokes', strokes)),
         ),
-        h('div', null, h('span', null, 'Tiempo'), h('span', null, formatTime(r.timeMs))),
-        h('div', { class: 'total' }, h('span', null, 'Puntos para la liga'), h('span', null, String(r.score))),
+        h('div', null, h('span', null, t('stats.time')), h('span', null, formatTime(r.timeMs))),
+        h('div', { class: 'total' }, h('span', null, t('daily.result.leaguePoints')), h('span', null, String(r.score))),
       ),
       opts.error ? h('p', { class: 'error' }, opts.error) : null,
-      opts.retry ? h('button', { class: 'btn secondary block', onclick: () => (modal.close(), opts.retry!()) }, 'Reintentar envío') : null,
+      opts.retry ? h('button', { class: 'btn secondary block', onclick: () => (modal.close(), opts.retry!()) }, t('daily.result.retrySend')) : null,
       h(
         'div',
         { class: 'row' },
-        h('button', { class: 'btn', onclick: () => share(shareText(day, r)) }, 'Compartir'),
-        h('button', { class: 'btn secondary', onclick: () => go({ name: 'ranking' }) }, 'Ranking'),
+        h('button', { class: 'btn', onclick: () => share(shareText(day, r)) }, t('common.share')),
+        h('button', { class: 'btn secondary', onclick: () => go({ name: 'ranking' }) }, t('nav.ranking')),
       ),
       h(
         'div',
         { class: 'row' },
-        canImprove(day, r) ? h('button', { class: 'btn secondary', onclick: () => improveDaily(day) }, '↺ Mejorar') : null,
-        h('button', { class: 'btn ghost', onclick: () => openSolution(day, r) }, '👀 Ver solución'),
+        canImprove(day, r) ? h('button', { class: 'btn secondary', onclick: () => improveDaily(day) }, `↺ ${t('golf.improve')}`) : null,
+        h('button', { class: 'btn ghost', onclick: () => openSolution(day, r) }, `👀 ${t('daily.solution.see')}`),
       ),
-      h('button', { class: 'link-btn', onclick: () => go({ name: 'home' }) }, 'Volver al inicio'),
+      h('button', { class: 'link-btn', onclick: () => go({ name: 'home' }) }, t('common.backHome')),
     ],
     { dismissable: true },
   );
@@ -254,20 +252,20 @@ export function showDailyResult(day: string, r: DailyResult, opts: { error?: str
 function showPointsResult(day: string, r: DailyResult, opts: { error?: string; retry?: () => void }): void {
   const modal = openModal(
     [
-      h('p', { class: 'eyebrow' }, `Reto · ${formatDay(day)}`),
-      h('h2', null, r.score >= 900 ? '¡Brutal!' : r.score >= 700 ? '¡Muy bien!' : '¡Completado!'),
-      h('div', { class: 'score-big' }, String(r.score), h('small', null, 'pts')),
-      r.streak ? h('p', { class: 'streak-line' }, `🔥 Racha de ${plural(r.streak, 'día', 'días')}`) : null,
+      h('p', { class: 'eyebrow' }, t('ghost.dailySubtitle', { day: formatDay(day) })),
+      h('h2', null, r.score >= 900 ? t('daily.result.brutal') : r.score >= 700 ? t('daily.result.veryGood') : t('daily.result.done')),
+      h('div', { class: 'score-big' }, String(r.score), h('small', null, t('common.pts'))),
+      r.streak ? h('p', { class: 'streak-line' }, `🔥 ${t('daily.share.streak', { days: tn('common.days', r.streak) })}`) : null,
       opts.error ? h('p', { class: 'error' }, opts.error) : null,
-      opts.retry ? h('button', { class: 'btn secondary block', onclick: () => (modal.close(), opts.retry!()) }, 'Reintentar envío') : null,
+      opts.retry ? h('button', { class: 'btn secondary block', onclick: () => (modal.close(), opts.retry!()) }, t('daily.result.retrySend')) : null,
       h(
         'div',
         { class: 'row' },
-        h('button', { class: 'btn', onclick: () => share(shareText(day, r)) }, 'Compartir'),
-        h('button', { class: 'btn secondary', onclick: () => go({ name: 'ranking' }) }, 'Ranking'),
+        h('button', { class: 'btn', onclick: () => share(shareText(day, r)) }, t('common.share')),
+        h('button', { class: 'btn secondary', onclick: () => go({ name: 'ranking' }) }, t('nav.ranking')),
       ),
-      h('button', { class: 'btn ghost block', onclick: () => go({ name: 'solution', day }) }, '👀 Ver solución'),
-      h('button', { class: 'link-btn', onclick: () => go({ name: 'home' }) }, 'Volver al inicio'),
+      h('button', { class: 'btn ghost block', onclick: () => go({ name: 'solution', day }) }, `👀 ${t('daily.solution.see')}`),
+      h('button', { class: 'link-btn', onclick: () => go({ name: 'home' }) }, t('common.backHome')),
     ],
     { dismissable: true },
   );

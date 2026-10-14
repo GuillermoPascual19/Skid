@@ -4,9 +4,10 @@ import * as online from '../../shared/api';
 import { h, openModal, toast } from '../../shared/dom';
 import { go } from '../../shared/router';
 import { resetProfile } from './profile';
+import { t } from '../../i18n/i18n';
 
 /** Lo que se queda en el navegador al borrar la cuenta: solo ajustes del aparato, nada del jugador. */
-const KEEP_KEYS = ['skid.theme.v1', 'skid.audio.v1', 'skid.guide.v1'];
+const KEEP_KEYS = ['skid.theme.v1', 'skid.audio.v1', 'skid.guide.v1', 'skid.lang.v1'];
 
 /** Borra del navegador todo lo del jugador (progreso, retos, borradores…). */
 function forgetLocalData(): void {
@@ -28,7 +29,7 @@ function confirmDanger(opts: { title: string; text: string; button: string; acti
       h('h2', null, opts.title),
       h('p', { class: 'lead' }, opts.text),
       error,
-      h('div', { class: 'row' }, h('button', { class: 'btn ghost', onclick: () => modal.close() }, 'Cancelar'), accept),
+      h('div', { class: 'row' }, h('button', { class: 'btn ghost', onclick: () => modal.close() }, t('common.cancel')), accept),
     ],
     { dismissable: true },
   );
@@ -48,14 +49,14 @@ function confirmDanger(opts: { title: string; text: string; button: string; acti
 /** Cierra la sesión en todos los dispositivos (solo con la cuenta vinculada a Google). */
 export function confirmLogoutEverywhere(): void {
   confirmDanger({
-    title: '¿Cerrar sesión en todas partes?',
-    text: 'Se cerrará en este y en todos tus dispositivos. Para volver, entra otra vez con Google. Úsalo si has perdido un móvil o has jugado en un ordenador ajeno.',
-    button: 'Cerrar en todos',
+    title: t('account.logoutAll.title'),
+    text: t('account.logoutAll.text'),
+    button: t('account.logoutAll.button'),
     action: async () => {
       await online.logoutEverywhere();
       resetProfile();
       forgetLocalData();
-      toast('Sesión cerrada en todos los dispositivos');
+      toast(t('account.logoutAll.done'));
       go({ name: 'home' });
     },
   });
@@ -64,9 +65,9 @@ export function confirmLogoutEverywhere(): void {
 /** Borra la cuenta y todos sus datos, aquí y en el servidor. */
 export function confirmDeleteAccount(): void {
   confirmDanger({
-    title: '¿Borrar tu cuenta?',
-    text: 'Se borrarán para siempre tu nombre, tu correo, tus partidas, rachas y logros, los niveles que has publicado y tus valoraciones. Las ligas que creaste pasarán a otro miembro. No se puede deshacer.',
-    button: 'Borrar mi cuenta',
+    title: t('account.delete.title'),
+    text: t('account.delete.text'),
+    button: t('account.delete.button'),
     action: async () => {
       try {
         window.google?.accounts.id.disableAutoSelect();
@@ -76,7 +77,7 @@ export function confirmDeleteAccount(): void {
       await online.deleteAccount();
       resetProfile();
       forgetLocalData();
-      toast('Tu cuenta se ha borrado');
+      toast(t('account.delete.done'));
       go({ name: 'home' });
     },
   });

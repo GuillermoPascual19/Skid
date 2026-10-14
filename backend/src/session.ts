@@ -32,7 +32,7 @@ export async function createSession(req: Request, env: Env): Promise<{ token: st
 
   // Ráfagas: el limitador de Cloudflare, en memoria (no gasta base de datos).
   const { success } = await env.SESSION_RATE_LIMITER.limit({ key: ipHash });
-  if (!success) throw new HttpError(429, 'Demasiadas cuentas nuevas seguidas. Espera un minuto.');
+  if (!success) throw new HttpError(429, 'tooManyNewAccounts');
 
   // Total diario, en D1. Los días anteriores se borran sobre la marcha.
   const [, counter] = await env.DB.batch([
@@ -45,7 +45,7 @@ export async function createSession(req: Request, env: Env): Promise<{ token: st
   ]);
   const count = (counter.results[0] as { count: number } | undefined)?.count ?? 0;
   if (count > MAX_SESSIONS_PER_IP_PER_DAY) {
-    throw new HttpError(429, 'Se han creado demasiadas cuentas desde esta conexión hoy. Prueba mañana.');
+    throw new HttpError(429, 'tooManyAccountsToday');
   }
 
   const token = randomToken();
@@ -60,17 +60,17 @@ export async function createSession(req: Request, env: Env): Promise<{ token: st
 
 export async function authenticate(req: Request, env: Env): Promise<Session> {
   const token = req.headers.get('Authorization')?.match(/^Bearer (.+)$/)?.[1];
-  if (!token) throw new HttpError(401, 'Sin sesión');
+  if (!token) throw new HttpError(401, 'noSession');
   const tokenHash = await sha256(token);
   const row = await env.DB.prepare('SELECT player_id, last_used_at FROM sessions WHERE token_hash = ?')
     .bind(tokenHash)
     .first<{ player_id: string; last_used_at: number | null }>();
-  if (!row) throw new HttpError(401, 'Sesión no válida');
+  if (!row) throw new HttpError(401, 'invalidSession');
   const now = Date.now();
   const lastUsed = row.last_used_at ?? 0;
   if (now - lastUsed > SESSION_MAX_IDLE_MS) {
     await env.DB.prepare('DELETE FROM sessions WHERE token_hash = ?').bind(tokenHash).run();
-    throw new HttpError(401, 'Sesión caducada');
+    throw new HttpError(401, 'sessionExpired');
   }
   if (now - lastUsed > SESSION_TOUCH_MS) {
     await env.DB.prepare('UPDATE sessions SET last_used_at = ? WHERE token_hash = ?').bind(now, tokenHash).run();
@@ -107,8 +107,8 @@ interface GoogleLoginResult {
  *   crea un jugador nuevo para esta.
  */
 export async function googleLogin(env: Env, session: Session, credential: unknown): Promise<GoogleLoginResult> {
-  if (!env.GOOGLE_CLIENT_ID) throw new HttpError(503, 'El login con Google no está configurado');
-  if (typeof credential !== 'string' || credential.length > 4096) throw new HttpError(400, 'Credencial no válida');
+  if (!env.GOOGLE_CLIENT_ID) throw new HttpError(503, 'googleNotConfigured');
+  if (typeof credential !== 'string' || credential.length > 4096) throw new HttpError(400, 'invalidCredential');
 
   googleKeys ??= googleKeyProvider(certsUrl(env));
   let claims;
@@ -116,7 +116,7 @@ export async function googleLogin(env: Env, session: Session, credential: unknow
     claims = await verifyGoogleIdToken(credential, env.GOOGLE_CLIENT_ID, googleKeys);
   } catch (err) {
     // 400 y no 401: un 401 haría que el cliente tirase su sesión.
-    if (err instanceof InvalidTokenError) throw new HttpError(400, `No se pudo verificar la cuenta de Google: ${err.message}`);
+    if (err instanceof InvalidTokenError) throw new HttpError(400, 'googleUnverified');
     throw err;
   }
   const email = claims.email_verified === false ? null : (claims.email ?? null);
@@ -179,7 +179,7 @@ async function switchDevice(
  */
 export async function logoutEverywhere(env: Env, session: Session): Promise<{ ok: true }> {
   const player = await env.DB.prepare('SELECT google_sub FROM players WHERE id = ?').bind(session.playerId).first<{ google_sub: string | null }>();
-  if (!player?.google_sub) throw new HttpError(400, 'Vincula antes tu cuenta de Google: si no, no podrías volver a entrar');
+  if (!player?.google_sub) throw new HttpError(400, 'linkGoogleFirst');
   await env.DB.prepare('DELETE FROM sessions WHERE player_id = ?').bind(session.playerId).run();
   return { ok: true };
 }

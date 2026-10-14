@@ -1,15 +1,16 @@
 // Perfil de un amigo (se abre tocándolo en el ranking): su pingüino, racha,
 // estadísticas, gorros y el cara a cara contigo.
 
-import { HAT_NAMES, penguinSvg } from '../../../../common/art/hats';
+import { penguinSvg } from '../../../../common/art/hats';
 import { ACHIEVEMENTS } from '../../../../common/logic/achievements/achievements';
-import { h, plural, svg } from '../../shared/dom';
+import { h, svg } from '../../shared/dom';
 import { go, type Screen } from '../../shared/router';
 import { scoreChart, tile } from '../daily/stats-screen';
 import { type PlayerProfile, getPlayer } from './api';
+import { playerName, t, tn } from '../../i18n/i18n';
 
 export function playerScreen(id: string): Screen {
-  const title = h('h1', null, 'Perfil');
+  const title = h('h1', null, t('profile.title'));
   const subtitle = h('p');
   const body = h('div', { class: 'stats-body' }, h('p', { class: 'empty' }, 'Cargando…'));
   const el = h(
@@ -18,7 +19,7 @@ export function playerScreen(id: string): Screen {
     h(
       'header',
       { class: 'topbar' },
-      h('button', { class: 'icon-btn', 'aria-label': 'Volver', onclick: () => go({ name: 'ranking' }) }, '←'),
+      h('button', { class: 'icon-btn', 'aria-label': t('common.back'), onclick: () => go({ name: 'ranking' }) }, '←'),
       h('div', { class: 'title' }, title, subtitle),
     ),
     body,
@@ -30,12 +31,12 @@ export function playerScreen(id: string): Screen {
     try {
       const p = await getPlayer(id);
       if (disposed) return;
-      title.textContent = p.isMe ? 'Tu perfil' : (p.name ?? 'Jugador');
-      subtitle.textContent = p.sharedLeagues.length ? p.sharedLeagues.join(' · ') : 'Reto diario';
+      title.textContent = p.isMe ? t('profile.yours') : playerName(p.name);
+      subtitle.textContent = p.sharedLeagues.length ? p.sharedLeagues.join(' · ') : t('home.daily.eyebrow');
       render(p);
     } catch (err) {
       body.replaceChildren(
-        h('section', { class: 'card empty' }, h('p', { class: 'error' }, (err as Error).message), h('button', { class: 'btn', onclick: load }, 'Reintentar')),
+        h('section', { class: 'card empty' }, h('p', { class: 'error' }, (err as Error).message), h('button', { class: 'btn', onclick: load }, t('common.retry'))),
       );
     }
   }
@@ -51,38 +52,45 @@ export function playerScreen(id: string): Screen {
         h(
           'div',
           null,
-          h('h2', null, p.name ?? 'Sin nombre'),
-          h('p', { class: 'muted' }, p.hat ? `Lleva: ${HAT_NAMES[p.hat]}` : 'Sin gorro'),
+          h('h2', null, playerName(p.name)),
+          h('p', { class: 'muted' }, p.hat ? t('profile.wears', { hat: t(`hats.${p.hat}`) }) : t('achievementsScreen.noHat')),
           h(
             'div',
             { class: 'chips' },
-            h('span', { class: 'chip' }, `🔥 ${plural(s.currentStreak, 'día', 'días')}`),
-            h('span', { class: 'chip' }, `Mejor racha: ${s.bestStreak}`),
+            h('span', { class: 'chip' }, `🔥 ${tn('common.days', s.currentStreak)}`),
+            h('span', { class: 'chip' }, t('profile.bestStreak', { n: s.bestStreak })),
           ),
         ),
       ),
-      ...(p.headToHead ? [headToHead(p.headToHead, p.name ?? 'Tu amigo')] : []),
+      ...(p.headToHead ? [headToHead(p.headToHead, playerName(p.name))] : []),
       h(
         'div',
         { class: 'tiles' },
-        tile('Retos jugados', s.played),
-        tile('Mejor puntuación', s.bestScore ?? '—', s.perfect > 0 ? `⭐ ${plural(s.perfect, 'perfecto', 'perfectos')}` : null),
-        tile('Media', s.averageScore ?? '—'),
-        tile('Días ganados', s.wins),
+        tile(t('stats.screen.played'), s.played),
+        tile(t('stats.screen.bestScore'), s.bestScore ?? '—', s.perfect > 0 ? `⭐ ${tn('stats.screen.perfect', s.perfect)}` : null),
+        tile(t('stats.screen.average'), s.averageScore ?? '—'),
+        tile(t('stats.screen.daysWon'), s.wins),
       ),
       h(
         'section',
         { class: 'card' },
-        h('h2', { class: 'section-title' }, `Gorros · ${hats.length} de ${ACHIEVEMENTS.length}`),
+        h('h2', { class: 'section-title' }, t('profile.hats', { n: hats.length, total: ACHIEVEMENTS.length })),
         hats.length === 0
-          ? h('p', { class: 'muted' }, 'Todavía no ha conseguido ninguno.')
+          ? h('p', { class: 'muted' }, t('profile.noHats'))
           : h(
               'div',
               { class: 'hat-shelf' },
-              ...hats.map((a) => h('div', { class: 'hat-item', title: `${a.name}: ${a.description}` }, svg(penguinSvg(a.hat)), h('small', null, HAT_NAMES[a.hat]))),
+              ...hats.map((a) =>
+                h(
+                  'div',
+                  { class: 'hat-item', title: `${t(`achievements.${a.id}.name`)}: ${t(`achievements.${a.id}.description`)}` },
+                  svg(penguinSvg(a.hat)),
+                  h('small', null, t(`hats.${a.hat}`)),
+                ),
+              ),
             ),
       ),
-      h('section', { class: 'card chart-card' }, h('h2', null, 'Últimos 30 días'), scoreChart(s.history)),
+      h('section', { class: 'card chart-card' }, h('h2', null, t('stats.screen.last30')), scoreChart(s.history)),
     );
   }
 
@@ -98,20 +106,20 @@ export function playerScreen(id: string): Screen {
 /** Marcador de los días que jugasteis los dos. */
 function headToHead(r: NonNullable<PlayerProfile['headToHead']>, name: string): HTMLElement {
   if (r.played === 0) {
-    return h('section', { class: 'card h2h' }, h('p', { class: 'eyebrow' }, 'Cara a cara'), h('p', { class: 'muted' }, 'Aún no habéis jugado el mismo día.'));
+    return h('section', { class: 'card h2h' }, h('p', { class: 'eyebrow' }, t('profile.h2h.title')), h('p', { class: 'muted' }, t('profile.h2h.none')));
   }
-  const verdict = r.myWins > r.theirWins ? '¡Vas ganando!' : r.myWins < r.theirWins ? `${name} va por delante` : 'Empate técnico';
+  const verdict = r.myWins > r.theirWins ? t('profile.h2h.winning') : r.myWins < r.theirWins ? t('profile.h2h.losing', { name }) : t('profile.h2h.tied');
   return h(
     'section',
     { class: 'card h2h' },
-    h('p', { class: 'eyebrow' }, 'Cara a cara'),
+    h('p', { class: 'eyebrow' }, t('profile.h2h.title')),
     h(
       'div',
       { class: 'h2h-score' },
-      h('div', null, h('strong', null, String(r.myWins)), h('span', null, 'Tú')),
+      h('div', null, h('strong', null, String(r.myWins)), h('span', null, t('ghost.you'))),
       h('span', { class: 'h2h-vs' }, '–'),
       h('div', null, h('strong', null, String(r.theirWins)), h('span', null, name)),
     ),
-    h('p', { class: 'muted' }, `${verdict} · ${plural(r.played, 'reto jugado', 'retos jugados')} los dos${r.ties ? ` · ${plural(r.ties, 'empate', 'empates')}` : ''}`),
+    h('p', { class: 'muted' }, `${verdict} · ${tn('profile.h2h.played', r.played)}${r.ties ? ` · ${tn('profile.h2h.ties', r.ties)}` : ''}`),
   );
 }

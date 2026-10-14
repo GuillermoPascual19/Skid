@@ -3,13 +3,14 @@
 
 import * as online from '../../shared/api';
 import { penguinSvg } from '../../../../common/art/hats';
-import { formatDay, formatTime, h, openModal, plural, previousDay, share, svg, toast } from '../../shared/dom';
+import { formatDay, formatTime, h, openModal, previousDay, share, svg, toast } from '../../shared/dom';
 import { monthRange, weekRange, type DayRange } from '../../../../common/logic/daily/daily';
 import { golfLabel } from '../../../../common/logic/daily/score';
 import { today } from '../daily/daily';
 import { ensureName } from '../profile/profile';
 import { go, type Screen } from '../../shared/router';
 import { type League, type RankingRow, createLeague, joinLeague, leagueInvite, leagueRanking, leagueStandings, leaveLeague, myLeagues } from './api';
+import { intlLocale, t, tn } from '../../i18n/i18n';
 
 type Period = 'today' | 'yesterday' | 'week' | 'month';
 
@@ -23,7 +24,7 @@ function rowProps(row: { id: string; name: string; isMe: boolean }) {
     class: `rank-row ${row.isMe ? 'me' : ''}`,
     role: 'button',
     tabIndex: 0,
-    'aria-label': `Ver el perfil de ${row.name}`,
+    'aria-label': t('ranking.profileOf', { name: row.name }),
     onclick: open,
     onkeydown: (e: KeyboardEvent) => {
       if (e.key === 'Enter' || e.key === ' ') {
@@ -42,8 +43,8 @@ export function rankingScreen(route: { join?: string }): Screen {
     h(
       'header',
       { class: 'topbar' },
-      h('button', { class: 'icon-btn', 'aria-label': 'Volver', onclick: () => go({ name: 'home' }) }, '←'),
-      h('div', { class: 'title' }, h('h1', null, 'Ranking'), h('p', null, 'Reto diario con tus amigos')),
+      h('button', { class: 'icon-btn', 'aria-label': t('common.back'), onclick: () => go({ name: 'home' }) }, '←'),
+      h('div', { class: 'title' }, h('h1', null, t('nav.ranking')), h('p', null, t('ranking.subtitle'))),
     ),
     body,
   );
@@ -53,12 +54,12 @@ export function rankingScreen(route: { join?: string }): Screen {
       h(
         'section',
         { class: 'card' },
-        h('p', { class: 'eyebrow' }, 'Próximamente'),
-        h('h2', null, 'El ranking online aún no está activado'),
+        h('p', { class: 'eyebrow' }, t('ranking.offline.eyebrow')),
+        h('h2', null, t('ranking.offline.title')),
         h(
           'p',
           { class: 'muted', style: 'margin-top: 8px' },
-          'Mientras tanto, termina el reto y pulsa Compartir para mandar tu resultado a tus amigos.',
+          t('ranking.offline.text'),
         ),
       ),
     );
@@ -66,10 +67,10 @@ export function rankingScreen(route: { join?: string }): Screen {
   }
 
   const PERIODS: [Period, string][] = [
-    ['today', 'Hoy'],
-    ['yesterday', 'Ayer'],
-    ['week', 'Semana'],
-    ['month', 'Mes'],
+    ['today', t('ranking.period.today')],
+    ['yesterday', t('ranking.period.yesterday')],
+    ['week', t('ranking.period.week')],
+    ['month', t('ranking.period.month')],
   ];
 
   let leagues: League[] = [];
@@ -92,7 +93,7 @@ export function rankingScreen(route: { join?: string }): Screen {
         const joined = await confirmInvite(code);
         if (joined) {
           selected = joined.id;
-          toast(`Te has unido a ${joined.name}`);
+          toast(t('ranking.joined', { name: joined.name }));
         }
       }
       leagues = await myLeagues();
@@ -100,7 +101,7 @@ export function rankingScreen(route: { join?: string }): Screen {
       if (!disposed) render();
     } catch (err) {
       body.replaceChildren(
-        h('section', { class: 'card empty' }, h('p', { class: 'error' }, (err as Error).message), h('button', { class: 'btn', onclick: load }, 'Reintentar')),
+        h('section', { class: 'card empty' }, h('p', { class: 'error' }, (err as Error).message), h('button', { class: 'btn', onclick: load }, t('common.retry'))),
       );
     }
   }
@@ -111,15 +112,15 @@ export function rankingScreen(route: { join?: string }): Screen {
     if (invite.alreadyMember) return null;
     return new Promise((resolve) => {
       let joined: League | null = null;
-      const accept = h('button', { class: 'btn' }, 'Unirme');
+      const accept = h('button', { class: 'btn' }, t('ranking.join'));
       const error = h('p', { class: 'error', hidden: true });
       const modal = openModal(
         [
-          h('p', { class: 'eyebrow' }, 'Invitación a una liga'),
+          h('p', { class: 'eyebrow' }, t('ranking.invite.eyebrow')),
           h('h2', null, invite.name),
-          h('p', { class: 'lead' }, `${plural(invite.members, 'miembro', 'miembros')}. Al unirte, los demás verán tus resultados del reto y tu perfil, y tú los suyos.`),
+          h('p', { class: 'lead' }, t('ranking.invite.text', { members: tn('ranking.members', invite.members) })),
           error,
-          h('div', { class: 'row' }, h('button', { class: 'btn ghost', onclick: () => modal.close() }, 'No, gracias'), accept),
+          h('div', { class: 'row' }, h('button', { class: 'btn ghost', onclick: () => modal.close() }, t('ranking.invite.decline')), accept),
         ],
         { dismissable: true, onClose: () => resolve(joined) },
       );
@@ -141,12 +142,12 @@ export function rankingScreen(route: { join?: string }): Screen {
   function confirmLeave(league: League) {
     const modal = openModal(
       [
-        h('h2', null, `¿Salir de ${league.name}?`),
-        h('p', { class: 'lead' }, 'Dejarás de ver a sus miembros y ellos a ti. Para volver necesitarás otra vez el código.'),
+        h('h2', null, t('ranking.leave.title', { name: league.name })),
+        h('p', { class: 'lead' }, t('ranking.leave.text')),
         h(
           'div',
           { class: 'row' },
-          h('button', { class: 'btn ghost', onclick: () => modal.close() }, 'Cancelar'),
+          h('button', { class: 'btn ghost', onclick: () => modal.close() }, t('common.cancel')),
           h(
             'button',
             {
@@ -155,7 +156,7 @@ export function rankingScreen(route: { join?: string }): Screen {
                 modal.close();
                 try {
                   await leaveLeague(league.id);
-                  toast(`Has salido de ${league.name}`);
+                  toast(t('ranking.leave.done', { name: league.name }));
                   selected = null;
                   await load();
                 } catch (err) {
@@ -163,7 +164,7 @@ export function rankingScreen(route: { join?: string }): Screen {
                 }
               },
             },
-            'Salir',
+            t('ranking.leave.button'),
           ),
         ),
       ],
@@ -178,9 +179,9 @@ export function rankingScreen(route: { join?: string }): Screen {
           'section',
           { class: 'card empty' },
           h('div', { style: 'font-size: 48px' }, '🏆'),
-          h('h2', null, 'Aún no estás en ninguna liga'),
-          h('p', { class: 'muted', style: 'margin: 6px 0 14px' }, 'Crea una y comparte el enlace con tus amigos, o únete con su código.'),
-          h('button', { class: 'btn big block', onclick: openLeagueForms }, 'Crear o unirse a una liga'),
+          h('h2', null, t('ranking.empty.title')),
+          h('p', { class: 'muted', style: 'margin: 6px 0 14px' }, t('ranking.empty.text')),
+          h('button', { class: 'btn big block', onclick: openLeagueForms }, t('ranking.createOrJoin')),
         ),
       );
       return;
@@ -210,7 +211,7 @@ export function rankingScreen(route: { join?: string }): Screen {
             l.name,
           ),
         ),
-        h('button', { class: 'tab', 'aria-label': 'Crear o unirse a una liga', onclick: openLeagueForms }, '＋'),
+        h('button', { class: 'tab', 'aria-label': t('ranking.createOrJoin'), onclick: openLeagueForms }, '＋'),
       ),
       h(
         'div',
@@ -227,21 +228,21 @@ export function rankingScreen(route: { join?: string }): Screen {
         h(
           'div',
           { style: 'flex:1' },
-          h('p', { class: 'eyebrow' }, `Invita a ${league.name}`),
+          h('p', { class: 'eyebrow' }, t('ranking.inviteTo', { name: league.name })),
           h('div', { class: 'code' }, league.code),
-          h('small', { class: 'muted' }, plural(league.members ?? 1, 'miembro', 'miembros')),
+          h('small', { class: 'muted' }, tn('ranking.members', league.members ?? 1)),
         ),
         h(
           'button',
           {
             class: 'btn secondary',
             onclick: () =>
-              share(`¡Únete a mi liga de Skid "${league.name}" y compite en el reto diario!\n${location.origin}${location.pathname}?join=${league.code}`),
+              share(`${t('ranking.shareInvite', { name: league.name })}\n${location.origin}${location.pathname}?join=${league.code}`),
           },
-          'Invitar',
+          t('ranking.invite.button'),
         ),
       ),
-      h('button', { class: 'link-btn leave-league', onclick: () => confirmLeave(league) }, 'Salir de esta liga'),
+      h('button', { class: 'link-btn leave-league', onclick: () => confirmLeave(league) }, t('ranking.leave.link')),
     );
 
     if (range) void fillStandings(list, league.id, range);
@@ -264,15 +265,15 @@ export function rankingScreen(route: { join?: string }): Screen {
             h(
               'span',
               { class: 'who' },
-              h('strong', null, row.name + (row.isMe ? ' (tú)' : '')),
+              h('strong', null, row.isMe ? t('ranking.me', { name: row.name }) : row.name),
               h(
                 'small',
                 null,
                 row.days > 0
-                  ? [plural(row.days, 'reto', 'retos'), row.wins > 0 ? `🏆 ${row.wins}` : null, `mejor ${row.best}`]
+                  ? [tn('ranking.challenges', row.days), row.wins > 0 ? `🏆 ${row.wins}` : null, t('ranking.bestN', { n: row.best ?? 0 })]
                       .filter(Boolean)
                       .join(' · ')
-                  : 'Sin retos en este periodo',
+                  : t('ranking.noChallenges'),
               ),
             ),
             row.days > 0 ? h('span', { class: 'pts' }, String(row.points)) : h('span', { class: 'pts none' }, '—'),
@@ -301,7 +302,7 @@ export function rankingScreen(route: { join?: string }): Screen {
               go({ name: 'ghost', day: forDay, friendId: row.id });
             },
           },
-          '👻 Ver su partida',
+          `👻 ${t('ranking.watchGame')}`,
         );
       list.replaceChildren(
         ...rows.map((row, i) =>
@@ -313,23 +314,23 @@ export function rankingScreen(route: { join?: string }): Screen {
             h(
               'span',
               { class: 'who' },
-              h('strong', null, row.name + (row.isMe ? ' (tú)' : '')),
+              h('strong', null, row.isMe ? t('ranking.me', { name: row.name }) : row.name),
               h(
                 'small',
                 null,
                 row.status === 'finished'
                   ? row.overPar !== null
-                    ? `${row.moves} mov.${row.hints ? ` · 💡 ${row.hints}` : ''} · ⏱ ${formatTime(row.timeMs ?? 0)}`
-                    : `${row.moves} mov. · ↺ ${row.retries}${row.hints ? ` · 💡 ${row.hints}` : ''} · ⏱ ${formatTime(row.timeMs ?? 0)}`
+                    ? `${t('common.movesShort', { n: row.moves ?? 0 })}${row.hints ? ` · 💡 ${row.hints}` : ''} · ⏱ ${formatTime(row.timeMs ?? 0)}`
+                    : `${t('common.movesShort', { n: row.moves ?? 0 })} · ↺ ${row.retries}${row.hints ? ` · 💡 ${row.hints}` : ''} · ⏱ ${formatTime(row.timeMs ?? 0)}`
                   : row.status === 'playing'
-                    ? 'Jugando…'
-                    : 'Sin jugar',
+                    ? t('ranking.playing')
+                    : t('ranking.notPlayed'),
               ),
               canWatch && !row.isMe && row.status === 'finished' ? ghostButton(row) : null,
             ),
             row.status === 'finished'
               ? row.overPar !== null
-                ? h('span', { class: `pts golf${row.overPar === 0 ? ' par' : ''}`, title: `${row.score} puntos de liga` }, golfLabel(row.overPar))
+                ? h('span', { class: `pts golf${row.overPar === 0 ? ' par' : ''}`, title: t('ranking.leaguePoints', { n: row.score ?? 0 }) }, golfLabel(row.overPar))
                 : h('span', { class: 'pts' }, String(row.score))
               : h('span', { class: 'pts none' }, '—'),
           ),
@@ -341,8 +342,8 @@ export function rankingScreen(route: { join?: string }): Screen {
   }
 
   function openLeagueForms() {
-    const codeInput = h('input', { class: 'field', placeholder: 'Código (p. ej. 4F9K2A)', maxLength: 6, autocapitalize: 'characters' });
-    const nameInput = h('input', { class: 'field', placeholder: 'Nombre de la liga', maxLength: 30 });
+    const codeInput = h('input', { class: 'field', placeholder: t('ranking.form.codePlaceholder'), maxLength: 6, autocapitalize: 'characters' });
+    const nameInput = h('input', { class: 'field', placeholder: t('ranking.form.namePlaceholder'), maxLength: 30 });
     const error = h('p', { class: 'error', hidden: true });
 
     const run = async (button: HTMLButtonElement, action: () => Promise<League>) => {
@@ -360,13 +361,13 @@ export function rankingScreen(route: { join?: string }): Screen {
       }
     };
 
-    const joinBtn: HTMLButtonElement = h('button', { class: 'btn secondary', type: 'submit' }, 'Unirme');
-    const createBtn: HTMLButtonElement = h('button', { class: 'btn', type: 'submit' }, 'Crear');
+    const joinBtn: HTMLButtonElement = h('button', { class: 'btn secondary', type: 'submit' }, t('ranking.join'));
+    const createBtn: HTMLButtonElement = h('button', { class: 'btn', type: 'submit' }, t('ranking.form.create'));
 
     const modal = openModal(
       [
-        h('h2', null, 'Ligas'),
-        h('p', { class: 'eyebrow' }, 'Unirse con un código'),
+        h('h2', null, t('ranking.form.title')),
+        h('p', { class: 'eyebrow' }, t('ranking.form.joinEyebrow')),
         h(
           'form',
           {
@@ -379,7 +380,7 @@ export function rankingScreen(route: { join?: string }): Screen {
           codeInput,
           joinBtn,
         ),
-        h('p', { class: 'eyebrow' }, 'Crear una liga nueva'),
+        h('p', { class: 'eyebrow' }, t('ranking.form.createEyebrow')),
         h(
           'form',
           {
@@ -393,7 +394,7 @@ export function rankingScreen(route: { join?: string }): Screen {
           createBtn,
         ),
         error,
-        h('button', { class: 'link-btn', onclick: () => modal.close() }, 'Cerrar'),
+        h('button', { class: 'link-btn', onclick: () => modal.close() }, t('common.close')),
       ],
       { dismissable: true },
     );
@@ -419,16 +420,13 @@ function medal(index: number): string {
   return ['🥇', '🥈', '🥉'][index] ?? String(index + 1);
 }
 
-/** "Semana del 5 al 11 de octubre" o "Octubre de 2026". */
+/** "Semana 5–11 de octubre" o "Octubre de 2026", en el idioma del jugador. */
 function formatRange({ from, to }: DayRange, month: boolean): string {
   const date = (d: string) => new Date(`${d}T12:00:00Z`);
-  const fmt = (d: string, opts: Intl.DateTimeFormatOptions) => new Intl.DateTimeFormat('es-ES', { ...opts, timeZone: 'UTC' }).format(date(d));
   if (month) {
-    const text = fmt(from, { month: 'long', year: 'numeric' });
+    const text = new Intl.DateTimeFormat(intlLocale(), { month: 'long', year: 'numeric', timeZone: 'UTC' }).format(date(from));
     return text.charAt(0).toUpperCase() + text.slice(1);
   }
-  const sameMonth = from.slice(0, 7) === to.slice(0, 7);
-  return sameMonth
-    ? `Semana del ${fmt(from, { day: 'numeric' })} al ${fmt(to, { day: 'numeric', month: 'long' })}`
-    : `Semana del ${fmt(from, { day: 'numeric', month: 'long' })} al ${fmt(to, { day: 'numeric', month: 'long' })}`;
+  const range = new Intl.DateTimeFormat(intlLocale(), { day: 'numeric', month: 'long', timeZone: 'UTC' }).formatRange(date(from), date(to));
+  return t('weekly.title', { range });
 }

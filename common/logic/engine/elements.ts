@@ -7,20 +7,19 @@ import { traceMove } from './move.ts';
 
 export type ElementId = 'snow' | 'arrow' | 'portal' | 'hole';
 
+/** El nombre y la descripción de cada elemento están en los diccionarios del juego (elements.<id>). */
 export interface ElementDef {
   readonly id: ElementId;
   /** Nivel del modo libre a partir del cual aparece. */
   readonly level: number;
-  readonly name: string;
-  readonly description: string;
 }
 
 /** En orden de desbloqueo. */
 export const ELEMENTS: readonly ElementDef[] = [
-  { id: 'snow', level: 15, name: 'Nieve blanda', description: 'El pingüino se frena y se para encima.' },
-  { id: 'arrow', level: 30, name: 'Corrientes', description: 'Al pasar por encima, el pingüino gira hacia donde apunta la flecha y sigue deslizando.' },
-  { id: 'portal', level: 45, name: 'Teletransportes', description: 'Entras por uno, sales por su pareja y sigues deslizando en la misma dirección.' },
-  { id: 'hole', level: 60, name: 'Agujeros', description: 'Si caes al agua vuelves a la salida, pero conservas las piezas que llevas.' },
+  { id: 'snow', level: 15 },
+  { id: 'arrow', level: 30 },
+  { id: 'portal', level: 45 },
+  { id: 'hole', level: 60 },
 ];
 
 /** Elementos que pueden salir en el nivel `level`. */

@@ -14,7 +14,8 @@ export interface Friend {
 /** Un jugador del duelo. Las marcas del rival son null hasta que el duelo termina. */
 export interface DuelSide {
   id: string;
-  name: string;
+  /** null si no ha elegido nombre (se muestra «Anónimo»). */
+  name: string | null;
   hat: HatId | null;
   started: boolean;
   /** Ha terminado el tablero al menos una vez. */
@@ -48,7 +49,7 @@ export interface DuelInvite {
   id: string;
   difficulty: DuelDifficulty;
   expiresAt: number;
-  challenger: { name: string; hat: HatId | null };
+  challenger: { name: string | null; hat: HatId | null };
 }
 
 export function listFriends(): Promise<Friend[]> {

@@ -1,3 +1,4 @@
+import { intlLocale, t } from '../i18n/i18n';
 // Utilidades pequeñas para construir la interfaz sin framework.
 
 type Child = Node | string | number | null | undefined | false;
@@ -82,9 +83,9 @@ export async function share(text: string): Promise<void> {
   }
   try {
     await navigator.clipboard.writeText(text);
-    toast('Copiado al portapapeles');
+    toast(t('common.copied'));
   } catch {
-    toast('No se pudo copiar');
+    toast(t('common.copyFailed'));
   }
 }
 
@@ -114,9 +115,9 @@ export function formatTime(ms: number): string {
   return h > 0 ? `${h}:${String(m).padStart(2, '0')}:${s}` : `${m}:${s}`;
 }
 
-/** "2026-10-06" -> "lunes, 6 de octubre". */
+/** "2026-10-06" -> "lunes, 6 de octubre" (en el idioma del jugador). */
 export function formatDay(day: string): string {
-  return new Intl.DateTimeFormat('es-ES', { weekday: 'long', day: 'numeric', month: 'long', timeZone: 'UTC' }).format(
+  return new Intl.DateTimeFormat(intlLocale(), { weekday: 'long', day: 'numeric', month: 'long', timeZone: 'UTC' }).format(
     new Date(`${day}T12:00:00Z`),
   );
 }
@@ -137,10 +138,6 @@ export function untilMidnight(timeZone: string, now = new Date()): string {
   const hours = Math.floor(minutesLeft / 60);
   const minutes = minutesLeft % 60;
   return hours > 0 ? `${hours} h ${minutes} min` : `${minutes} min`;
-}
-
-export function plural(n: number, one: string, many: string): string {
-  return `${n} ${n === 1 ? one : many}`;
 }
 
 // -------------------------------------------------------------------- Iconos

@@ -7,7 +7,7 @@ describe('nombres de jugador', () => {
   });
 
   it('rechaza otros alfabetos (letras que se confunden con las nuestras), emojis y símbolos', () => {
-    expect(nameProblem('Аna')).not.toBeNull(); // «А» cirílica.
+    expect(nameProblem('Аna')).toBe('chars'); // «А» cirílica.
     expect(nameProblem('Αna')).not.toBeNull(); // «Α» griega.
     expect(nameProblem('Ana🐧')).not.toBeNull();
     expect(nameProblem('<b>Ana</b>')).not.toBeNull();
@@ -15,7 +15,7 @@ describe('nombres de jugador', () => {
   });
 
   it('controla la longitud', () => {
-    expect(nameProblem('A')).not.toBeNull();
+    expect(nameProblem('A')).toBe('length');
     expect(nameProblem('A'.repeat(21))).not.toBeNull();
   });
 
