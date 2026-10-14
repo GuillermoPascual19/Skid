@@ -21,6 +21,7 @@ import {
   waitingForRival,
 } from './duels';
 import { playerName, t } from '../../i18n/i18n';
+import { duelNotifyHint } from '../notifications/notifications';
 
 export function duelRoomScreen(id: string): Screen {
   const subtitle = h('p');
@@ -39,6 +40,9 @@ export function duelRoomScreen(id: string): Screen {
 
   let duel: Duel | null = null;
   let offset = 0;
+  /** «Avísame cuando entre», si las notificaciones están apagadas (se mira una vez). */
+  let notifyHint: HTMLElement | null = null;
+  void duelNotifyHint().then((el) => (notifyHint = el));
   let disposed = false;
   let poll = 0;
   let tick = 0;
@@ -160,6 +164,7 @@ export function duelRoomScreen(id: string): Screen {
         h('p', { class: 'muted' }, rival ? t('duels.room.pressStart') : t('duels.room.keepOpen')),
         rival && !d.me.ready ? h('button', { class: 'btn big block duel-start-btn', onclick: () => void ready(true) }, `⚔️ ${t('duels.room.start')}`) : null,
         rival && d.me.ready ? h('button', { class: 'link-btn', onclick: () => void ready(false) }, t('duels.room.notYet')) : null,
+        rival && !rival.present ? notifyHint : null,
         h('p', { class: 'muted small' }, timeLeft(d.expiresAt)),
         !rival ? h('button', { class: 'btn block', onclick: () => shareDuel(d) }, `🔗 ${t('duels.screen.shareLink')}`) : null,
         rival && d.role === 'opponent'

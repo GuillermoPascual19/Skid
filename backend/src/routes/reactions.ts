@@ -3,8 +3,9 @@
 
 import { isHatId } from '../../../common/art/hats';
 import { dayKey, shiftDay } from '../../../common/logic/daily/daily';
-import { REACTION_DAYS, type ReactionId, isReactionId } from '../../../common/logic/leagues/reactions';
+import { REACTIONS, REACTION_DAYS, type ReactionId, isReactionId } from '../../../common/logic/leagues/reactions';
 import { type Env, HttpError } from '../http';
+import { background, notify } from '../push';
 
 export interface RowReactions {
   /** Cuántas de cada tipo, de los miembros de la liga que se está mirando. */
@@ -65,6 +66,15 @@ export async function react(env: Env, fromId: string, toId: string, day: string,
     )
       .bind(day, fromId, toId, reaction, Date.now())
       .run();
+    background(
+      env,
+      env.DB.prepare('SELECT name FROM players WHERE id = ?')
+        .bind(fromId)
+        .first<{ name: string | null }>()
+        .then((row) =>
+          notify(env, toId, 'reaction', { name: row?.name ?? '?', emoji: REACTIONS[reaction] }, { url: '/', throttle: { tag: `reaction:${fromId}:${day}`, ms: 86_400_000 } }),
+        ),
+    );
   }
   return { reaction };
 }

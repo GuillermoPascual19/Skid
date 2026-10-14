@@ -14,6 +14,11 @@ export interface Env {
   GOOGLE_CLIENT_ID?: string;
   /** Solo para pruebas en local: de dónde descargar las claves de firma. */
   GOOGLE_CERTS_URL?: string;
+  /** Claves VAPID de las notificaciones (la pública en wrangler.jsonc, la privada como secreto). Sin ellas, no hay notificaciones. */
+  VAPID_PUBLIC_KEY?: string;
+  VAPID_PRIVATE_KEY?: string;
+  /** Deja una tarea corriendo después de responder (ctx.waitUntil de la petición). */
+  waitUntil?(task: Promise<unknown>): void;
 }
 
 export interface Session {

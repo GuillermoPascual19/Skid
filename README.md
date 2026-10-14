@@ -26,6 +26,7 @@ y niveles creados por los jugadores.
   compartir y denunciar.
 - Guía «Cómo se juega», modo oscuro, música y efectos sintetizados, y login con Google para jugar en
   varios dispositivos.
+- Se instala como app y avisa con notificaciones (duelos, reacciones y recordatorio de racha).
 - En siete idiomas: español, inglés, alemán, francés, portugués, italiano y ruso. Usa el del
   navegador y se cambia desde el inicio.
 - Compartir por WhatsApp o Telegram, copiar el enlace o el mensaje, o el menú del sistema.
@@ -75,6 +76,8 @@ frontend/                  el juego en el navegador (Vite)
   public/                  se copia tal cual a dist/
     _headers               cabeceras de seguridad (CSP…) de la web
     theme-init.js          aplica el tema antes de pintar
+    sw.js                  service worker: muestra las notificaciones
+    manifest.webmanifest   app instalable (con sus iconos)
   src/
     main.ts                arranque y rutas
     style.css              estilos (tema claro y oscuro con variables)
@@ -104,9 +107,11 @@ backend/                   el Worker de Cloudflare: sirve el juego (dist/) y la 
     session.ts             sesiones, login con Google, cerrar sesión y borrar la cuenta
     google.ts              verificación de los tokens de Google
     i18n.ts                idioma de cada petición para los mensajes de error
+    push.ts                notificaciones: a quién, en qué idioma y sin repetir
+    webpush.ts             cifrado y firma VAPID de las notificaciones (sin librerías)
     routes/                un archivo por apartado: daily, weekly, timeattack, duels, leagues,
                            seasons, reactions, levels, players, stats, achievements
-  migrations/              esquema de la base de datos D1 (0001 a 0016)
+  migrations/              esquema de la base de datos D1 (0001 a 0017)
 common/                    lo que usan los dos; sin APIs del navegador ni imports de fuera
   logic/                   reglas puras: el servidor reproduce las partidas con este mismo código
     engine/                tablero, movimiento, solver, generador, elementos, aleatorio
@@ -118,7 +123,7 @@ common/                    lo que usan los dos; sin APIs del navegador ni import
     leagues/               temporadas (fechas, podio y el gorro de cada mes) y reacciones
     community/             validación de niveles creados por jugadores
     players/               reglas de los nombres
-  i18n/                    idiomas y mensajes de error del servidor en cada uno
+  i18n/                    idiomas, mensajes de error y textos de las notificaciones
   art/                     dibujos SVG (pingüino, gorros, elementos)
 tests/                     backend/ y common/, con el mismo árbol que el código
 .github/workflows/         despliegue automático
@@ -203,6 +208,20 @@ fuera) y compila el juego a `dist/`.
 - Lógica en `common/logic/leagues/seasons.ts`, servidor en `backend/src/routes/seasons.ts` y el
   juego en la pestaña Temporada del ranking (`frontend/src/features/ranking/season.ts`).
 
+## Notificaciones
+
+- Avisos push aunque el juego esté cerrado: te retan a un duelo, han aceptado tu duelo, tu rival te
+  espera en la sala, han reaccionado a tu reto y, por la tarde, el recordatorio de racha (a quien jugó
+  ayer y aún no hoy). Cada dispositivo elige cuáles quiere desde el 🔔 de la portada.
+- Sin librerías: el contenido va cifrado para el navegador (RFC 8291) y firmado con la clave VAPID del
+  servidor (RFC 8292), con WebCrypto (`backend/src/webpush.ts`). Solo se envía a los servicios push de
+  los navegadores (Google, Mozilla, Apple, Microsoft) y las suscripciones caducadas se borran solas.
+- Para no agobiar: los avisos de un duelo, como mucho uno cada 10 minutos; las reacciones, uno por
+  amigo y día; el recordatorio, uno al día (`push_log`).
+- El recordatorio lo lanza una tarea programada (`triggers.crons` en `wrangler.jsonc`, 18:00 UTC).
+- La app se puede instalar (`public/manifest.webmanifest`); en iPhone hace falta instalarla para
+  recibir notificaciones. El service worker que las muestra es `public/sw.js`.
+
 ## Seguridad
 
 - Sesiones: token aleatorio de 256 bits en el navegador; en la base de datos solo su hash. Google se
@@ -251,3 +270,8 @@ Despliegue automático en cada push a `main` (`.github/workflows/deploy.yml`, pa
 añade en GitHub, en *Settings → Secrets and variables → Actions*, los secrets
 `CLOUDFLARE_API_TOKEN` (créalo en el panel con la plantilla *Edit Cloudflare Workers* y permiso
 *D1: Edit*) y `CLOUDFLARE_ACCOUNT_ID`.
+
+Notificaciones: la clave pública VAPID está en `wrangler.jsonc` y la privada es un secreto del Worker
+(una sola vez: `pnpm exec wrangler secret put VAPID_PRIVATE_KEY`). Sin ella el juego funciona igual,
+pero sin notificaciones. En local se lee de `.dev.vars` (no se sube al repositorio). Para generar un
+par nuevo hay que cambiar las dos a la vez (las suscripciones existentes dejan de valer).
