@@ -158,8 +158,9 @@ fuera) y compila el juego a `dist/`.
 - Retas a un amigo de tus ligas o a cualquiera con un enlace (`?duelo=`), y eliges dificultad
   (niveles 6, 12 y 32 del modo libre). El servidor genera el tablero al crear el duelo y lo guarda.
 - Son en directo. Los dos esperan en la sala del duelo; mientras está abierta, el juego avisa al
-  servidor cada 2 s (`POST /duels/:id/here`). Cuando coinciden, el servidor fija la hora de empezar,
-  la misma para los dos, tras una cuenta atrás de 4 s. Tienen 48 h para coincidir.
+  servidor cada 2 s (`POST /duels/:id/here`). Cuando están los dos y los dos pulsan *Empezar*
+  (`PUT /duels/:id/ready`), el servidor fija la hora de empezar, la misma para los dos, tras una
+  cuenta atrás de 5 s. Tienen 48 h para coincidir.
 - Un intento, sin pistas: se puede reiniciar, pero el reloj sigue. Al terminar se envía y se espera
   al rival; su resultado no se ve hasta que terminan los dos (o pasan 20 minutos). Gana quien haga
   menos movimientos y, a igualdad, quien tardó menos.

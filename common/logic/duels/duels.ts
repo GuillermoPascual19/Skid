@@ -1,6 +1,7 @@
 // Duelos en directo: dos jugadores, el mismo tablero nuevo (que ninguno ha
-// visto). Cuando los dos están en la sala, empiezan a la vez tras una cuenta
-// atrás y cada uno tiene un intento (puede reiniciar, pero el reloj sigue).
+// visto). Cuando los dos están en la sala y han pulsado Empezar, empiezan a la
+// vez tras una cuenta atrás y cada uno tiene un intento (puede reiniciar, pero el
+// reloj sigue).
 // Gana quien haga menos movimientos y, a igualdad, quien tarde menos.
 
 import { generateLevel, type GeneratedLevel } from '../engine/generator.ts';
@@ -28,8 +29,8 @@ export const DUEL_PRESENCE_MS = 12_000;
 /** Cada cuánto avisa el juego de que sigue en la sala (y pregunta por el rival). */
 export const DUEL_POLL_MS = 2_000;
 
-/** Cuenta atrás desde que están los dos hasta que empieza. */
-export const DUEL_COUNTDOWN_MS = 4_000;
+/** Cuenta atrás desde que los dos han pulsado Empezar hasta que empieza. */
+export const DUEL_COUNTDOWN_MS = 5_000;
 
 /** Tiempo para terminar el tablero una vez empezado; quien no acabe, no tiene resultado. */
 export const DUEL_LIVE_MS = 20 * 60 * 1000;

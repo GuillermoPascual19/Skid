@@ -19,6 +19,8 @@ export interface DuelSide {
   hat: HatId | null;
   /** Está en la sala ahora mismo. */
   present: boolean;
+  /** Ha pulsado Empezar. */
+  ready: boolean;
   started: boolean;
   /** Ha terminado el tablero. */
   finished: boolean;
@@ -88,7 +90,12 @@ export function declineDuel(id: string): Promise<Duel> {
   return api('POST', `/duels/${encodeURIComponent(id)}/decline`);
 }
 
-/** Sigues en la sala; cuando estáis los dos, el servidor fija la hora de empezar. */
+/** Pulsas Empezar (o lo deshaces). Cuando lo habéis pulsado los dos, el servidor fija la hora de empezar. */
+export function setDuelReady(id: string, ready: boolean): Promise<Duel> {
+  return api('PUT', `/duels/${encodeURIComponent(id)}/ready`, { ready });
+}
+
+/** Sigues en la sala. */
 export function duelHere(id: string): Promise<Duel> {
   return api('POST', `/duels/${encodeURIComponent(id)}/here`);
 }

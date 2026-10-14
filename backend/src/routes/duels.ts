@@ -1,6 +1,6 @@
 // Duelos en directo: retar a un amigo de tus ligas o a cualquiera con un enlace,
-// esperar en la sala a que estéis los dos, jugar a la vez (el servidor reproduce
-// el intento) y ver quién gana. Hasta que terminan los dos no se ve el resultado
+// esperar en la sala a que estéis los dos y pulséis Empezar, jugar a la vez (el
+// servidor reproduce el intento) y ver quién gana. Hasta que terminan los dos no se ve el resultado
 // del rival.
 
 import { isHatId } from '../../../common/art/hats';
@@ -37,6 +37,8 @@ interface DuelRow {
   declined_at: number | null;
   challenger_seen_at: number | null;
   opponent_seen_at: number | null;
+  challenger_ready_at: number | null;
+  opponent_ready_at: number | null;
   starts_at: number | null;
 }
 
@@ -58,7 +60,7 @@ interface RunRow {
 
 /**
  * open: nadie ha aceptado el enlace · waiting: hay rival, pero aún no han
- * coincidido en la sala · playing: empezado (o en la cuenta atrás) · finished:
+ * coincidido en la sala o no han pulsado Empezar los dos · playing: empezado (o en la cuenta atrás) · finished:
  * terminaron los dos o se acabó el tiempo · declined: el rival lo rechazó.
  */
 type DuelStatus = 'open' | 'waiting' | 'playing' | 'finished' | 'declined';
@@ -113,6 +115,7 @@ async function duelResponse(env: Env, duel: DuelRow, playerId: string) {
   const iAmChallenger = playerId === duel.challenger_id;
   const rivalId = iAmChallenger ? duel.opponent_id : duel.challenger_id;
   const seenAt = (id: string) => (id === duel.challenger_id ? duel.challenger_seen_at : duel.opponent_seen_at);
+  const readyAt = (id: string) => (id === duel.challenger_id ? duel.challenger_ready_at : duel.opponent_ready_at);
   const side = (id: string | null, reveal: boolean) => {
     if (!id) return null;
     const player = players.find((p) => p.id === id);
@@ -124,6 +127,8 @@ async function duelResponse(env: Env, duel: DuelRow, playerId: string) {
       hat: isHatId(player?.hat) ? player.hat : null,
       /** En la sala ahora mismo. */
       present: present(seenAt(id), now),
+      /** Ha pulsado Empezar. */
+      ready: readyAt(id) !== null,
       started: !!run,
       finished: done,
       // Ha terminado su intento (eso sí se ve: sabes que el rival ya ha acabado).
@@ -156,7 +161,7 @@ async function duelResponse(env: Env, duel: DuelRow, playerId: string) {
     rows: decodeRows(duel.rows),
     createdAt: duel.created_at,
     expiresAt: duel.expires_at,
-    /** Cuándo empieza (o empezó) la partida, con el reloj del servidor; null si aún no han coincidido. */
+    /** Cuándo empieza (o empezó) la partida, con el reloj del servidor; null si aún no han pulsado Empezar los dos. */
     startsAt: duel.starts_at,
     /** Hora del servidor, para que el juego cuadre la cuenta atrás con su reloj. */
     serverNow: now,
@@ -264,32 +269,57 @@ export async function declineDuel(env: Env, playerId: string, id: string) {
   return duelResponse(env, await loadDuel(env, id), playerId);
 }
 
-/**
- * Sigues en la sala (el juego lo dice cada pocos segundos). Si el rival también
- * está, se fija la hora de empezar para los dos: tras la cuenta atrás, y con un
- * tiempo máximo para terminar.
- */
+/** Sigues en la sala (el juego lo dice cada pocos segundos). */
 export async function here(env: Env, playerId: string, id: string) {
   const duel = await myDuel(env, playerId, id);
   const now = Date.now();
   if (duel.declined_at !== null || duel.expires_at <= now || duel.starts_at !== null) return duelResponse(env, duel, playerId);
+  const column = playerId === duel.challenger_id ? 'challenger_seen_at' : 'opponent_seen_at';
+  await env.DB.prepare(`UPDATE duels SET ${column} = ? WHERE id = ?`).bind(now, id).run();
+  return maybeStart(env, playerId, id);
+}
 
-  const iAmChallenger = playerId === duel.challenger_id;
-  await env.DB.prepare(`UPDATE duels SET ${iAmChallenger ? 'challenger_seen_at' : 'opponent_seen_at'} = ? WHERE id = ?`).bind(now, id).run();
-  const rivalSeen = iAmChallenger ? duel.opponent_seen_at : duel.challenger_seen_at;
-  if (duel.opponent_id && present(rivalSeen, now)) {
-    const startsAt = now + DUEL_COUNTDOWN_MS;
-    // Solo la primera petición que los ve juntos fija la hora (si llegan dos a la vez, gana una).
-    const update = await env.DB.prepare('UPDATE duels SET starts_at = ?, expires_at = ? WHERE id = ? AND starts_at IS NULL')
-      .bind(startsAt, startsAt + DUEL_LIVE_MS, id)
-      .run();
-    if (update.meta.changes) {
-      await env.DB.batch(
-        [duel.challenger_id, duel.opponent_id].map((p) =>
-          env.DB.prepare('INSERT OR IGNORE INTO duel_runs (duel_id, player_id, started_at) VALUES (?, ?, ?)').bind(id, p, startsAt),
-        ),
-      );
-    }
+/** Pulsas Empezar (o lo deshaces con `ready` false). Cuenta también como estar en la sala. */
+export async function setReady(env: Env, playerId: string, id: string, ready: unknown) {
+  const duel = await myDuel(env, playerId, id);
+  const now = Date.now();
+  if (duel.declined_at !== null) throw new HttpError(409, 'duelDeclined');
+  if (!duel.opponent_id) throw new HttpError(409, 'duelNoRival');
+  if (duel.expires_at <= now) throw new HttpError(409, 'duelOver');
+  if (duel.starts_at !== null) return duelResponse(env, duel, playerId); // Ya ha empezado: nada que cambiar.
+  const me = playerId === duel.challenger_id ? 'challenger' : 'opponent';
+  await env.DB.prepare(`UPDATE duels SET ${me}_ready_at = ?, ${me}_seen_at = ? WHERE id = ?`)
+    .bind(ready === true ? now : null, now, id)
+    .run();
+  return maybeStart(env, playerId, id);
+}
+
+/**
+ * Si los dos están en la sala y han pulsado Empezar, se fija la hora de empezar
+ * para los dos: tras la cuenta atrás, y con un tiempo máximo para terminar.
+ */
+async function maybeStart(env: Env, playerId: string, id: string) {
+  const duel = await loadDuel(env, id);
+  const now = Date.now();
+  const ready =
+    duel.opponent_id !== null &&
+    duel.challenger_ready_at !== null &&
+    duel.opponent_ready_at !== null &&
+    present(duel.challenger_seen_at, now) &&
+    present(duel.opponent_seen_at, now);
+  if (!ready || duel.starts_at !== null) return duelResponse(env, duel, playerId);
+
+  const startsAt = now + DUEL_COUNTDOWN_MS;
+  // Solo la primera petición que los ve listos fija la hora (si llegan dos a la vez, gana una).
+  const update = await env.DB.prepare('UPDATE duels SET starts_at = ?, expires_at = ? WHERE id = ? AND starts_at IS NULL')
+    .bind(startsAt, startsAt + DUEL_LIVE_MS, id)
+    .run();
+  if (update.meta.changes) {
+    await env.DB.batch(
+      [duel.challenger_id, duel.opponent_id!].map((p) =>
+        env.DB.prepare('INSERT OR IGNORE INTO duel_runs (duel_id, player_id, started_at) VALUES (?, ?, ?)').bind(id, p, startsAt),
+      ),
+    );
   }
   return duelResponse(env, await loadDuel(env, id), playerId);
 }

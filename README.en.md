@@ -159,8 +159,9 @@ anything from outside) and builds the game to `dist/`.
   (free-play levels 6, 12 and 32). The server generates the board when the duel is created and
   stores it.
 - Duels are live. Both players wait in the duel room; while it's open, the game pings the server
-  every 2 s (`POST /duels/:id/here`). When both are there, the server sets the start time, the same
-  for both, after a 4 s countdown. They have 48 hours to meet.
+  every 2 s (`POST /duels/:id/here`). When both are there and both press *Start*
+  (`PUT /duels/:id/ready`), the server sets the start time, the same for both, after a 5 s countdown.
+  They have 48 hours to meet.
 - One attempt, no hints: you can restart, but the clock keeps running. When you finish, your result
   is sent and you wait for your rival; their result stays hidden until both have finished (or 20
   minutes have passed). Fewer moves wins and, on a tie, the faster player.

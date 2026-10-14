@@ -1,6 +1,6 @@
 // Sala del duelo: se entra al crearlo o al aceptarlo (también desde el enlace).
 // Mientras está abierta avisa al servidor de que sigues aquí; cuando estáis los
-// dos, cuenta atrás y a jugar. Si ya has terminado, espera al rival; si el duelo
+// dos y habéis pulsado Empezar, cuenta atrás y a jugar. Si ya has terminado, espera al rival; si el duelo
 // ha acabado, el resultado. Queda en la dirección para volver aquí al recargar.
 
 import { penguinSvg } from '../../../../common/art/hats';
@@ -8,7 +8,7 @@ import { DUEL_POLL_MS } from '../../../../common/logic/duels/duels';
 import { h, svg, toast } from '../../shared/dom';
 import { go, type Screen } from '../../shared/router';
 import { ensureName } from '../profile/profile';
-import { type Duel, type DuelInvite, type DuelSide, acceptDuel, duelHere, getDuel } from './api';
+import { type Duel, type DuelInvite, type DuelSide, acceptDuel, duelHere, getDuel, setDuelReady } from './api';
 import {
   clearDuelUrl,
   confirmDecline,
@@ -72,12 +72,14 @@ export function duelRoomScreen(id: string): Screen {
   /** Un jugador en la sala: su pingüino y si está dentro. */
   function seat(name: string, side: DuelSide | null, isMe: boolean): HTMLElement {
     const here = isMe || side?.present;
+    const ready = here && side?.ready;
+    const state = ready ? `⚔️ ${t('duels.room.wantsToStart')}` : here ? `✓ ${t('duels.room.here')}` : side ? t('duels.room.away') : t('duels.room.nobodyYet');
     return h(
       'div',
-      { class: `duel-seat ${here ? 'here' : ''}` },
+      { class: `duel-seat ${here ? 'here' : ''} ${ready ? 'ready' : ''}` },
       h('div', { class: 'duel-seat-penguin' }, side || isMe ? svg(penguinSvg(side?.hat ?? null)) : h('span', { class: 'duel-seat-unknown' }, '?')),
       h('strong', null, name),
-      h('span', { class: 'duel-seat-state' }, here ? `✓ ${t('duels.room.here')}` : side ? t('duels.room.away') : t('duels.room.nobodyYet')),
+      h('span', { class: 'duel-seat-state' }, state),
     );
   }
 
@@ -132,21 +134,32 @@ export function duelRoomScreen(id: string): Screen {
       return;
     }
 
-    // Esperando: a que alguien abra el enlace o a que el rival entre en la sala.
+    // Esperando: a que alguien abra el enlace, a que el rival entre en la sala o a que
+    // pulséis Empezar los dos.
     const rival = d.rival;
+    const name = rivalName(d);
+    const rivalReady = !!rival?.present && rival.ready;
     const message = !rival
       ? t('duels.room.waitingLink')
-      : rival.present
-        ? t('duels.room.bothHere')
-        : t('duels.screen.waitingFor', { name: rivalName(d) });
+      : d.me.ready
+        ? rival.present
+          ? t('duels.room.waitingStart', { name })
+          : t('duels.screen.waitingFor', { name })
+        : rivalReady
+          ? t('duels.room.rivalWants', { name })
+          : rival.present
+            ? t('duels.room.bothHere')
+            : t('duels.screen.waitingFor', { name });
     body.replaceChildren(
       seats(d),
       h(
         'section',
-        { class: 'card duel-waiting' },
-        h('span', { class: 'duel-dots', 'aria-hidden': 'true' }, h('i'), h('i'), h('i')),
+        { class: `card duel-waiting ${rivalReady && !d.me.ready ? 'nudge' : ''}` },
+        !rival || d.me.ready || !rival.present ? h('span', { class: 'duel-dots', 'aria-hidden': 'true' }, h('i'), h('i'), h('i')) : null,
         h('h2', null, message),
-        h('p', { class: 'muted' }, t('duels.room.keepOpen')),
+        h('p', { class: 'muted' }, rival ? t('duels.room.pressStart') : t('duels.room.keepOpen')),
+        rival && !d.me.ready ? h('button', { class: 'btn big block duel-start-btn', onclick: () => void ready(true) }, `⚔️ ${t('duels.room.start')}`) : null,
+        rival && d.me.ready ? h('button', { class: 'link-btn', onclick: () => void ready(false) }, t('duels.room.notYet')) : null,
         h('p', { class: 'muted small' }, timeLeft(d.expiresAt)),
         !rival ? h('button', { class: 'btn block', onclick: () => shareDuel(d) }, `🔗 ${t('duels.screen.shareLink')}`) : null,
         rival && d.role === 'opponent'
@@ -154,6 +167,18 @@ export function duelRoomScreen(id: string): Screen {
           : null,
       ),
     );
+  }
+
+  /** Pulsas Empezar (o lo deshaces): se pinta enseguida con la respuesta del servidor. */
+  async function ready(value: boolean) {
+    try {
+      duel = await setDuelReady(id, value);
+      if (disposed) return;
+      offset = duel.serverNow - Date.now();
+      render(duel);
+    } catch (err) {
+      toast((err as Error).message);
+    }
   }
 
   /** Alguien abre el enlace de un duelo abierto: quién reta y aceptar (o no). */

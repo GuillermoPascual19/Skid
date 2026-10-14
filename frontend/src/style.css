@@ -3450,3 +3450,34 @@ input.switch:focus-visible {
     animation: none;
   }
 }
+
+/* Sala: ya ha pulsado Empezar. */
+.duel-seat.ready .duel-seat-state {
+  color: var(--gold-dark);
+}
+
+/* El rival quiere empezar y tú aún no: la tarjeta llama la atención. */
+.duel-waiting.nudge {
+  outline: 3px solid var(--gold);
+  animation: duel-nudge 1.4s ease-in-out infinite;
+}
+
+@keyframes duel-nudge {
+  0%,
+  100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.015);
+  }
+}
+
+.duel-start-btn {
+  margin-top: 4px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .duel-waiting.nudge {
+    animation: none;
+  }
+}
