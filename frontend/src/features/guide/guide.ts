@@ -5,6 +5,7 @@ import { penguinSvg } from '../../../../common/art/hats';
 import { elementSvg } from '../../../../common/art/elements';
 import { ELEMENTS } from '../../../../common/logic/engine/elements';
 import { GOLF } from '../../../../common/logic/daily/score';
+import { TIME_ATTACK_MS, TIME_ATTACK_POINTS, TIME_ATTACK_SKIP_MS } from '../../../../common/logic/timeattack/timeattack';
 import { FREEZE_EVERY, MAX_FREEZES } from '../../../../common/logic/daily/streaks';
 import * as online from '../../shared/api';
 import { h, openModal, starSvg, svg } from '../../shared/dom';
@@ -12,16 +13,16 @@ import { read, write } from '../../shared/storage';
 import { t, tn } from '../../i18n/i18n';
 
 /** Sube cuando cambian las reglas o hay algo nuevo (ver NEWS): quien ya jugaba ve el aviso. */
-export const GUIDE_VERSION = 6;
+export const GUIDE_VERSION = 7;
 const GUIDE_SEEN_KEY = 'skid.guide.v1';
 
-export type GuidePage = 'slide' | 'pieces' | 'free' | 'daily' | 'weekly' | 'duels' | 'leagues' | 'elements' | 'community';
+export type GuidePage = 'slide' | 'pieces' | 'free' | 'daily' | 'weekly' | 'timeattack' | 'duels' | 'leagues' | 'elements' | 'community';
 
 /** Aviso de la portada para quien ya jugaba: lo último que ha cambiado (sube GUIDE_VERSION al cambiarlo). */
 export const NEWS = {
-  icon: '🧊',
+  icon: '⏱',
   // El título y el texto están en los diccionarios: news.title y news.text.
-  page: 'daily' as GuidePage,
+  page: 'timeattack' as GuidePage,
 };
 
 interface Page {
@@ -137,6 +138,17 @@ const PAGES: Page[] = [
         ['↺', t('guide.weekly.r2')],
         ['🚫', t('guide.weekly.r3')],
         ['🏆', t('guide.weekly.r4')],
+      ),
+    ],
+  },
+  {
+    id: 'timeattack',
+    body: () => [
+      rules(
+        ['⏱', t('guide.timeattack.r1', { minutes: TIME_ATTACK_MS / 60_000 })],
+        ['⭐', t('guide.timeattack.r2', { base: TIME_ATTACK_POINTS.base, perfect: TIME_ATTACK_POINTS.perfect })],
+        ['⏭', t('guide.timeattack.r3', { seconds: TIME_ATTACK_SKIP_MS / 1000 })],
+        ['🏆', t('guide.timeattack.r4')],
       ),
     ],
   },

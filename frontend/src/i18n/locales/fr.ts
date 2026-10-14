@@ -320,6 +320,34 @@ export const messages: Messages = {
     playAgain: 'Rejouer',
     firstMark: 'Ton premier score de la semaine. Tu peux l\'améliorer jusqu\'à dimanche.',
   },
+  timeattack: {
+    points: 'Points',
+    title: 'Contre-la-montre',
+    intro: {
+      title: '{minutes} minutes, autant de plateaux que possible',
+      boards: 'Des petits plateaux, l\'un après l\'autre et de plus en plus difficiles. Tu peux en recommencer un, mais le chrono continue.',
+      points: 'Chaque plateau rapporte {base} points ou plus (plus tu avances, plus il rapporte) et {perfect} de bonus à l\'optimum.',
+      skip: 'Si tu bloques, passe-le : tu perds {seconds} secondes.',
+      week: 'Les mêmes plateaux pour tous toute la semaine. Joue autant de fois que tu veux : ta meilleure partie compte dans le classement avec tes amis.',
+    },
+    boards: { one: '{n} plateau', other: '{n} plateaux' },
+    ranking: {
+      empty: 'Personne n\'a encore joué cette semaine. Sois le premier !',
+    },
+    card: {
+      title: '{minutes} minutes, autant de plateaux que possible',
+      text: 'Les mêmes plateaux pour tous cette semaine : affronte tes amis.',
+      again: 'Battre mon score',
+    },
+    board: 'Plateau',
+    hintKeys: 'Flèches ou WASD · R recommence le plateau (le chrono continue)',
+    hintTouch: 'Glisse le doigt · ↺ recommence le plateau (le chrono continue)',
+    skip: 'Passer (−{seconds} s)',
+    over: 'Temps écoulé !',
+    record: 'Nouveau record !',
+    recordText: '{points} points : ta meilleure partie de la semaine.',
+    weekBest: 'Ton record de la semaine : {points} points',
+  },
   duels: {
     difficulty: {
       easy: 'Facile',
@@ -808,8 +836,8 @@ export const messages: Messages = {
     next: 'Suivant',
   },
   news: {
-    title: 'Changement : les déplacements comptent.',
-    text: 'Fini le golf : ton résultat, c\'est ton nombre de déplacements, moins il y en a, mieux c\'est. Et tu peux maintenant partager sur WhatsApp ou copier le lien.',
+    title: 'Nouveau : contre-la-montre.',
+    text: '3 minutes pour réussir autant de plateaux que possible. Les mêmes pour tous toute la semaine : affronte tes amis.',
   },
   guide: {
     slide: {
@@ -850,6 +878,13 @@ export const messages: Messages = {
       r2: 'Joue autant de fois que tu veux pendant la semaine : ton meilleur essai compte.',
       r3: 'Pas d\'indices.',
       r4: 'Classement avec les amis de toutes tes ligues. À déplacements égaux, le premier à l\'avoir fait gagne.',
+    },
+    timeattack: {
+      title: 'Contre-la-montre',
+      r1: '{minutes} minutes pour réussir autant de plateaux que possible, l\'un après l\'autre et de plus en plus difficiles.',
+      r2: 'Chaque plateau rapporte {base} points ou plus (plus tu avances, plus il rapporte) et {perfect} de bonus à l\'optimum.',
+      r3: 'Si tu bloques, tu peux passer le plateau au prix de {seconds} secondes.',
+      r4: 'Les plateaux sont les mêmes pour tous toute la semaine. Ta meilleure partie compte dans le classement avec tes amis.',
     },
     duels: {
       title: 'Duels',

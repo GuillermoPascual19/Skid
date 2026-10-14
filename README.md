@@ -15,6 +15,8 @@ y niveles creados por los jugadores.
 - **Reto diario**: el mismo tablero para todos; gana quien lo haga en menos movimientos. Con rachas,
   protectores de racha, solución al terminar y el fantasma de un amigo.
 - **Reto semanal**: un tablero grande y difícil de lunes a domingo, con ranking entre amigos.
+- **Contrarreloj**: 3 minutos para superar tantos tableros como puedas, los mismos para todos durante
+  la semana, con ranking entre amigos.
 - **Duelos en directo**: retas a un amigo (o a quien quieras con un enlace) y jugáis a la vez el
   mismo tablero nuevo.
 - **Ligas**: ranking del día y de la semana con tus amigos, y temporadas mensuales cuyo campeón se
@@ -81,6 +83,7 @@ frontend/                  el juego en el navegador (Vite)
       free-play/           modo libre
       daily/               reto diario, estadísticas, solución y fantasma de un amigo
       weekly/              reto semanal
+      timeattack/          contrarreloj: partida, tarjeta y ranking
       duels/               duelos: retar, sala de espera, partida en directo, resultado y revancha
       ranking/             ligas, temporadas, reacciones y ranking por movimientos (niveles,
                            reto semanal)
@@ -101,14 +104,15 @@ backend/                   el Worker de Cloudflare: sirve el juego (dist/) y la 
     session.ts             sesiones, login con Google, cerrar sesión y borrar la cuenta
     google.ts              verificación de los tokens de Google
     i18n.ts                idioma de cada petición para los mensajes de error
-    routes/                un archivo por apartado: daily, weekly, duels, leagues, seasons,
-                           reactions, levels, players, stats, achievements
-  migrations/              esquema de la base de datos D1 (0001 a 0015)
+    routes/                un archivo por apartado: daily, weekly, timeattack, duels, leagues,
+                           seasons, reactions, levels, players, stats, achievements
+  migrations/              esquema de la base de datos D1 (0001 a 0016)
 common/                    lo que usan los dos; sin APIs del navegador ni imports de fuera
   logic/                   reglas puras: el servidor reproduce las partidas con este mismo código
     engine/                tablero, movimiento, solver, generador, elementos, aleatorio
     daily/                 reto diario, puntos de liga y rachas
     weekly/                reto semanal
+    timeattack/            contrarreloj: tableros de la semana y puntos
     duels/                 duelos: dificultades, tiempos y quién gana
     achievements/          logros
     leagues/               temporadas (fechas, podio y el gorro de cada mes) y reacciones
@@ -152,6 +156,22 @@ fuera) y compila el juego a `dist/`.
   amigos (quienes comparten alguna liga contigo); a igualdad gana quien lo consiguió antes.
 - Lógica en `common/logic/weekly/`, servidor en `backend/src/routes/weekly.ts` y el juego en
   `frontend/src/features/weekly/`.
+
+## Contrarreloj
+
+- 3 minutos para superar tantos tableros pequeños como se pueda, uno detrás de otro y cada vez más
+  difíciles (empieza en el nivel 4 del modo libre y sube uno por tablero).
+- Cada tablero da 100 puntos más 20 por cada tablero ya superado (los saltados no cuentan), y 50 de
+  bonus en el óptimo. Se puede
+  saltar uno perdiendo 10 s. Reiniciar el tablero se puede, pero el reloj sigue.
+- Los tableros de la semana son los mismos para todos. Cada uno se genera la primera vez que alguien
+  llega a él y se guarda en `time_attack_boards` (generar muchos de golpe no cabe en una petición).
+- El servidor fija la hora de salida (tras 3 s de cuenta atrás) y el final, y reproduce cada tablero
+  al recibirlo: comprueba que se ha superado, que no se ha ido más rápido que las animaciones y que
+  no se ha acabado el tiempo (con 3 s de margen para la red). Ranking de la semana con los amigos de
+  todas tus ligas: cuenta la mejor partida de cada uno.
+- Lógica en `common/logic/timeattack/`, servidor en `backend/src/routes/timeattack.ts` y el juego en
+  `frontend/src/features/timeattack/`.
 
 ## Duelos
 

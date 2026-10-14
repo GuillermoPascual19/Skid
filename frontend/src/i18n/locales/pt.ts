@@ -320,6 +320,34 @@ export const messages: Messages = {
     playAgain: 'Jogar outra vez',
     firstMark: 'A tua primeira marca da semana. Podes melhorá-la até domingo.',
   },
+  timeattack: {
+    points: 'Pontos',
+    title: 'Contrarrelógio',
+    intro: {
+      title: '{minutes} minutos, tantos tabuleiros quanto conseguires',
+      boards: 'Tabuleiros pequenos, uns atrás dos outros e cada vez mais difíceis. Podes recomeçar um, mas o relógio continua.',
+      points: 'Cada tabuleiro dá {base} pontos ou mais (mais quanto mais avançado) e {perfect} de bónus se o fizeres no ótimo.',
+      skip: 'Se ficares preso, salta-o: perdes {seconds} segundos.',
+      week: 'Os mesmos tabuleiros para todos durante a semana. Joga quantas vezes quiseres: conta a tua melhor partida na classificação com os teus amigos.',
+    },
+    boards: { one: '{n} tabuleiro', other: '{n} tabuleiros' },
+    ranking: {
+      empty: 'Ainda ninguém jogou esta semana. Sê o primeiro!',
+    },
+    card: {
+      title: '{minutes} minutos, tantos tabuleiros quanto conseguires',
+      text: 'Os mesmos tabuleiros para todos esta semana: compete com os teus amigos.',
+      again: 'Superar a minha marca',
+    },
+    board: 'Tabuleiro',
+    hintKeys: 'Setas ou WASD · R recomeça o tabuleiro (o relógio continua)',
+    hintTouch: 'Desliza o dedo · ↺ recomeça o tabuleiro (o relógio continua)',
+    skip: 'Saltar (−{seconds} s)',
+    over: 'Tempo!',
+    record: 'Nova melhor marca!',
+    recordText: '{points} pontos: a tua melhor partida da semana.',
+    weekBest: 'A tua melhor marca da semana: {points} pontos',
+  },
   duels: {
     difficulty: {
       easy: 'Fácil',
@@ -808,8 +836,8 @@ export const messages: Messages = {
     next: 'Seguinte',
   },
   news: {
-    title: 'Mudança: contam os movimentos.',
-    text: 'Acabou o golfe: o teu resultado é o número de movimentos, quanto menos melhor. E agora podes partilhar pelo WhatsApp ou copiar o link.',
+    title: 'Novo: contrarrelógio.',
+    text: '3 minutos para superar tantos tabuleiros quanto conseguires. Os mesmos para todos durante a semana: compete com os teus amigos.',
   },
   guide: {
     slide: {
@@ -850,6 +878,13 @@ export const messages: Messages = {
       r2: 'Joga quantas vezes quiseres durante a semana: conta a tua melhor tentativa.',
       r3: 'Sem pistas.',
       r4: 'Classificação com os amigos de todas as tuas ligas. Com os mesmos movimentos, ganha quem o conseguiu primeiro.',
+    },
+    timeattack: {
+      title: 'Contrarrelógio',
+      r1: '{minutes} minutos para superar tantos tabuleiros quanto conseguires, uns atrás dos outros e cada vez mais difíceis.',
+      r2: 'Cada tabuleiro dá {base} pontos ou mais (mais quanto mais avançado) e {perfect} de bónus se o fizeres no ótimo.',
+      r3: 'Se ficares preso, podes saltar o tabuleiro em troca de {seconds} segundos.',
+      r4: 'Os tabuleiros são os mesmos para todos durante a semana. Conta a tua melhor partida na classificação com os teus amigos.',
     },
     duels: {
       title: 'Duelos',
