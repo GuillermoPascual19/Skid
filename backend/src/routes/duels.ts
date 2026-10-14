@@ -17,6 +17,7 @@ import {
   isDuelDifficulty,
 } from '../../../common/logic/duels/duels';
 import { type Env, HttpError } from '../http';
+import { background, notify } from '../push';
 import { requireName } from './players';
 
 const MAX_LOG_LENGTH = 2000;
@@ -64,6 +65,22 @@ interface RunRow {
  * terminaron los dos o se acabó el tiempo · declined: el rival lo rechazó.
  */
 type DuelStatus = 'open' | 'waiting' | 'playing' | 'finished' | 'declined';
+
+/** Avisos de un duelo a un jugador: como mucho uno cada 10 minutos por duelo. */
+const DUEL_NOTIFY_MS = 10 * 60 * 1000;
+
+async function nameOf(env: Env, playerId: string): Promise<string> {
+  const row = await env.DB.prepare('SELECT name FROM players WHERE id = ?').bind(playerId).first<{ name: string | null }>();
+  return row?.name ?? '?';
+}
+
+/** Avisa a `to` de algo del duelo `duelId` que ha hecho `from`. */
+function notifyDuel(env: Env, to: string, from: string, duelId: string, kind: 'duelChallenge' | 'duelAccepted' | 'duelWaiting'): void {
+  background(
+    env,
+    nameOf(env, from).then((name) => notify(env, to, kind, { name }, { url: `/?duelo=${duelId}`, throttle: { tag: `duel:${duelId}`, ms: DUEL_NOTIFY_MS } })),
+  );
+}
 
 /** ¿Comparten alguna liga? Solo a los amigos de tus ligas se les reta por nombre. */
 async function sharesLeague(env: Env, a: string, b: string): Promise<boolean> {
@@ -214,6 +231,7 @@ export async function createDuel(env: Env, playerId: string, input: { difficulty
   )
     .bind(id, playerId, opponentId, input.difficulty, encodeRows(level.rows), level.solution.length, now, now + DUEL_DURATION_MS, now)
     .run();
+  if (opponentId) notifyDuel(env, opponentId, playerId, id, 'duelChallenge');
   return duelResponse(env, await loadDuel(env, id), playerId);
 }
 
@@ -257,6 +275,7 @@ export async function acceptDuel(env: Env, playerId: string, id: string) {
     .bind(playerId, Date.now(), id)
     .run();
   if (!update.meta.changes && duel.opponent_id !== playerId) throw new HttpError(409, 'duelHasRival');
+  if (update.meta.changes) notifyDuel(env, duel.challenger_id, playerId, id, 'duelAccepted');
   return here(env, playerId, id);
 }
 
@@ -307,7 +326,13 @@ async function maybeStart(env: Env, playerId: string, id: string) {
     duel.opponent_ready_at !== null &&
     present(duel.challenger_seen_at, now) &&
     present(duel.opponent_seen_at, now);
-  if (!ready || duel.starts_at !== null) return duelResponse(env, duel, playerId);
+  if (!ready || duel.starts_at !== null) {
+    // Estás en la sala y el rival no: se le avisa (como mucho cada 10 minutos).
+    const rivalId = playerId === duel.challenger_id ? duel.opponent_id : duel.challenger_id;
+    const rivalSeen = playerId === duel.challenger_id ? duel.opponent_seen_at : duel.challenger_seen_at;
+    if (duel.starts_at === null && rivalId && !present(rivalSeen, now)) notifyDuel(env, rivalId, playerId, id, 'duelWaiting');
+    return duelResponse(env, duel, playerId);
+  }
 
   const startsAt = now + DUEL_COUNTDOWN_MS;
   // Solo la primera petición que los ve listos fija la hora (si llegan dos a la vez, gana una).

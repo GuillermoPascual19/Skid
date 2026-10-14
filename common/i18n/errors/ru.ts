@@ -92,6 +92,8 @@ export const errors: ErrorMessages = {
   runNotStarted: 'Партия ещё не началась',
   timeUp: 'Время вышло',
   runChanged: 'Партия изменилась на другом устройстве',
+  pushDisabled: 'Уведомления недоступны',
+  invalidSubscription: 'Неверная подписка',
   reactionInvalid: 'Такой реакции нет',
   reactionSelf: 'Нельзя реагировать на своё испытание',
   reactionNotAllowed: 'Реагировать можно только на пройденные испытания друзей за последние {days} дн.',

@@ -24,6 +24,7 @@ import { weeklyCard } from '../weekly/weekly';
 import { duelsCard } from '../duels/duels';
 import { timeAttackCard } from '../timeattack/timeattack';
 import { reactionsCard } from '../ranking/reactions';
+import { notificationsButton } from '../notifications/notifications';
 import { t, tn } from '../../i18n/i18n';
 
 export function homeScreen(): Screen {
@@ -290,7 +291,7 @@ export function homeScreen(): Screen {
         )
       : null;
   const audio = audioToggles();
-  audio.el.prepend(languageButton(), themeButton());
+  audio.el.prepend(languageButton(), themeButton(), ...(online.onlineEnabled ? [notificationsButton()] : []));
   const el = h(
     'div',
     { class: 'screen home' },

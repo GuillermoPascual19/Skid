@@ -92,6 +92,8 @@ export const errors: ErrorMessages = {
   runNotStarted: 'A partida ainda não começou',
   timeUp: 'Acabou o tempo',
   runChanged: 'A partida mudou noutro dispositivo',
+  pushDisabled: 'As notificações não estão disponíveis',
+  invalidSubscription: 'Subscrição inválida',
   reactionInvalid: 'Essa reação não existe',
   reactionSelf: 'Não podes reagir ao teu próprio desafio',
   reactionNotAllowed: 'Só podes reagir a desafios terminados dos teus amigos dos últimos {days} dias',

@@ -92,6 +92,8 @@ export const errors: ErrorMessages = {
   runNotStarted: "The game hasn't started yet",
   timeUp: "Time's up",
   runChanged: 'The game changed on another device',
+  pushDisabled: 'Notifications are not available',
+  invalidSubscription: 'Invalid subscription',
   reactionInvalid: "That reaction doesn't exist",
   reactionSelf: "You can't react to your own challenge",
   reactionNotAllowed: "You can only react to your friends' finished challenges from the last {days} days",

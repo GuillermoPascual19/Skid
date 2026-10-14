@@ -11,6 +11,7 @@ import { weeklyScreen } from './features/weekly/weekly-screen';
 import { duelsScreen } from './features/duels/duels-screen';
 import { difficultyLabel } from './features/duels/duels';
 import { duelRoomScreen } from './features/duels/duel-room';
+import { refreshPush, registerServiceWorker } from './features/notifications/notifications';
 import { timeAttackScreen } from './features/timeattack/timeattack-screen';
 import { duelPlayScreen } from './features/duels/duel-play';
 import { getDuelGhost } from './features/duels/api';
@@ -110,3 +111,7 @@ if (duelLink) {
   history.replaceState(null, '', location.pathname);
   go({ name: 'community', open: sharedLevel });
 } else go(join ? { name: 'ranking', join } : { name: 'home' });
+
+// Notificaciones: el service worker que las recibe y, si están activadas, la suscripción al día.
+registerServiceWorker();
+void refreshPush();

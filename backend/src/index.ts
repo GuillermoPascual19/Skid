@@ -36,14 +36,17 @@ import {
 import { playerProfile } from './routes/players';
 import { leagueSeason, seasonHats, seasonTitles, settleSeasons } from './routes/seasons';
 import { newReactions, react } from './routes/reactions';
+import { deleteSubscription, pushKey, saveSubscription, streakReminders, testPush } from './routes/push';
 import { playerStats } from './routes/stats';
 import { authenticate, createSession, deleteAccount, googleLogin, logoutEverywhere } from './session';
 import { nameKey, nameProblem, NAME_MAX, NAME_MIN } from '../../common/logic/players/names';
 
 export default {
-  async fetch(req, env): Promise<Response> {
+  async fetch(req, rawEnv, ctx): Promise<Response> {
     const url = new URL(req.url);
-    if (!url.pathname.startsWith('/api/')) return env.ASSETS.fetch(req);
+    if (!url.pathname.startsWith('/api/')) return rawEnv.ASSETS.fetch(req);
+    // Las notificaciones se envían después de responder, sin que el jugador espere.
+    const env: Env = { ...rawEnv, waitUntil: (task) => ctx.waitUntil(task) };
     try {
       return await handleApi(req, url, env);
     } catch (err) {
@@ -51,6 +54,11 @@ export default {
       console.error(err);
       return json({ error: errorMessage(requestLocale(req), 'internal'), code: 'internal' }, 500);
     }
+  },
+
+  /** Tarea programada de cada tarde (wrangler.jsonc): el recordatorio de racha. */
+  async scheduled(_event, env, ctx): Promise<void> {
+    ctx.waitUntil(streakReminders(env).then((n) => console.log(`recordatorios de racha: ${n}`)));
   },
 } satisfies ExportedHandler<Env>;
 
@@ -122,6 +130,13 @@ async function handleApi(req: Request, url: URL, env: Env): Promise<Response> {
   }
 
   if (route === 'GET /stats') return json(await playerStats(env, playerId));
+  if (route === 'GET /push/key') return json(pushKey(env));
+  if (route === 'PUT /push/subscription') return json(await saveSubscription(env, playerId, await body(req)));
+  if (route === 'DELETE /push/subscription') {
+    const { endpoint } = await body<{ endpoint?: unknown }>(req);
+    return json(await deleteSubscription(env, playerId, endpoint));
+  }
+  if (route === 'POST /push/test') return json(await testPush(env, playerId));
   if ((m = route.match(/^GET \/players\/([\w-]+)$/))) return json(await playerProfile(env, playerId, m[1]));
   if ((m = route.match(/^GET \/daily\/(\d{4}-\d{2}-\d{2})$/))) return json(await getRun(env, playerId, m[1]));
   if ((m = route.match(/^POST \/daily\/(\d{4}-\d{2}-\d{2})\/start$/))) return json(await startRun(env, playerId, m[1]));

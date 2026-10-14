@@ -26,6 +26,7 @@ friends, and levels made by the players.
   ranking, sharing and reporting.
 - A "How to play" guide, dark mode, synthesized music and sound effects, and Google sign-in to play
   on several devices.
+- It installs as an app and sends notifications (duels, reactions and streak reminder).
 - In seven languages: Spanish, English, German, French, Portuguese, Italian and Russian. It picks
   the browser's language and can be changed from the home screen.
 - Share on WhatsApp or Telegram, copy the link or the message, or use the system share menu.
@@ -75,6 +76,8 @@ frontend/                  the game in the browser (Vite)
   public/                  copied as-is to dist/
     _headers               security headers (CSP…) for the site
     theme-init.js          applies the theme before the first paint
+    sw.js                  service worker: shows the notifications
+    manifest.webmanifest   installable app (with its icons)
   src/
     main.ts                startup and routes
     style.css              styles (light and dark theme with CSS variables)
@@ -104,9 +107,11 @@ backend/                   the Cloudflare Worker: serves the game (dist/) and th
     session.ts             sessions, Google sign-in, signing out and deleting the account
     google.ts              Google token verification
     i18n.ts                each request's language for error messages
+    push.ts                notifications: who, in which language and without repeats
+    webpush.ts             notification encryption and VAPID signing (no libraries)
     routes/                one file per feature: daily, weekly, timeattack, duels, leagues,
                            seasons, reactions, levels, players, stats, achievements
-  migrations/              D1 database schema (0001 to 0016)
+  migrations/              D1 database schema (0001 to 0017)
 common/                    used by both; no browser APIs and no imports from outside
   logic/                   pure rules: the server replays games with this very same code
     engine/                board, movement, solver, generator, elements, randomness
@@ -118,7 +123,7 @@ common/                    used by both; no browser APIs and no imports from out
     leagues/               seasons (dates, podium and each month's hat) and reactions
     community/             validation of player-made levels
     players/               player name rules
-  i18n/                    languages and the server's error messages in each one
+  i18n/                    languages, error messages and notification texts
   art/                     SVG drawings (penguin, hats, elements)
 tests/                     backend/ and common/, mirroring the code tree
 .github/workflows/         automatic deployment
@@ -204,6 +209,21 @@ anything from outside) and builds the game to `dist/`.
 - Logic in `common/logic/leagues/seasons.ts`, server in `backend/src/routes/seasons.ts` and the
   game in the Season tab of the ranking (`frontend/src/features/ranking/season.ts`).
 
+## Notifications
+
+- Push notifications even when the game is closed: someone challenges you to a duel, someone accepted
+  your duel, your rival is waiting in the room, someone reacted to your challenge and, in the
+  evening, the streak reminder (for players who played yesterday but not yet today). Each device picks
+  which ones it wants from the 🔔 on the home screen.
+- No libraries: the content is encrypted for the browser (RFC 8291) and signed with the server's
+  VAPID key (RFC 8292), using WebCrypto (`backend/src/webpush.ts`). It only sends to the browsers' push
+  services (Google, Mozilla, Apple, Microsoft), and expired subscriptions are deleted automatically.
+- To avoid spamming: duel notifications at most once every 10 minutes; reactions, one per friend per
+  day; the reminder, once a day (`push_log`).
+- The reminder is sent by a scheduled job (`triggers.crons` in `wrangler.jsonc`, 18:00 UTC).
+- The app can be installed (`public/manifest.webmanifest`); on iPhone it has to be installed to get
+  notifications. The service worker that shows them is `public/sw.js`.
+
 ## Security
 
 - Sessions: a random 256-bit token in the browser; the database only keeps its hash. Google tokens are
@@ -254,3 +274,8 @@ Automatic deployment on every push to `main` (`.github/workflows/deploy.yml`, ru
 in GitHub, under *Settings → Secrets and variables → Actions*, add the secrets `CLOUDFLARE_API_TOKEN`
 (create it in the dashboard with the *Edit Cloudflare Workers* template and the *D1: Edit*
 permission) and `CLOUDFLARE_ACCOUNT_ID`.
+
+Notifications: the public VAPID key is in `wrangler.jsonc` and the private one is a Worker secret
+(once: `pnpm exec wrangler secret put VAPID_PRIVATE_KEY`). Without it the game works the same, just
+without notifications. Locally it's read from `.dev.vars` (not committed). To generate a new pair,
+change both at once (existing subscriptions stop working).
