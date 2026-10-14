@@ -91,7 +91,7 @@ export const errors = {
   alreadyStarted: 'Ya has empezado a jugarlo',
   duelDeclined: 'Este duelo se rechazó',
   duelNoRival: 'Este duelo aún no tiene rival',
-  duelHandedIn: 'Ya entregaste tu marca en este duelo',
+  duelHandedIn: 'Ya has terminado este duelo',
   finishBeforeHandIn: 'Termina el tablero al menos una vez antes de entregar',
   duelNotStarted: 'No has empezado este duelo',
   duelNotOver: 'El duelo aún no ha terminado',

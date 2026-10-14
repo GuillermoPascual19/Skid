@@ -15,7 +15,8 @@ y niveles creados por los jugadores.
 - **Reto diario**: el mismo tablero para todos; gana quien lo haga en menos movimientos. Con rachas,
   protectores de racha, solución al terminar y el fantasma de un amigo.
 - **Reto semanal**: un tablero grande y difícil de lunes a domingo, con ranking entre amigos.
-- **Duelos**: retas a un amigo (o a quien quieras con un enlace) al mismo tablero nuevo.
+- **Duelos en directo**: retas a un amigo (o a quien quieras con un enlace) y jugáis a la vez el
+  mismo tablero nuevo.
 - **Ligas**: ranking del día y de la semana con tus amigos, y temporadas mensuales cuyo campeón se
   lleva el gorro de ese mes; reacciones con emojis a los retos de tus amigos; logros que
   desbloquean más gorros.
@@ -80,7 +81,7 @@ frontend/                  el juego en el navegador (Vite)
       free-play/           modo libre
       daily/               reto diario, estadísticas, solución y fantasma de un amigo
       weekly/              reto semanal
-      duels/               duelos: retar, aceptar, jugar, resultado y revancha
+      duels/               duelos: retar, sala de espera, partida en directo, resultado y revancha
       ranking/             ligas, temporadas, reacciones y ranking por movimientos (niveles,
                            reto semanal)
       achievements/        logros y gorros
@@ -102,13 +103,13 @@ backend/                   el Worker de Cloudflare: sirve el juego (dist/) y la 
     i18n.ts                idioma de cada petición para los mensajes de error
     routes/                un archivo por apartado: daily, weekly, duels, leagues, seasons,
                            reactions, levels, players, stats, achievements
-  migrations/              esquema de la base de datos D1 (0001 a 0014)
+  migrations/              esquema de la base de datos D1 (0001 a 0015)
 common/                    lo que usan los dos; sin APIs del navegador ni imports de fuera
   logic/                   reglas puras: el servidor reproduce las partidas con este mismo código
     engine/                tablero, movimiento, solver, generador, elementos, aleatorio
     daily/                 reto diario, puntos de liga y rachas
     weekly/                reto semanal
-    duels/                 duelos: dificultades y quién gana
+    duels/                 duelos: dificultades, tiempos y quién gana
     achievements/          logros
     leagues/               temporadas (fechas, podio y el gorro de cada mes) y reacciones
     community/             validación de niveles creados por jugadores
@@ -156,13 +157,18 @@ fuera) y compila el juego a `dist/`.
 
 - Retas a un amigo de tus ligas o a cualquiera con un enlace (`?duelo=`), y eliges dificultad
   (niveles 6, 12 y 32 del modo libre). El servidor genera el tablero al crear el duelo y lo guarda.
-- Cada uno juega cuantas veces quiera, sin pistas, y entrega su mejor marca. El duelo termina cuando
-  entregan los dos o a las 48 h; hasta entonces no se ve la marca del otro. Gana quien tenga menos
-  movimientos y, a igualdad, quien tardó menos (desde que empezó hasta su mejor intento).
-- Al terminar: el fantasma con los dos mejores intentos y la revancha.
+- Son en directo. Los dos esperan en la sala del duelo; mientras está abierta, el juego avisa al
+  servidor cada 2 s (`POST /duels/:id/here`). Cuando están los dos y los dos pulsan *Empezar*
+  (`PUT /duels/:id/ready`), el servidor fija la hora de empezar, la misma para los dos, tras una
+  cuenta atrás de 5 s. Tienen 48 h para coincidir.
+- Un intento, sin pistas: se puede reiniciar, pero el reloj sigue. Al terminar se envía y se espera
+  al rival; su resultado no se ve hasta que terminan los dos (o pasan 20 minutos). Gana quien haga
+  menos movimientos y, a igualdad, quien tardó menos.
+- La sala queda en la dirección (`?duelo=`): si el móvil recarga la página al volver de WhatsApp, se
+  vuelve a ella.
+- Al terminar: el fantasma con los dos intentos y la revancha.
 - Lógica en `common/logic/duels/`, servidor en `backend/src/routes/duels.ts` y el juego en
-  `frontend/src/features/duels/`. La partida «al mejor intento» es común con el reto semanal
-  (`frontend/src/play/attempt-screen.ts`).
+  `frontend/src/features/duels/` (la sala en `duel-room.ts`, la partida en `duel-play.ts`).
 
 ## Temporadas
 

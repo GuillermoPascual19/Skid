@@ -82,7 +82,7 @@ export const errors: ErrorMessages = {
   alreadyStarted: 'Já começaste a jogá-lo',
   duelDeclined: 'Este duelo foi recusado',
   duelNoRival: 'Este duelo ainda não tem adversário',
-  duelHandedIn: 'Já entregaste a tua marca neste duelo',
+  duelHandedIn: 'Já terminaste este duelo',
   finishBeforeHandIn: 'Termina o tabuleiro pelo menos uma vez antes de entregar',
   duelNotStarted: 'Não começaste este duelo',
   duelNotOver: 'O duelo ainda não terminou',

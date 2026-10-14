@@ -1,6 +1,8 @@
-// Duelos: dos jugadores, el mismo tablero nuevo (que ninguno ha visto) y 48 h
-// para jugarlo. Estilo golf: cuenta el mejor intento de cada uno, sin pistas, y
-// a igualdad de movimientos gana quien tardó menos.
+// Duelos en directo: dos jugadores, el mismo tablero nuevo (que ninguno ha
+// visto). Cuando los dos están en la sala y han pulsado Empezar, empiezan a la
+// vez tras una cuenta atrás y cada uno tiene un intento (puede reiniciar, pero el
+// reloj sigue).
+// Gana quien haga menos movimientos y, a igualdad, quien tarde menos.
 
 import { generateLevel, type GeneratedLevel } from '../engine/generator.ts';
 
@@ -18,28 +20,45 @@ export function isDuelDifficulty(value: unknown): value is DuelDifficulty {
   return typeof value === 'string' && Object.hasOwn(DUEL_DIFFICULTIES, value);
 }
 
-/** Tiempo para jugarlo desde que se crea el duelo. */
+/** Tiempo para que los dos coincidan en la sala desde que se crea el duelo. */
 export const DUEL_DURATION_MS = 48 * 60 * 60 * 1000;
+
+/** Se está en la sala si el juego ha avisado en estos últimos milisegundos. */
+export const DUEL_PRESENCE_MS = 12_000;
+
+/** Cada cuánto avisa el juego de que sigue en la sala (y pregunta por el rival). */
+export const DUEL_POLL_MS = 2_000;
+
+/** Cuenta atrás desde que los dos han pulsado Empezar hasta que empieza. */
+export const DUEL_COUNTDOWN_MS = 5_000;
+
+/** Tiempo para terminar el tablero una vez empezado; quien no acabe, no tiene resultado. */
+export const DUEL_LIVE_MS = 20 * 60 * 1000;
 
 export function duelLevel(difficulty: DuelDifficulty, seed: number): GeneratedLevel {
   return generateLevel(DUEL_DIFFICULTIES[difficulty].level, seed, { rejectDeadEnds: true });
 }
 
-/** Mejor intento de un jugador: movimientos y tiempo desde que empezó hasta conseguirlo. */
+/** Resultado de un jugador: movimientos y tiempo desde que empezó el duelo. */
 export interface DuelResult {
   readonly moves: number;
   readonly timeMs: number;
 }
 
 /**
- * Quién gana un duelo terminado: menos movimientos y, a igualdad, menos tiempo.
- * Quien no lo terminó pierde contra quien sí; si ninguno lo terminó, empate.
+ * Quién gana un duelo terminado y por qué: menos movimientos y, a igualdad,
+ * menos tiempo. Quien no lo terminó pierde contra quien sí; si ninguno lo
+ * terminó (o empatan en todo), empate.
  */
+export function duelVerdict(a: DuelResult | null, b: DuelResult | null): { winner: 'a' | 'b' | 'draw'; by: 'moves' | 'time' | 'noShow' | null } {
+  if (!a && !b) return { winner: 'draw', by: null };
+  if (!a) return { winner: 'b', by: 'noShow' };
+  if (!b) return { winner: 'a', by: 'noShow' };
+  if (a.moves !== b.moves) return { winner: a.moves < b.moves ? 'a' : 'b', by: 'moves' };
+  if (a.timeMs !== b.timeMs) return { winner: a.timeMs < b.timeMs ? 'a' : 'b', by: 'time' };
+  return { winner: 'draw', by: null };
+}
+
 export function duelWinner(a: DuelResult | null, b: DuelResult | null): 'a' | 'b' | 'draw' {
-  if (!a && !b) return 'draw';
-  if (!a) return 'b';
-  if (!b) return 'a';
-  if (a.moves !== b.moves) return a.moves < b.moves ? 'a' : 'b';
-  if (a.timeMs !== b.timeMs) return a.timeMs < b.timeMs ? 'a' : 'b';
-  return 'draw';
+  return duelVerdict(a, b).winner;
 }

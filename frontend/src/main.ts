@@ -9,7 +9,9 @@ import { solutionScreen } from './features/daily/solution-screen';
 import { ghostScreen } from './features/daily/ghost-screen';
 import { weeklyScreen } from './features/weekly/weekly-screen';
 import { duelsScreen } from './features/duels/duels-screen';
-import { difficultyLabel, duelScreen } from './features/duels/duels';
+import { difficultyLabel } from './features/duels/duels';
+import { duelRoomScreen } from './features/duels/duel-room';
+import { duelPlayScreen } from './features/duels/duel-play';
 import { getDuelGhost } from './features/duels/api';
 import { customLevelScreen } from './features/community/play-screen';
 import { communityScreen } from './features/community/community-screen';
@@ -68,7 +70,8 @@ setRoutes({
     }),
   weekly: (route) => weeklyScreen(route.info),
   duels: (route) => duelsScreen(route.open),
-  duel: (route) => duelScreen(route.duel),
+  duelRoom: (route) => duelRoomScreen(route.id),
+  duel: (route) => duelPlayScreen(route.duel),
   duelGhost: (route) =>
     ghostScreen({
       subtitle: t('ghost.duelSubtitle', { difficulty: difficultyLabel(route.duel.difficulty) }),
@@ -97,9 +100,9 @@ const join = params.get('join');
 const sharedLevel = params.get('nivel');
 const duelLink = params.get('duelo');
 if (duelLink) {
-  // Como el de los niveles: el enlace de un duelo solo se abre una vez.
-  history.replaceState(null, '', location.pathname);
-  go({ name: 'duels', open: duelLink });
+  // A la sala del duelo, que deja el enlace puesto mientras se está en ella: si
+  // el móvil recarga la página (al volver de WhatsApp), se vuelve a la sala.
+  go({ name: 'duelRoom', id: duelLink });
 } else if (sharedLevel) {
   // El enlace solo abre el nivel una vez: al recargar se vuelve a la portada.
   history.replaceState(null, '', location.pathname);

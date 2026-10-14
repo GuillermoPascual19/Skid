@@ -20,6 +20,7 @@ export type Route =
   | { name: 'ghost'; day: string; friendId: string }
   | { name: 'weekly'; info: WeeklyInfo }
   | { name: 'duels'; open?: string }
+  | { name: 'duelRoom'; id: string }
   | { name: 'duel'; duel: Duel }
   | { name: 'duelGhost'; duel: Duel }
   | { name: 'ranking'; join?: string }

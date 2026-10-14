@@ -1,14 +1,14 @@
-// Duelos: crear (contra un amigo o por enlace), aceptar una invitación, jugar,
-// ver el resultado (con el fantasma y la revancha) y la partida en sí.
+// Duelos: crear (contra un amigo o por enlace), rechazar, el resultado (con el
+// fantasma y la revancha) y la tarjeta de la portada. La sala está en
+// duel-room.ts y la partida en duel-play.ts.
 
 import { penguinSvg } from '../../../../common/art/hats';
 import { type DuelDifficulty } from '../../../../common/logic/duels/duels';
 import { movesLabel } from '../../shared/result';
-import { attemptScreen } from '../../play/attempt-screen';
 import { formatDuration, formatTime, h, openModal, share, svg, toast } from '../../shared/dom';
-import { go, type Screen } from '../../shared/router';
+import { go } from '../../shared/router';
 import { ensureName } from '../profile/profile';
-import { type Duel, type DuelInvite, type Friend, acceptDuel, createDuel, declineDuel, finishDuel, handInDuel, listDuels, listFriends, startDuel } from './api';
+import { type Duel, type Friend, createDuel, declineDuel, listDuels, listFriends } from './api';
 import { playerName, t, tn } from '../../i18n/i18n';
 
 const DIFFICULTY_ORDER: DuelDifficulty[] = ['easy', 'medium', 'hard'];
@@ -32,14 +32,38 @@ export function shareDuel(duel: Pick<Duel, 'id' | 'difficulty'>): void {
   void share(`⚔️ ${t('duels.shareText', { difficulty: difficultyLabel(duel.difficulty) })}\n${duelLink(duel.id)}`);
 }
 
-/** Entra a jugar (la primera vez empieza a contar el tiempo en el servidor). */
-export async function playDuel(duel: Duel): Promise<void> {
-  try {
-    const started = duel.me.started ? duel : await startDuel(duel.id);
-    go({ name: 'duel', duel: started });
-  } catch (err) {
-    toast((err as Error).message);
-  }
+/** A la sala del duelo: allí se espera al rival, empieza la partida y se ve el resultado. */
+export function enterRoom(duel: Pick<Duel, 'id'>): void {
+  go({ name: 'duelRoom', id: duel.id });
+}
+
+/**
+ * Deja el duelo en la dirección (?duelo=): si el móvil recarga la página al
+ * volver de WhatsApp, se vuelve a la sala y no a la portada.
+ */
+export function keepDuelInUrl(id: string): void {
+  history.replaceState(null, '', `${location.pathname}?duelo=${encodeURIComponent(id)}`);
+}
+
+export function clearDuelUrl(): void {
+  if (new URLSearchParams(location.search).has('duelo')) history.replaceState(null, '', location.pathname);
+}
+
+/** Has terminado y el rival aún juega: tu resultado y la animación de espera. */
+export function waitingForRival(duel: Duel): HTMLElement[] {
+  const mine = duel.me.moves !== null ? `${movesLabel(duel.me.moves)} · ⏱ ${formatTime(duel.me.timeMs ?? 0)}` : null;
+  const items: (HTMLElement | null)[] = [
+    h(
+      'div',
+      { class: 'duel-wait' },
+      h('div', { class: 'duel-wait-penguin' }, svg(penguinSvg(duel.rival?.hat ?? null))),
+      h('span', { class: 'duel-dots', 'aria-hidden': 'true' }, h('i'), h('i'), h('i')),
+    ),
+    h('h2', null, t('duels.live.waitingRival', { name: rivalName(duel) })),
+    mine ? h('p', { class: 'lead' }, t('duels.live.yourResult', { result: mine })) : null,
+    h('p', { class: 'muted' }, timeLeft(duel.expiresAt)),
+  ];
+  return items.filter((el): el is HTMLElement => el !== null);
 }
 
 /** Nuevo duelo: dificultad y rival (un amigo de tus ligas o un enlace para cualquiera). */
@@ -87,6 +111,8 @@ export async function openNewDuel(onCreated: () => void, preset?: { difficulty: 
       const duel = await createDuel(difficulty, rival?.id ?? null);
       modal.close();
       onCreated();
+      // A la sala, a esperar al rival. Con enlace, además, a compartirlo.
+      enterRoom(duel);
       if (rival) toast(t('duels.new.challenged', { name: rival.name }));
       else shareDuel(duel);
     } catch (err) {
@@ -107,36 +133,6 @@ export async function openNewDuel(onCreated: () => void, preset?: { difficulty: 
   } catch (err) {
     friends.replaceChildren(h('p', { class: 'error' }, (err as Error).message));
   }
-}
-
-/** Invitación por enlace: quién reta y con qué dificultad. Al aceptar, a jugar. */
-export async function openInvite(invite: DuelInvite, onAccepted: (duel: Duel) => void): Promise<void> {
-  const accept = h('button', { class: 'btn' }, t('duels.invite.accept'));
-  const error = h('p', { class: 'error', hidden: true });
-  const modal = openModal(
-    [
-      h('div', { class: 'duel-invite-penguin' }, svg(penguinSvg(invite.challenger.hat))),
-      h('p', { class: 'eyebrow' }, t('ghost.duelSubtitle', { difficulty: difficultyLabel(invite.difficulty) })),
-      h('h2', null, t('duels.invite.title', { name: playerName(invite.challenger.name) })),
-      h('p', { class: 'lead' }, t('duels.invite.text', { left: timeLeft(invite.expiresAt) })),
-      error,
-      h('div', { class: 'row' }, h('button', { class: 'btn ghost', onclick: () => modal.close() }, t('common.notNow')), accept),
-    ],
-    { dismissable: true },
-  );
-  accept.addEventListener('click', async () => {
-    accept.disabled = true;
-    try {
-      if (!(await ensureName())) return void (accept.disabled = false);
-      const duel = await acceptDuel(invite.id);
-      modal.close();
-      onAccepted(duel);
-    } catch (err) {
-      error.textContent = (err as Error).message;
-      error.hidden = false;
-      accept.disabled = false;
-    }
-  });
 }
 
 /** Rechazar un duelo al que te han retado (antes de jugarlo). */
@@ -186,90 +182,70 @@ export function outcomeText(duel: Duel): string {
   return duel.me.finished ? t('ghost.draw') : t('duels.outcome.noneFinished');
 }
 
-const sideLine = (name: string, side: Duel['me']) =>
-  h(
-    'div',
-    null,
-    h('span', null, name),
-    h('span', null, side.finished && side.moves !== null ? `${movesLabel(side.moves)} · ⏱ ${formatTime(side.timeMs ?? 0)}` : t('duels.result.notFinished')),
-  );
+/** Qué decidió el duelo, si hace falta decirlo. */
+function decidedText(duel: Duel): string | null {
+  if (duel.decidedBy === 'moves') return t('duels.result.byMoves');
+  if (duel.decidedBy === 'time') return t('duels.result.byTime');
+  return null;
+}
 
-/** Resultado de un duelo terminado: quién gana, las dos marcas, el fantasma y la revancha. */
-export function showDuelResult(duel: Duel, onChange: () => void): void {
+/** Fila de un jugador en el resultado: movimientos y tiempo, con 🏆 si ganó. */
+function sideRow(name: string, side: Duel['me'], winner: boolean): HTMLElement {
+  return h(
+    'div',
+    { class: `duel-side ${winner ? 'winner' : ''}` },
+    h('span', { class: 'duel-side-name' }, `${winner ? '🏆 ' : ''}${name}`),
+    side.finished && side.moves !== null
+      ? h('span', { class: 'duel-side-result' }, h('strong', null, movesLabel(side.moves)), ` · ⏱ ${formatTime(side.timeMs ?? 0)}`)
+      : h('span', { class: 'duel-side-result muted' }, t('duels.result.notFinished')),
+  );
+}
+
+/** El resultado de un duelo terminado: quién gana y por qué, las dos marcas, el fantasma y la revancha. */
+export function duelResultContent(duel: Duel, opts: { onChange: () => void; close?: () => void }): HTMLElement[] {
   const rival = duel.rival;
-  const modal = openModal(
-    [
-      h('p', { class: 'eyebrow' }, `${t('ghost.duelSubtitle', { difficulty: difficultyLabel(duel.difficulty) })} · ${t('common.optimalN', { n: duel.optimal })}`),
-      h('h2', null, outcomeText(duel)),
-      rival && duel.status === 'finished' ? h('div', { class: 'breakdown' }, sideLine(t('ghost.you'), duel.me), sideLine(playerName(rival.name), rival)) : null,
-      h(
-        'div',
-        { class: 'row' },
-        rival?.finished && duel.status === 'finished'
-          ? h('button', { class: 'btn secondary', onclick: () => (modal.close(), go({ name: 'duelGhost', duel })) }, `👻 ${t('duels.result.watch')}`)
-          : null,
-        rival
-          ? h(
-              'button',
-              {
-                class: 'btn',
-                onclick: () => {
-                  modal.close();
-                  void openNewDuel(onChange, { difficulty: duel.difficulty, rival: { id: rival.id, name: playerName(rival.name), hat: rival.hat } });
-                },
+  const finished = duel.status === 'finished';
+  const decided = decidedText(duel);
+  const items: (HTMLElement | null)[] = [
+    h('p', { class: 'eyebrow' }, `${t('ghost.duelSubtitle', { difficulty: difficultyLabel(duel.difficulty) })} · ${t('common.optimalN', { n: duel.optimal })}`),
+    h('h2', null, `${duel.outcome === 'win' ? '🏆 ' : ''}${outcomeText(duel)}`),
+    decided ? h('p', { class: 'muted duel-decided' }, decided) : null,
+    rival && finished
+      ? h('div', { class: 'duel-sides' }, sideRow(t('ghost.you'), duel.me, duel.outcome === 'win'), sideRow(playerName(rival.name), rival, duel.outcome === 'lose'))
+      : null,
+    h(
+      'div',
+      { class: 'row' },
+      rival?.finished && finished ? h('button', { class: 'btn secondary', onclick: () => (opts.close?.(), go({ name: 'duelGhost', duel })) }, `👻 ${t('duels.result.watch')}`) : null,
+      rival
+        ? h(
+            'button',
+            {
+              class: 'btn',
+              onclick: () => {
+                opts.close?.();
+                void openNewDuel(opts.onChange, { difficulty: duel.difficulty, rival: { id: rival.id, name: playerName(rival.name), hat: rival.hat } });
               },
-              `⚔️ ${t('duels.result.rematch')}`,
-            )
-          : null,
-      ),
-      h('button', { class: 'link-btn', onclick: () => modal.close() }, t('common.close')),
-    ],
+            },
+            `⚔️ ${t('duels.result.rematch')}`,
+          )
+        : null,
+    ),
+  ];
+  return items.filter((el): el is HTMLElement => el !== null);
+}
+
+/** El resultado en un modal (desde la lista de duelos). */
+export function showDuelResult(duel: Duel, onChange: () => void): void {
+  const modal = openModal(
+    [...duelResultContent(duel, { onChange, close: () => modal.close() }), h('button', { class: 'link-btn', onclick: () => modal.close() }, t('common.close'))],
     { dismissable: true },
   );
 }
 
-/** Qué cuenta el resultado tras jugar o entregar, según cómo esté el duelo. */
-function duelOutcome(duel: Duel) {
-  const rival = rivalName(duel);
-  const best = duel.me.overPar;
-  const mark = movesLabel(duel.optimal + (best ?? 0));
-  if (duel.status === 'finished') {
-    return { bestOverPar: best, note: t('duels.play.yourMark', { mark }), highlight: `⚔️ ${outcomeText(duel)}`, closed: true };
-  }
-  if (duel.me.handedIn) {
-    return { bestOverPar: best, note: t('duels.play.handedIn', { mark, name: rival }), closed: true };
-  }
-  return {
-    bestOverPar: best,
-    note: t('duels.play.keepImproving', { mark }),
-    highlight: duel.rival?.handedIn ? t('duels.play.rivalHandedIn', { name: rival }) : undefined,
-  };
-}
-
-/** La partida de un duelo: al mejor intento, como el reto semanal, hasta que entregas tu marca. */
-export function duelScreen(duel: Duel): Screen {
-  const name = rivalName(duel);
-  return attemptScreen({
-    title: t('duels.play.title', { name }),
-    subtitle: `${difficultyLabel(duel.difficulty)} · ${timeLeft(duel.expiresAt)}`,
-    eyebrow: t('duels.play.title', { name }),
-    rows: duel.rows,
-    optimal: duel.optimal,
-    bestOverPar: duel.me.overPar,
-    secondary: { label: t('nav.duels'), onclick: () => go({ name: 'duels' }) },
-    async submit(log) {
-      return duelOutcome((await finishDuel(duel.id, log)).duel);
-    },
-    handIn: {
-      label: `✅ ${t('duels.play.handIn')}`,
-      run: async () => duelOutcome(await handInDuel(duel.id)),
-    },
-  });
-}
-
-/** Duelos en los que te toca jugar (no has entregado tu marca). */
+/** Duelos que te esperan: entrar en la sala o terminar tu partida. */
 export function myTurn(duels: Duel[]): Duel[] {
-  return duels.filter((d) => d.status === 'playing' && !d.me.handedIn);
+  return duels.filter((d) => d.status === 'waiting' || (d.status === 'playing' && !d.me.handedIn));
 }
 
 

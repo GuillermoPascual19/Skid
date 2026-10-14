@@ -82,7 +82,7 @@ export const errors: ErrorMessages = {
   alreadyStarted: 'Игра уже начата',
   duelDeclined: 'Эту дуэль отклонили',
   duelNoRival: 'У этой дуэли пока нет соперника',
-  duelHandedIn: 'Результат в этой дуэли уже сдан',
+  duelHandedIn: 'Эта дуэль уже завершена тобой',
   finishBeforeHandIn: 'Пройди поле хотя бы раз, прежде чем сдавать результат',
   duelNotStarted: 'Эта дуэль не начата',
   duelNotOver: 'Дуэль ещё не закончилась',
