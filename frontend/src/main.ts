@@ -1,11 +1,16 @@
 import './style.css';
 import { installAudio } from './audio/sound';
-import { h } from './shared/dom';
+import { formatDay, h } from './shared/dom';
+import { dailyLevel } from '../../common/logic/daily/daily';
+import { getGhost } from './features/daily/api';
 import { levelsScreen } from './features/free-play/free-play-screen';
 import { dailyScreen } from './features/daily/daily-screen';
 import { solutionScreen } from './features/daily/solution-screen';
 import { ghostScreen } from './features/daily/ghost-screen';
 import { weeklyScreen } from './features/weekly/weekly-screen';
+import { duelsScreen } from './features/duels/duels-screen';
+import { difficultyLabel, duelScreen } from './features/duels/duels';
+import { getDuelGhost } from './features/duels/api';
 import { customLevelScreen } from './features/community/play-screen';
 import { communityScreen } from './features/community/community-screen';
 import { editorScreen } from './features/community/editor-screen';
@@ -53,8 +58,23 @@ setRoutes({
   levels: () => levelsScreen(),
   daily: (route) => dailyScreen(route.record),
   solution: (route) => solutionScreen(route.day),
-  ghost: (route) => ghostScreen(route.day, route.friendId),
+  ghost: (route) =>
+    ghostScreen({
+      subtitle: `Reto · ${formatDay(route.day)}`,
+      rows: dailyLevel(route.day).rows,
+      load: () => getGhost(route.day, route.friendId),
+      back: { label: 'Ranking', route: { name: 'ranking' } },
+    }),
   weekly: (route) => weeklyScreen(route.info),
+  duels: (route) => duelsScreen(route.open),
+  duel: (route) => duelScreen(route.duel),
+  duelGhost: (route) =>
+    ghostScreen({
+      subtitle: `Duelo · ${difficultyLabel(route.duel.difficulty)}`,
+      rows: route.duel.rows,
+      load: () => getDuelGhost(route.duel.id),
+      back: { label: 'Duelos', route: { name: 'duels' } },
+    }),
   ranking: (route) => rankingScreen(route),
   stats: () => statsScreen(),
   achievements: () => achievementsScreen(),
@@ -73,7 +93,12 @@ await waitForFonts();
 const params = new URLSearchParams(location.search);
 const join = params.get('join');
 const sharedLevel = params.get('nivel');
-if (sharedLevel) {
+const duelLink = params.get('duelo');
+if (duelLink) {
+  // Como el de los niveles: el enlace de un duelo solo se abre una vez.
+  history.replaceState(null, '', location.pathname);
+  go({ name: 'duels', open: duelLink });
+} else if (sharedLevel) {
   // El enlace solo abre el nivel una vez: al recargar se vuelve a la portada.
   history.replaceState(null, '', location.pathname);
   go({ name: 'community', open: sharedLevel });

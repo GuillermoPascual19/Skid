@@ -2,19 +2,30 @@
 // movimiento a movimiento. Su pingüino es el fantasma (semitransparente, con su
 // nombre); si no jugaste ese día, su partida la hace el pingüino normal.
 
-import { initialState, type Direction, type GameState } from '../../../../common/logic/engine/board';
-import { dailyLevel, decodeRun } from '../../../../common/logic/daily/daily';
+import { initialState, parseBoard, type Direction, type GameState } from '../../../../common/logic/engine/board';
+import { decodeRun } from '../../../../common/logic/daily/daily';
 import { applyMove } from '../../../../common/logic/engine/move';
 import { golfLabel } from '../../../../common/logic/daily/score';
 import type { HatId } from '../../../../common/art/hats';
 import type { BoardHooks } from '../../game/BoardScene';
 import type { MountedBoard } from '../../game/mount';
-import { formatDay, formatTime, h, openModal, toast } from '../../shared/dom';
+import { formatTime, h, openModal, toast } from '../../shared/dom';
 import { sfx } from '../../audio/sound';
-import { go, type Screen } from '../../shared/router';
+import { go, type Route, type Screen } from '../../shared/router';
 import { loadBoard, onKey, openPauseMenu, playLayout } from '../../play/play';
 import { currentMe } from '../profile/profile';
-import { type GhostRun, getGhost } from './api';
+import type { GhostRun } from './api';
+
+/** De dónde salen las dos partidas: el reto diario de un día o un duelo. */
+export interface GhostSource {
+  /** Subtítulo de la pantalla y del resumen («Reto · martes, 13 de octubre», «Duelo · Difícil»). */
+  readonly subtitle: string;
+  readonly rows: string[];
+  /** Tu mejor intento (null si no jugaste) y el del otro. */
+  load(): Promise<{ me: GhostRun | null; friend: GhostRun }>;
+  /** A dónde se vuelve (también si falla la carga). */
+  readonly back: { readonly label: string; readonly route: Route };
+}
 
 const FIRST_DELAY = 900;
 const STEP_DELAY = 350;
@@ -22,8 +33,8 @@ const STEP_DELAY = 350;
 /** "Par", "+2" o, en retos de antes del golf, los puntos. */
 const resultLabel = (run: GhostRun) => (run.overPar !== null ? golfLabel(run.overPar) : `${run.score ?? 0} pts`);
 
-export function ghostScreen(day: string, friendId: string): Screen {
-  const board = dailyLevel(day).board;
+export function ghostScreen(source: GhostSource): Screen {
+  const board = parseBoard(source.rows);
   let mounted: MountedBoard | null = null;
   let disposed = false;
   let me: GhostRun | null = null;
@@ -52,13 +63,13 @@ export function ghostScreen(day: string, friendId: string): Screen {
       openPauseMenu(mounted, {
         restartLabel: 'Ver otra vez',
         onRestart: () => replay(),
-        onExit: () => go({ name: 'ranking' }),
+        onExit: () => go(source.back.route),
       }),
     onRestart: () => replay(),
     onSwipe: () => {},
     restartLabel: 'Ver otra vez',
   });
-  ui.setTitle('Fantasma', `Reto · ${formatDay(day)}`);
+  ui.setTitle('Fantasma', source.subtitle);
 
   const hud = () => {
     ui.setStat('lead', `${Math.min(step, lead.length)}/${lead.length}`);
@@ -145,14 +156,14 @@ export function ghostScreen(day: string, friendId: string): Screen {
         );
       const modal = openModal(
         [
-          h('p', { class: 'eyebrow' }, `Reto · ${formatDay(day)}`),
+          h('p', { class: 'eyebrow' }, source.subtitle),
           h('h2', null, me ? verdict() : `La partida de ${friend.name}`),
           h('div', { class: 'breakdown' }, me ? line('Tú', me) : null, line(friend.name ?? 'Amigo', friend)),
           h(
             'div',
             { class: 'row' },
             h('button', { class: 'btn secondary', onclick: () => (modal.close(), replay()) }, '↺ Ver otra vez'),
-            h('button', { class: 'btn', onclick: () => go({ name: 'ranking' }) }, 'Ranking'),
+            h('button', { class: 'btn', onclick: () => go(source.back.route) }, source.back.label),
           ),
         ],
         { dismissable: true },
@@ -170,13 +181,13 @@ export function ghostScreen(day: string, friendId: string): Screen {
       });
       let myHat: HatId | null = null;
       try {
-        const [runs, profile] = await Promise.all([getGhost(day, friendId), currentMe().catch(() => null)]);
+        const [runs, profile] = await Promise.all([source.load(), currentMe().catch(() => null)]);
         me = runs.me;
         friend = runs.friend;
         myHat = profile?.hat ?? null;
       } catch (err) {
         toast((err as Error).message);
-        return go({ name: 'ranking' });
+        return go(source.back.route);
       }
       if (disposed) return;
       const friendName = friend.name ?? 'Amigo';

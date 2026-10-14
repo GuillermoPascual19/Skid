@@ -11,17 +11,17 @@ import { h, openModal, starSvg, svg } from '../../shared/dom';
 import { read, write } from '../../shared/storage';
 
 /** Sube cuando cambian las reglas o hay algo nuevo (ver NEWS): quien ya jugaba ve el aviso. */
-export const GUIDE_VERSION = 3;
+export const GUIDE_VERSION = 4;
 const GUIDE_SEEN_KEY = 'skid.guide.v1';
 
-export type GuidePage = 'slide' | 'pieces' | 'free' | 'daily' | 'weekly' | 'leagues' | 'elements' | 'community';
+export type GuidePage = 'slide' | 'pieces' | 'free' | 'daily' | 'weekly' | 'duels' | 'leagues' | 'elements' | 'community';
 
 /** Aviso de la portada para quien ya jugaba: lo último que ha cambiado (sube GUIDE_VERSION al cambiarlo). */
 export const NEWS = {
-  icon: '🗓️',
-  title: 'Nuevo: reto semanal.',
-  text: 'Un tablero grande y difícil para toda la semana, con ranking entre tus amigos.',
-  page: 'weekly' as GuidePage,
+  icon: '⚔️',
+  title: 'Nuevo: duelos.',
+  text: 'Reta a un amigo (o a quien quieras con un enlace) al mismo tablero y gana quien lo haga en menos golpes.',
+  page: 'duels' as GuidePage,
 };
 
 interface Page {
@@ -140,6 +140,19 @@ const PAGES: Page[] = [
     ],
   },
   {
+    id: 'duels',
+    title: 'Duelos',
+    body: () => [
+      rules(
+        ['⚔️', 'Reta a un amigo de tus ligas, o a cualquiera con un enlace. Eliges la dificultad.'],
+        ['🗺️', 'Un tablero nuevo que ninguno ha visto, el mismo para los dos.'],
+        ['↺', 'Juega cuantas veces quieras y, cuando te guste tu marca, entrégala. Sin pistas.'],
+        ['🙈', 'No ves la marca del otro hasta que los dos entregáis (o pasan 48 h).'],
+        ['🏆', 'Gana quien tenga menos golpes; a igualdad, quien tardó menos. Luego podéis ver el duelo con el fantasma y pedir la revancha.'],
+      ),
+    ],
+  },
+  {
     id: 'leagues',
     title: 'Ligas, rachas y gorros',
     body: () => [
@@ -168,7 +181,7 @@ const PAGES: Page[] = [
 
 /** Las páginas que tienen sentido aquí (sin servidor no hay reto semanal, ligas ni niveles de jugadores). */
 function pages(): Page[] {
-  return PAGES.filter((p) => online.onlineEnabled || !['weekly', 'leagues', 'community'].includes(p.id));
+  return PAGES.filter((p) => online.onlineEnabled || !['weekly', 'duels', 'leagues', 'community'].includes(p.id));
 }
 
 /** Abre la guía, en la página indicada. */

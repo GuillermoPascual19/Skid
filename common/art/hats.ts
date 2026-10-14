@@ -21,7 +21,7 @@ export const HAT_NAMES: Record<HatId, string> = {
 };
 
 export function isHatId(value: unknown): value is HatId {
-  return typeof value === 'string' && value in HAT_NAMES;
+  return typeof value === 'string' && Object.hasOwn(HAT_NAMES, value); // No `in`: daría por buenos 'constructor', 'toString'…
 }
 
 const HATS: Record<HatId, string> = {
