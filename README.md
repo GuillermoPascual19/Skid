@@ -1,13 +1,47 @@
 # Skid
 
-Puzzle de deslizamiento sobre hielo: recoge las piezas en orden con el menor número de movimientos.
-Reto diario con ranking entre amigos. Hecho con Phaser + TypeScript + Vite.
+Puzzle de deslizamiento sobre hielo: el pingüino no frena hasta chocar, y hay que recoger las piezas
+en orden con el menor número de movimientos. Retos diarios y semanales, duelos y ligas entre amigos,
+y niveles creados por los jugadores.
+
+**Juega en <https://skid.gpm-854.workers.dev>**
+
+## Qué tiene
+
+- **Modo libre**: niveles generados cada vez más difíciles, con estrellas según los movimientos y
+  elementos que se desbloquean (nieve, corrientes, teletransportes y agujeros).
+- **Reto diario**: el mismo tablero para todos, estilo golf («Par», «+2»), con rachas, protectores de
+  racha, solución al terminar y el fantasma de un amigo.
+- **Reto semanal**: un tablero grande y difícil de lunes a domingo, con ranking entre amigos.
+- **Duelos**: retas a un amigo (o a quien quieras con un enlace) al mismo tablero nuevo.
+- **Ligas**: ranking del día, de la semana y del mes con tus amigos; logros que desbloquean gorros.
+- **Niveles de jugadores**: editor, publicar (hay que superarlo antes), valorar, ranking por nivel,
+  compartir y denunciar.
+- Guía «Cómo se juega», modo oscuro, música y efectos sintetizados, y login con Google para jugar en
+  varios dispositivos.
+
+## Tecnologías
+
+| Parte | Tecnología |
+|---|---|
+| Juego | [TypeScript](https://www.typescriptlang.org/) 7 sin framework de interfaz (DOM a mano), [Phaser](https://phaser.io/) 4 para el tablero, [Vite](https://vite.dev/) 8 |
+| Sonido | Web Audio API: música y efectos sintetizados en el navegador, sin archivos de audio |
+| Servidor | [Cloudflare Workers](https://developers.cloudflare.com/workers/): sirve el juego (static assets) y la API `/api/*` |
+| Base de datos | [Cloudflare D1](https://developers.cloudflare.com/d1/) (SQLite) con migraciones SQL; Rate Limiting de Workers contra abusos |
+| Cuentas | Jugadores anónimos con token; [Iniciar sesión con Google](https://developers.google.com/identity/gsi/web) opcional |
+| Tests | [Vitest](https://vitest.dev/) 4 |
+| Herramientas | Node 24, [pnpm](https://pnpm.io/) 10, [Wrangler](https://developers.cloudflare.com/workers/wrangler/) 4 |
+| Despliegue | GitHub Actions: tests, build, migraciones y despliegue en cada merge a `main` |
+
+La lógica del juego (`common/`) es TypeScript puro y la usan los dos lados: el navegador para jugar y
+el servidor para reproducir cada partida y comprobar que es válida.
 
 ## Desarrollo
 
-Hace falta **Node 24** (ver `.node-version`). Se usa **pnpm** (la versión está en `packageManager` de `package.json`; con `corepack enable` se
-instala sola). Por seguridad, `pnpm-workspace.yaml` solo deja ejecutar scripts de instalación a
-`esbuild`, `sharp` y `workerd`, y no instala versiones publicadas hace menos de 3 días.
+Hace falta **Node 24** (ver `.node-version`) y **pnpm** (la versión está en `packageManager` de
+`package.json`; con `corepack enable` se instala sola). Por seguridad, `pnpm-workspace.yaml` solo deja
+ejecutar scripts de instalación a `esbuild`, `sharp` y `workerd`, y no instala versiones publicadas
+hace menos de 3 días.
 
 ```sh
 pnpm install
@@ -26,41 +60,54 @@ Tres partes: el juego (`frontend/`), el servidor (`backend/`) y lo que usan los 
 (`common/`). Dentro, organizado por apartados: para tocar algo, se va a su carpeta.
 
 ```
-frontend/              el juego en el navegador (Vite)
-  index.html, public/
+frontend/                  el juego en el navegador (Vite)
+  index.html
+  public/                  se copia tal cual a dist/
+    _headers               cabeceras de seguridad (CSP…) de la web
+    theme-init.js          aplica el tema antes de pintar
   src/
-    main.ts            arranque y rutas
-    features/          un apartado por carpeta: pantallas, llamadas al servidor (api.ts)
-      home/            y lo que guarda en el navegador (storage.ts)
-      free-play/       modo libre
-      daily/           reto diario, estadísticas, solución y fantasma de un amigo
-      weekly/          reto semanal
-      duels/           duelos
-      ranking/         ligas y ranking estilo golf (niveles, reto semanal)
-      achievements/    logros y gorros
-      community/       multijugador: listado, editor, partida, valorar, denunciar
-      profile/         nombre, login con Google y perfil de otros jugadores
-      guide/           guía «Cómo se juega» y aviso de novedades
-    play/              pantalla de partida común a todos los modos (pausa, gestos, teclas)
-    game/              tablero en Phaser: escena, dibujo de casillas, efectos
-    audio/             música y efectos sintetizados, y sus controles
-    shared/            piezas comunes: dom, router, celebración, conexión y almacenamiento
-backend/               el Worker de Cloudflare: sirve el juego (dist/) y la API /api/*
+    main.ts                arranque y rutas
+    style.css              estilos (tema claro y oscuro con variables)
+    features/              un apartado por carpeta: pantallas, llamadas al servidor (api.ts)
+      home/                y lo que guarda en el navegador (storage.ts)
+      free-play/           modo libre
+      daily/               reto diario, estadísticas, solución y fantasma de un amigo
+      weekly/              reto semanal
+      duels/               duelos: retar, aceptar, jugar, resultado y revancha
+      ranking/             ligas y ranking estilo golf (niveles, reto semanal)
+      achievements/        logros y gorros
+      community/           niveles de jugadores: listado, editor, partida, valorar, denunciar
+      profile/             nombre, login con Google, perfil de otros jugadores y cuenta
+      guide/               guía «Cómo se juega» y aviso de novedades
+    play/                  partida común a todos los modos (pausa, gestos, teclas) y la
+                           partida «al mejor intento» (reto semanal y duelos)
+    game/                  tablero en Phaser: escena, dibujo de casillas, efectos, paleta
+    audio/                 música y efectos sintetizados, y sus controles
+    shared/                piezas comunes: dom, router, celebración, conexión, almacenamiento y tema
+backend/                   el Worker de Cloudflare: sirve el juego (dist/) y la API /api/*
   src/
-    index.ts           solo enruta
-    http.ts, session.ts, google.ts
-    routes/            un archivo por apartado (daily, leagues, levels, stats...)
-  migrations/          esquema de la base de datos D1
-common/                lo que usan los dos; sin APIs del navegador ni imports de fuera
-  logic/               reglas puras: el servidor reproduce las partidas con este mismo código
-    engine/            tablero, movimiento, solver, generador, elementos, aleatorio
-    daily/             reto diario, puntuación y rachas
-    weekly/            reto semanal
-    duels/             duelos
-    achievements/      logros
-    community/         validación de niveles creados por jugadores
-  art/                 dibujos SVG (pingüino, gorros, elementos)
-tests/                 backend/ y common/, con el mismo árbol que el código
+    index.ts               solo enruta
+    http.ts                errores, respuestas y validación de la entrada
+    session.ts             sesiones, login con Google, cerrar sesión y borrar la cuenta
+    google.ts              verificación de los tokens de Google
+    routes/                un archivo por apartado: daily, weekly, duels, leagues, levels,
+                           players, stats, achievements
+  migrations/              esquema de la base de datos D1 (0001 a 0012)
+common/                    lo que usan los dos; sin APIs del navegador ni imports de fuera
+  logic/                   reglas puras: el servidor reproduce las partidas con este mismo código
+    engine/                tablero, movimiento, solver, generador, elementos, aleatorio
+    daily/                 reto diario, puntuación estilo golf y rachas
+    weekly/                reto semanal
+    duels/                 duelos: dificultades y quién gana
+    achievements/          logros
+    community/             validación de niveles creados por jugadores
+    players/               reglas de los nombres
+  art/                     dibujos SVG (pingüino, gorros, elementos)
+tests/                     backend/ y common/, con el mismo árbol que el código
+.github/workflows/         despliegue automático
+wrangler.jsonc             configuración del Worker: D1, límites de peticiones, assets
+vite.config.ts             Vite y Vitest
+pnpm-workspace.yaml        ajustes de seguridad de pnpm
 ```
 
 `pnpm run build` comprueba los tipos de las tres partes (`common/` sin DOM y sin importar nada de
