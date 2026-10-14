@@ -1,5 +1,7 @@
 # Skid
 
+**Español** · [English](README.en.md)
+
 Puzzle de deslizamiento sobre hielo: el pingüino no frena hasta chocar, y hay que recoger las piezas
 en orden con el menor número de movimientos. Retos diarios y semanales, duelos y ligas entre amigos,
 y niveles creados por los jugadores.
