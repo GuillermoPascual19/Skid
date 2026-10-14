@@ -1,7 +1,7 @@
 // Partida del reto semanal: la pantalla «al mejor intento» (play/attempt-screen.ts)
 // enviando cada intento al reto de la semana.
 
-import { golfLabel } from '../../../../common/logic/daily/score';
+import { movesLabel } from '../../shared/result';
 import { attemptScreen } from '../../play/attempt-screen';
 import type { Screen } from '../../shared/router';
 import { type WeeklyInfo, finishWeekly } from './api';
@@ -24,8 +24,8 @@ export function weeklyScreen(info: WeeklyInfo): Screen {
       const note = sent.improved
         ? previous === null
           ? t('weekly.firstMark')
-          : t('golf.newBest', { before: golfLabel(previous) })
-        : t('golf.keepBest', { best: golfLabel(best) });
+          : t('golf.newBest', { before: movesLabel(info.optimal + previous) })
+        : t('golf.keepBest', { best: movesLabel(info.optimal + best) });
       previous = best;
       return {
         bestOverPar: best,

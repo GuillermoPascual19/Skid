@@ -14,7 +14,7 @@ import {
 } from '../../../../common/logic/daily/daily';
 import { generateLevel } from '../../../../common/logic/engine/generator';
 import { hashSeed } from '../../../../common/logic/engine/rng';
-import { golfLabel, golfPoints, overPar } from '../../../../common/logic/daily/score';
+import { golfPoints, overPar } from '../../../../common/logic/daily/score';
 import { countDeadEnds } from '../../../../common/logic/engine/solver';
 
 describe('dayKey', () => {
@@ -110,15 +110,13 @@ describe('registro de la partida', () => {
   });
 });
 
-describe('golf', () => {
-  it('el resultado es lo que te pasas del óptimo', () => {
+describe('movimientos y puntos de liga', () => {
+  it('se cuenta lo que te pasas del óptimo', () => {
     expect(overPar(15, 15)).toBe(0);
     expect(overPar(17, 15)).toBe(2);
-    expect(golfLabel(0)).toBe('Par');
-    expect(golfLabel(2)).toBe('+2');
   });
 
-  it('puntos de liga: 1000 al par, 100 menos por golpe, mínimo 100', () => {
+  it('puntos de liga: 1000 en el óptimo, 100 menos por movimiento de más, mínimo 100', () => {
     expect(golfPoints(0)).toBe(1000);
     expect(golfPoints(3)).toBe(700);
     expect(golfPoints(20)).toBe(100);

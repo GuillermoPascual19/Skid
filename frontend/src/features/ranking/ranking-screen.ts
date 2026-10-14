@@ -6,7 +6,7 @@ import { penguinSvg } from '../../../../common/art/hats';
 import { formatDay, formatTime, h, openModal, previousDay, share, svg, toast } from '../../shared/dom';
 import { weekRange, type DayRange } from '../../../../common/logic/daily/daily';
 import { seasonOf, seasonRange } from '../../../../common/logic/leagues/seasons';
-import { golfLabel } from '../../../../common/logic/daily/score';
+import { movesLabel } from '../../shared/result';
 import { today } from '../daily/daily';
 import { ensureName } from '../profile/profile';
 import { go, type Screen } from '../../shared/router';
@@ -357,7 +357,7 @@ export function rankingScreen(route: { join?: string }): Screen {
                 null,
                 row.status === 'finished'
                   ? row.overPar !== null
-                    ? `${t('common.movesShort', { n: row.moves ?? 0 })}${row.hints ? ` · 💡 ${row.hints}` : ''} · ⏱ ${formatTime(row.timeMs ?? 0)}`
+                    ? `${row.hints ? `💡 ${row.hints} · ` : ''}⏱ ${formatTime(row.timeMs ?? 0)}`
                     : `${t('common.movesShort', { n: row.moves ?? 0 })} · ↺ ${row.retries}${row.hints ? ` · 💡 ${row.hints}` : ''} · ⏱ ${formatTime(row.timeMs ?? 0)}`
                   : row.status === 'playing'
                     ? t('ranking.playing')
@@ -368,7 +368,12 @@ export function rankingScreen(route: { join?: string }): Screen {
             ),
             row.status === 'finished'
               ? row.overPar !== null
-                ? h('span', { class: `pts golf${row.overPar === 0 ? ' par' : ''}`, title: t('ranking.leaguePoints', { n: row.score ?? 0 }) }, golfLabel(row.overPar))
+                ? h(
+                    'span',
+                    { class: `pts moves${row.overPar === 0 ? ' perfect' : ''}`, title: t('ranking.leaguePoints', { n: row.score ?? 0 }) },
+                    // Cada pista cuenta como un movimiento más.
+                    movesLabel((row.moves ?? 0) + (row.hints ?? 0)),
+                  )
                 : h('span', { class: 'pts' }, String(row.score))
               : h('span', { class: 'pts none' }, '—'),
           ),

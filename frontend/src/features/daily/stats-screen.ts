@@ -52,13 +52,10 @@ export function statsScreen(): Screen {
       h(
         'div',
         { class: 'tiles' },
-        tile(t('stats.screen.played'), s.played),
-        tile(t('stats.screen.bestScore'), s.bestScore ?? '—', s.perfect > 0 ? `⭐ ${tn('stats.screen.perfect', s.perfect)}` : null),
-        tile(t('stats.screen.average'), s.averageScore ?? '—'),
-        tile(t('stats.screen.daysWon'), s.wins, s.wins > 0 ? `🏆 ${t('stats.screen.firstInLeague')}` : null),
+        ...movesTiles(s),
       ),
       h('section', { class: 'card chart-card' }, h('h2', null, t('stats.screen.calendar')), streakCalendar(s.calendar)),
-      h('section', { class: 'card chart-card' }, h('h2', null, t('stats.screen.last30')), scoreChart(s.history)),
+      h('section', { class: 'card chart-card' }, h('h2', null, t('stats.screen.last30')), overChart(s.history)),
     );
   }
 
@@ -200,12 +197,28 @@ function shortDay(day: string): string {
   return new Intl.DateTimeFormat(intlLocale(), { day: 'numeric', month: 'short', timeZone: 'UTC' }).format(new Date(`${day}T12:00:00Z`)).replace('.', '');
 }
 
+/** Las casillas de los totales: jugados, perfectos, movimientos de más de media y días ganados. */
+export function movesTiles(s: PlayerStats): HTMLElement[] {
+  const average = s.averageOver === null ? '—' : `+${s.averageOver.toLocaleString(intlLocale(), { maximumFractionDigits: 1 })}`;
+  return [
+    tile(t('stats.screen.played'), s.played),
+    tile(
+      t('stats.screen.perfect'),
+      s.perfect,
+      s.counted > 0 ? `🎯 ${t('stats.screen.perfectShare', { percent: Math.round((s.perfect / s.counted) * 100) })}` : null,
+    ),
+    tile(t('stats.screen.averageOver'), average, s.averageOver === null ? null : t('common.movesUnit')),
+    tile(t('stats.screen.daysWon'), s.wins, s.wins > 0 ? `🏆 ${t('stats.screen.firstInLeague')}` : null),
+  ];
+}
+
 /**
- * Columnas con la puntuación de cada día (0-1000). Azul = jugado, dorado = día
- * ganado, punto en la base = no jugado. Tooltip al tocar o pasar por encima, y
- * la misma información en una lista (el dorado tiene poco contraste con el fondo).
+ * Columnas con los movimientos de más de cada día: cuanto más alta, más lejos
+ * del óptimo. Los días en el óptimo llevan una diana verde, los ganados van en
+ * dorado y un punto en la base es que no jugó. Tooltip al tocar o pasar por
+ * encima, y la misma información en una lista (el dorado tiene poco contraste).
  */
-export function scoreChart(history: PlayerStats['history']): HTMLElement {
+export function overChart(history: PlayerStats['history']): HTMLElement {
   const W = 320;
   const H = 150;
   const pad = { left: 30, right: 6, top: 10, bottom: 22 };
@@ -214,23 +227,35 @@ export function scoreChart(history: PlayerStats['history']): HTMLElement {
   const slot = plotW / history.length;
   const barW = Math.min(24, slot - 2); // 2 px de aire entre columnas.
   const base = pad.top + plotH;
-  const y = (score: number) => base - (score / 1000) * plotH;
+  // La escala se adapta a lo que hubo (al menos hasta 4 de más, para que 1 no llene la gráfica).
+  const top = Math.max(4, ...history.map((d) => d.over ?? 0));
+  const y = (over: number) => base - (over / top) * plotH;
 
   const svg = svgEl('svg', { viewBox: `0 0 ${W} ${H}`, class: 'score-chart', role: 'img', 'aria-label': t('stats.chart.label') });
 
-  for (const tick of [0, 500, 1000]) {
+  for (const tick of [0, Math.round(top / 2), top]) {
     svg.append(svgEl('line', { x1: pad.left, x2: W - pad.right, y1: y(tick), y2: y(tick), class: 'grid' }));
     const label = svgEl('text', { x: pad.left - 6, y: y(tick) + 3.5, class: 'tick', 'text-anchor': 'end' });
-    label.textContent = tick === 1000 ? '1000' : String(tick);
+    label.textContent = tick === 0 ? '🎯' : `+${tick}`;
     svg.append(label);
   }
+
+  /** Lo que se dice de un día, en el tooltip y en la lista. */
+  const describe = (d: PlayerStats['history'][number]) =>
+    !d.played
+      ? t('stats.chart.notPlayed')
+      : d.over === null
+        ? t('stats.legend.played')
+        : d.over === 0
+          ? `🎯 ${t('stats.legend.perfect')}`
+          : tn('stats.chart.overN', d.over);
 
   const tooltip = h('div', { class: 'chart-tooltip', hidden: true });
   const show = (i: number) => {
     const d = history[i];
     tooltip.replaceChildren(
       h('strong', null, formatDay(d.day)),
-      h('span', null, d.score === null ? t('stats.chart.notPlayed') : `${d.score} ${t('common.pts')}${d.won ? ` · 🏆 ${t('stats.calendar.won')}` : ''}`),
+      h('span', null, `${describe(d)}${d.won ? ` · 🏆 ${t('stats.calendar.won')}` : ''}`),
     );
     tooltip.style.left = `${((pad.left + i * slot + slot / 2) / W) * 100}%`;
     tooltip.hidden = false;
@@ -240,16 +265,19 @@ export function scoreChart(history: PlayerStats['history']): HTMLElement {
 
   history.forEach((d, i) => {
     const cx = pad.left + i * slot + slot / 2;
-    if (d.score === null) {
+    if (!d.played) {
       svg.append(svgEl('circle', { cx, cy: base, r: 1.6, class: 'missed' }));
+    } else if (d.over === null || d.over === 0) {
+      // En el óptimo (o un reto de antes, sin movimientos): una marca en la base.
+      svg.append(svgEl('circle', { cx, cy: base - 4, r: Math.min(4, barW / 2), class: `bar ${d.over === 0 ? 'perfect' : 'old'} ${d.won ? 'won' : ''}`, 'data-i': i }));
     } else {
-      const top = Math.min(y(d.score), base - 2); // Una barra de 0 puntos se ve igual.
+      const barTop = y(d.over);
       const x0 = cx - barW / 2;
       const x1 = cx + barW / 2;
-      const r = Math.min(4, barW / 2, base - top);
+      const r = Math.min(4, barW / 2, base - barTop);
       svg.append(
         svgEl('path', {
-          d: `M${x0},${base} V${top + r} Q${x0},${top} ${x0 + r},${top} H${x1 - r} Q${x1},${top} ${x1},${top + r} V${base} Z`,
+          d: `M${x0},${base} V${barTop + r} Q${x0},${barTop} ${x0 + r},${barTop} H${x1 - r} Q${x1},${barTop} ${x1},${barTop + r} V${base} Z`,
           class: `bar ${d.won ? 'won' : ''}`,
           'data-i': i,
         }),
@@ -273,14 +301,15 @@ export function scoreChart(history: PlayerStats['history']): HTMLElement {
     if ((e as PointerEvent).pointerType === 'mouse') tooltip.hidden = true;
   });
 
-  const played = history.filter((d) => d.score !== null);
+  const played = history.filter((d) => d.played);
   return h(
     'div',
     null,
     h(
       'div',
       { class: 'legend' },
-      h('span', null, h('i', { class: 'swatch' }), t('stats.legend.score')),
+      h('span', null, h('i', { class: 'swatch' }), t('stats.legend.over')),
+      h('span', null, h('i', { class: 'swatch perfect' }), t('stats.legend.perfect')),
       h('span', null, h('i', { class: 'swatch won' }), t('stats.legend.won')),
       h('span', null, h('i', { class: 'swatch missed' }), t('stats.legend.missed')),
     ),
@@ -294,11 +323,11 @@ export function scoreChart(history: PlayerStats['history']): HTMLElement {
         : h(
             'table',
             null,
-            h('thead', null, h('tr', null, h('th', null, t('stats.chart.day')), h('th', null, t('stats.chart.points')), h('th', null, ''))),
+            h('thead', null, h('tr', null, h('th', null, t('stats.chart.day')), h('th', null, t('stats.legend.over')), h('th', null, ''))),
             h(
               'tbody',
               null,
-              ...[...played].reverse().map((d) => h('tr', null, h('td', null, formatDay(d.day)), h('td', null, String(d.score)), h('td', null, d.won ? '🏆' : ''))),
+              ...[...played].reverse().map((d) => h('tr', null, h('td', null, formatDay(d.day)), h('td', null, describe(d)), h('td', null, d.won ? '🏆' : ''))),
             ),
           ),
     ),

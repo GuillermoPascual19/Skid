@@ -19,7 +19,8 @@
   --bad: #e5484d;
   --shadow: 0 10px 30px rgba(21, 50, 79, 0.14);
   --radius: 22px;
-  --font: 'Baloo 2', 'Trebuchet MS', system-ui, sans-serif;
+  /* Baloo 2 no tiene cirílico: el ruso sale en Nunito (también redondeada). */
+  --font: 'Baloo 2', 'Nunito', 'Trebuchet MS', system-ui, sans-serif;
 
   /* Superficies y tablero (el tema oscuro las redefine). */
   --surface: #ffffff;
@@ -376,16 +377,16 @@ p {
   margin-left: 4px;
 }
 
-/* Resultado del reto al estilo golf: "+2" en dorado; "Par" en verde. */
-.score-big.golf {
+/* Resultado en movimientos; en verde si iguala el óptimo. */
+.score-big.moves {
   font-variant-numeric: tabular-nums;
 }
 
-.score-big.golf.par {
+.score-big.moves.perfect {
   color: var(--good);
 }
 
-.golf-note {
+.result-note {
   margin: 0;
   font-weight: 700;
   color: var(--ink-soft);
@@ -895,7 +896,7 @@ p {
   font-variant-numeric: tabular-nums;
 }
 
-.ranking .pts.golf.par {
+.ranking .pts.moves.perfect {
   color: var(--good);
 }
 
@@ -1409,6 +1410,20 @@ p {
 
 .score-chart .bar.won {
   fill: var(--gold-dark);
+}
+
+.score-chart .bar.perfect,
+.swatch.perfect {
+  fill: var(--good);
+  background: var(--good);
+}
+
+.score-chart .bar.perfect.won {
+  fill: var(--gold-dark);
+}
+
+.score-chart .bar.old {
+  fill: var(--muted-fill);
 }
 
 .score-chart:has(.bar.active) .bar:not(.active) {
@@ -2535,7 +2550,7 @@ input.switch:focus-visible {
   height: 48px;
 }
 
-.guide-golf {
+.guide-result {
   display: grid;
   gap: 2px;
   background: var(--surface-soft);
@@ -2544,7 +2559,7 @@ input.switch:focus-visible {
   text-align: left;
 }
 
-.guide-golf div {
+.guide-result div {
   display: flex;
   justify-content: space-between;
   gap: 12px;
@@ -2552,17 +2567,17 @@ input.switch:focus-visible {
   font-weight: 500;
 }
 
-.guide-golf div:first-child {
+.guide-result div:first-child {
   border-bottom: 2px dashed var(--line);
   padding-bottom: 6px;
 }
 
-.guide-golf strong {
+.guide-result strong {
   color: var(--gold-dark);
   font-variant-numeric: tabular-nums;
 }
 
-.guide-golf strong.par {
+.guide-result strong.perfect {
   color: var(--good);
 }
 
@@ -3145,4 +3160,70 @@ input.switch:focus-visible {
   align-items: center;
   gap: 10px;
   line-height: 1.3;
+}
+
+/* -------------------------------------------------------------- Compartir */
+
+.share-preview {
+  white-space: pre-line;
+  text-align: left;
+  font-size: 14px;
+  line-height: 1.35;
+  color: var(--ink-soft);
+  background: var(--surface-soft);
+  border-radius: 14px;
+  padding: 10px 12px;
+  margin: 10px 0 14px;
+  max-height: 140px;
+  overflow: auto;
+  overflow-wrap: anywhere;
+}
+
+.share-options {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  margin-bottom: 8px;
+}
+
+.share-option {
+  appearance: none;
+  border: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: 52px;
+  padding: 8px 10px;
+  border-radius: 16px;
+  background: var(--surface-soft);
+  box-shadow: 0 4px 0 var(--press);
+  color: var(--ink);
+  font: inherit;
+  font-weight: 700;
+  font-size: 16px;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.share-option:active {
+  transform: translateY(3px);
+  box-shadow: 0 1px 0 var(--press);
+}
+
+.share-option.whatsapp {
+  background: #25d366;
+  box-shadow: 0 4px 0 #1a9e4b;
+  color: #fff;
+}
+
+.share-option.telegram {
+  background: #229ed9;
+  box-shadow: 0 4px 0 #1878a6;
+  color: #fff;
+}
+
+.share-icon {
+  font-size: 20px;
+  line-height: 1;
 }

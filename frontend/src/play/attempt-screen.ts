@@ -4,7 +4,7 @@
 
 import { initialState, parseBoard, type Direction } from '../../../common/logic/engine/board';
 import { encodeRun } from '../../../common/logic/daily/daily';
-import { golfLabel } from '../../../common/logic/daily/score';
+import { movesBig, movesLabel } from '../shared/result';
 import { applyMove, isComplete } from '../../../common/logic/engine/move';
 import { solve } from '../../../common/logic/engine/solver';
 import type { BoardHooks } from '../game/BoardScene';
@@ -13,7 +13,7 @@ import { h, haptic, openModal, type Modal } from '../shared/dom';
 import { sfx } from '../audio/sound';
 import { go, type Screen } from '../shared/router';
 import { loadBoard, onKey, openPauseMenu, playLayout, wearHat } from './play';
-import { t, tn } from '../i18n/i18n';
+import { t } from '../i18n/i18n';
 
 /** Lo que cuenta el servidor tras recibir un intento. */
 export interface AttemptOutcome {
@@ -84,7 +84,7 @@ export function attemptScreen(opts: AttemptScreenOptions): Screen {
   const hud = () => {
     ui.setStat('moves', moves, moves > optimal ? 'warn' : undefined);
     ui.setStat('optimal', optimal);
-    ui.setStat('best', best !== null ? golfLabel(best) : '—');
+    ui.setStat('best', best !== null ? movesLabel(optimal + best) : '—');
   };
 
   const hooks: BoardHooks = {
@@ -128,7 +128,7 @@ export function attemptScreen(opts: AttemptScreenOptions): Screen {
   async function finish() {
     sfx.win();
     const over = Math.max(0, moves - optimal);
-    const note = h('p', { class: 'golf-note' }, t('common.saving'));
+    const note = h('p', { class: 'result-note' }, t('common.saving'));
     const highlight = h('p', { class: 'level-place', hidden: true });
     const retry = h('button', { class: 'btn secondary', onclick: () => restart() }, over === 0 ? t('golf.again') : `↺ ${t('golf.improve')}`);
     const handIn = opts.handIn
@@ -156,8 +156,8 @@ export function attemptScreen(opts: AttemptScreenOptions): Screen {
     result = openModal([
       h('p', { class: 'eyebrow' }, opts.eyebrow),
       h('h2', null, headline(over)),
-      h('div', { class: `score-big golf${over === 0 ? ' par' : ''}` }, golfLabel(over)),
-      h('p', { class: 'lead' }, `${tn('common.moves', moves)} · ${t('common.optimalN', { n: optimal })}`),
+      movesBig(moves, optimal),
+      h('p', { class: 'lead' }, t('common.optimalN', { n: optimal })),
       note,
       highlight,
       h('div', { class: 'row' }, retry, h('button', { class: 'btn ghost', onclick: opts.secondary.onclick }, opts.secondary.label)),

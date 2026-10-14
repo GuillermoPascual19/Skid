@@ -1,7 +1,7 @@
 // Pantalla de duelos: retar a alguien y tus duelos (te toca, esperando al rival y terminados).
 // Con `open` (el id de un enlace ?duelo=) enseña la invitación o el duelo.
 
-import { golfLabel } from '../../../../common/logic/daily/score';
+import { movesLabel } from '../../shared/result';
 import { h, toast } from '../../shared/dom';
 import { go, type Screen } from '../../shared/router';
 import { type Duel, getDuel, listDuels } from './api';
@@ -34,7 +34,7 @@ export function duelsScreen(open?: string): Screen {
     else if (duel.status === 'open') detail = t('duels.screen.noOneYet');
     else if (turn)
       detail = duel.me.finished
-        ? t('duels.screen.notHandedIn', { mark: golfLabel(duel.me.overPar ?? 0) })
+        ? t('duels.screen.notHandedIn', { mark: movesLabel(duel.optimal + (duel.me.overPar ?? 0)) })
         : rival?.handedIn
           ? t('duels.play.rivalHandedIn', { name: rivalName(duel) })
           : t('duels.screen.yourTurn');

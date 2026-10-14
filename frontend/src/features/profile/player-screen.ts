@@ -7,7 +7,7 @@ import { SEASON_HATS } from '../../../../common/logic/leagues/seasons';
 import { seasonName } from '../ranking/season';
 import { h, svg } from '../../shared/dom';
 import { go, type Screen } from '../../shared/router';
-import { scoreChart, tile } from '../daily/stats-screen';
+import { movesTiles, overChart } from '../daily/stats-screen';
 import { type PlayerProfile, getPlayer } from './api';
 import { playerName, t, tn } from '../../i18n/i18n';
 
@@ -78,10 +78,7 @@ export function playerScreen(id: string): Screen {
       h(
         'div',
         { class: 'tiles' },
-        tile(t('stats.screen.played'), s.played),
-        tile(t('stats.screen.bestScore'), s.bestScore ?? '—', s.perfect > 0 ? `⭐ ${tn('stats.screen.perfect', s.perfect)}` : null),
-        tile(t('stats.screen.average'), s.averageScore ?? '—'),
-        tile(t('stats.screen.daysWon'), s.wins),
+        ...movesTiles(s),
       ),
       h(
         'section',
@@ -97,7 +94,7 @@ export function playerScreen(id: string): Screen {
               ),
             ),
       ),
-      h('section', { class: 'card chart-card' }, h('h2', null, t('stats.screen.last30')), scoreChart(s.history)),
+      h('section', { class: 'card chart-card' }, h('h2', null, t('stats.screen.last30')), overChart(s.history)),
     );
   }
 

@@ -58,14 +58,16 @@ export interface PlayerStats {
   freezes: number;
   /** Días ("YYYY-MM-DD") jugados, ganados y salvados por un protector. */
   calendar: { played: string[]; won: string[]; frozen: string[] };
-  bestScore: number | null;
-  averageScore: number | null;
+  /** Retos contados por movimientos (los de antes solo tenían puntos). */
+  counted: number;
+  /** Retos hechos en el óptimo. */
+  perfect: number;
+  /** Media de movimientos por encima del óptimo (null si aún no hay ninguno). */
+  averageOver: number | null;
   /** Días que quedó 1.º en alguna liga (con al menos 2 que terminaron). */
   wins: number;
-  /** Retos con 1000 puntos. */
-  perfect: number;
-  /** Últimos 30 días, del más antiguo a hoy; score null = no jugó. */
-  history: { day: string; score: number | null; won: boolean }[];
+  /** Últimos 30 días, del más antiguo a hoy; over null = no jugó o es de antes de contar movimientos. */
+  history: { day: string; played: boolean; over: number | null; won: boolean }[];
 }
 
 export function getStats(): Promise<PlayerStats> {

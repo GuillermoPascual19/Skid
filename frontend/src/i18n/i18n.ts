@@ -14,8 +14,11 @@ import type { ErrorKey, ErrorMessages } from '../../../common/i18n/errors/es';
 import { read, write } from '../shared/storage';
 import { messages as es } from './locales/es';
 
+/** Formas del plural. El ruso usa también few (2–4) y many (5–20…); el resto, one y other. */
 export interface Plural {
   readonly one: string;
+  readonly few?: string;
+  readonly many?: string;
   readonly other: string;
 }
 
@@ -34,7 +37,7 @@ export type PluralKey = Keys<typeof es, Plural>;
 const LOCALE_KEY = 'skid.lang.v1';
 
 /** Etiqueta de Intl de cada idioma (fechas, números, plurales). */
-const INTL: Record<Locale, string> = { es: 'es-ES', en: 'en-GB', de: 'de-DE', fr: 'fr-FR', pt: 'pt-PT', it: 'it-IT' };
+const INTL: Record<Locale, string> = { es: 'es-ES', en: 'en-GB', de: 'de-DE', fr: 'fr-FR', pt: 'pt-PT', it: 'it-IT', ru: 'ru-RU' };
 
 const LOADERS: Record<Locale, () => Promise<{ messages: Messages; errors: ErrorMessages }>> = {
   es: async () => ({ messages: es, errors: (await import('../../../common/i18n/errors/es')).errors }),
@@ -43,6 +46,7 @@ const LOADERS: Record<Locale, () => Promise<{ messages: Messages; errors: ErrorM
   fr: async () => ({ messages: (await import('./locales/fr')).messages, errors: (await import('../../../common/i18n/errors/fr')).errors }),
   pt: async () => ({ messages: (await import('./locales/pt')).messages, errors: (await import('../../../common/i18n/errors/pt')).errors }),
   it: async () => ({ messages: (await import('./locales/it')).messages, errors: (await import('../../../common/i18n/errors/it')).errors }),
+  ru: async () => ({ messages: (await import('./locales/ru')).messages, errors: (await import('../../../common/i18n/errors/ru')).errors }),
 };
 
 let current: Locale = 'es';
@@ -95,7 +99,8 @@ export function t(key: TextKey, params?: MessageParams): string {
 export function tn(key: PluralKey, n: number, params?: MessageParams): string {
   const forms = (lookup(dict, key) ?? lookup(es, key)) as Plural | undefined;
   if (!forms) return key;
-  const form = pluralRules.select(n) === 'one' ? forms.one : forms.other;
+  const rule = pluralRules.select(n);
+  const form = (rule === 'one' || rule === 'few' || rule === 'many' ? forms[rule] : undefined) ?? forms.other;
   return formatMessage(form, { n, ...params });
 }
 

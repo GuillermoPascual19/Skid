@@ -118,7 +118,7 @@ export async function leagueRanking(env: Env, playerId: string, leagueId: string
      JOIN players p ON p.id = m.player_id
      LEFT JOIN daily_runs r ON r.player_id = m.player_id AND r.day = ?2
      WHERE m.league_id = ?3
-     ORDER BY r.finished_at IS NULL, r.score DESC, r.time_ms ASC, p.name`,
+     ORDER BY r.finished_at IS NULL, COALESCE(r.over_par, -r.score), r.time_ms ASC, p.name`,
   )
     .bind(playerId, day, leagueId)
     .all<RankingDbRow>();
@@ -166,7 +166,8 @@ export async function dailyWins(env: Env, playerId: string, day: string) {
             (SELECT COUNT(*) FROM league_members m3
                JOIN daily_runs r3 ON r3.player_id = m3.player_id AND r3.day = ?2 AND r3.finished_at IS NOT NULL
              WHERE m3.league_id = l.id
-               AND (r3.score > me.score OR (r3.score = me.score AND r3.time_ms < me.time_ms))) AS better
+               AND (COALESCE(r3.over_par, -r3.score) < COALESCE(me.over_par, -me.score)
+                    OR (COALESCE(r3.over_par, -r3.score) = COALESCE(me.over_par, -me.score) AND r3.time_ms < me.time_ms))) AS better
      FROM leagues l
      JOIN league_members m ON m.league_id = l.id AND m.player_id = ?1
      JOIN daily_runs me ON me.player_id = ?1 AND me.day = ?2 AND me.finished_at IS NOT NULL
@@ -227,14 +228,14 @@ export async function leagueTotals(env: Env, leagueId: string, from: string, to:
 async function standingRows(env: Env, playerId: string, leagueId: string, from: string, to: string): Promise<StandingRow[]> {
   const { results } = await env.DB.prepare(
     `WITH runs AS (
-       SELECT r.player_id, r.day, r.score, r.time_ms
+       SELECT r.player_id, r.day, r.score, r.time_ms, COALESCE(r.over_par, -r.score) AS rank_key
        FROM daily_runs r
        JOIN league_members lm ON lm.player_id = r.player_id AND lm.league_id = ?4
        WHERE r.day BETWEEN ?2 AND ?3 AND r.finished_at IS NOT NULL
      ),
      ranked AS (
        SELECT *,
-              RANK() OVER (PARTITION BY day ORDER BY score DESC, time_ms ASC) AS pos,
+              RANK() OVER (PARTITION BY day ORDER BY rank_key, time_ms ASC) AS pos,
               COUNT(*) OVER (PARTITION BY day) AS finishers
        FROM runs
      )

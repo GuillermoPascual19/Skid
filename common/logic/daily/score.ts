@@ -10,20 +10,21 @@ export function starsFor(moves: number, optimal: number): 1 | 2 | 3 {
 }
 
 /**
- * Reto diario al estilo golf: el resultado es lo que te pasas del óptimo
- * ("Par" si lo igualas, "+2" con dos golpes de más). Cada movimiento es un
- * golpe y cada pista suma otro. Reintentar es gratis: cuenta el mejor intento.
+ * Reto diario: el resultado es el número de movimientos del mejor intento, y
+ * cada pista cuenta como uno más (menos es mejor; a igualdad, menos tiempo).
+ * Reintentar es gratis. Por detrás, cada reto da puntos de liga para la
+ * clasificación semanal y las temporadas.
  */
 export const GOLF = {
-  /** Puntos de liga (semanal, mensual) de un reto al par. */
+  /** Puntos de liga de un reto hecho en el óptimo. */
   parPoints: 1000,
-  /** Puntos de liga que resta cada golpe de más. */
+  /** Puntos de liga que resta cada movimiento de más. */
   perStroke: 100,
   /** Terminar el reto garantiza al menos estos puntos. */
   minimum: 100,
 } as const;
 
-/** Golpes por encima del óptimo (nunca negativo: el óptimo es el mínimo). */
+/** Movimientos (con las pistas) por encima del óptimo (nunca negativo: el óptimo es el mínimo). */
 export function overPar(strokes: number, optimal: number): number {
   return Math.max(0, strokes - optimal);
 }
@@ -31,9 +32,4 @@ export function overPar(strokes: number, optimal: number): number {
 /** Puntos de liga de un resultado: las clasificaciones suman estos puntos día a día. */
 export function golfPoints(over: number): number {
   return Math.max(GOLF.minimum, GOLF.parPoints - over * GOLF.perStroke);
-}
-
-/** "Par" o "+N". */
-export function golfLabel(over: number): string {
-  return over <= 0 ? 'Par' : `+${over}`;
 }

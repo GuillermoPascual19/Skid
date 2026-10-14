@@ -1,7 +1,7 @@
 // Reto semanal: la tarjeta de la portada, la presentación con las reglas y el ranking.
 
 import { dayKey, shiftDay, weekRange, DAILY_TIME_ZONE } from '../../../../common/logic/daily/daily';
-import { golfLabel } from '../../../../common/logic/daily/score';
+import { movesBig } from '../../shared/result';
 import { weekKey } from '../../../../common/logic/weekly/weekly';
 import { h, openModal, untilMidnight } from '../../shared/dom';
 import { go } from '../../shared/router';
@@ -93,7 +93,7 @@ export function weeklyCard(): { el: HTMLElement; load(): Promise<void> } {
         ? h(
             'div',
             { class: 'weekly-best' },
-            h('span', { class: `score-big golf${best === 0 ? ' par' : ''}` }, golfLabel(best)),
+            movesBig(info.optimal + best, info.optimal),
             h(
               'span',
               { class: 'muted' },
