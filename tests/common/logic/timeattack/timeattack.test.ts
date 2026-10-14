@@ -14,9 +14,14 @@ describe('contrarreloj', () => {
     expect(timeAttackBoard('2026-10-12', 0).rows).not.toEqual(timeAttackBoard('2026-10-12', 1).rows);
   });
 
-  it('los puntos suben con el tablero y hay bonus en el óptimo', () => {
+  it('los puntos suben con cada tablero superado y hay bonus en el óptimo', () => {
     expect(boardPoints(0, 6, 6)).toEqual({ points: 150, perfect: true });
     expect(boardPoints(0, 8, 6)).toEqual({ points: 100, perfect: false });
     expect(boardPoints(5, 12, 12)).toEqual({ points: 250, perfect: true });
+  });
+
+  it('saltar tableros no sube lo que valen los siguientes: cuentan los superados', () => {
+    // Quien ha superado 2 (y saltado 3) cobra lo mismo que quien ha superado 2 sin saltar.
+    expect(boardPoints(2, 10, 10).points).toBe(190);
   });
 });

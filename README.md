@@ -161,7 +161,8 @@ fuera) y compila el juego a `dist/`.
 
 - 3 minutos para superar tantos tableros pequeños como se pueda, uno detrás de otro y cada vez más
   difíciles (empieza en el nivel 4 del modo libre y sube uno por tablero).
-- Cada tablero da 100 puntos más 20 por cada tablero anterior, y 50 de bonus en el óptimo. Se puede
+- Cada tablero da 100 puntos más 20 por cada tablero ya superado (los saltados no cuentan), y 50 de
+  bonus en el óptimo. Se puede
   saltar uno perdiendo 10 s. Reiniciar el tablero se puede, pero el reloj sigue.
 - Los tableros de la semana son los mismos para todos. Cada uno se genera la primera vez que alguien
   llega a él y se guarda en `time_attack_boards` (generar muchos de golpe no cabe en una petición).

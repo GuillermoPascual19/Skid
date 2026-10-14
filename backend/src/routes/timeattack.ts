@@ -173,7 +173,8 @@ export async function finishTimeAttackBoard(env: Env, playerId: string, id: stri
   // Más rápido que las animaciones = enviado con un script, sin jugar.
   if (now - run.last_at < minPlayTimeMs(replay) * 0.9) throw new HttpError(400, 'tooFast');
 
-  const { points, perfect } = boardPoints(run.next_idx, replay.moves, current.optimal);
+  // Lo que vale depende de los tableros superados, no de los saltados.
+  const { points, perfect } = boardPoints(run.boards, replay.moves, current.optimal);
   // Solo cuenta una vez aunque llegue repetido (se comprueba qué tablero tocaba).
   const update = await env.DB.prepare(
     `UPDATE time_attack_runs SET score = score + ?, boards = boards + 1, perfect = perfect + ?, next_idx = next_idx + 1, last_at = ?

@@ -20,7 +20,11 @@ export const TIME_ATTACK_GRACE_MS = 3_000;
 /** Tableros que puede tener una partida (nadie llega, pero pone un límite). */
 export const TIME_ATTACK_MAX_BOARDS = 80;
 
-/** Puntos de un tablero superado: más cuanto más avanzado, y un bonus en el óptimo. */
+/**
+ * Puntos de un tablero superado: más cuantos más llevas superados (no por su
+ * posición: así saltar tableros no sube lo que valen los siguientes) y un bonus
+ * en el óptimo.
+ */
 export const TIME_ATTACK_POINTS = { base: 100, perBoard: 20, perfect: 50 } as const;
 
 /** Nivel del modo libre de cada tablero: empieza fácil y sube uno por tablero. */
@@ -33,9 +37,9 @@ export function timeAttackBoard(week: string, index: number): GeneratedLevel {
   return generateLevel(timeAttackLevel(index), hashSeed(`skid-timeattack:${week}:${index}`), { rejectDeadEnds: true });
 }
 
-/** Puntos por superar el tablero `index` con `moves` movimientos. */
-export function boardPoints(index: number, moves: number, optimal: number): { points: number; perfect: boolean } {
+/** Puntos por superar un tablero con `moves` movimientos, habiendo superado ya `cleared`. */
+export function boardPoints(cleared: number, moves: number, optimal: number): { points: number; perfect: boolean } {
   const perfect = moves <= optimal;
-  const points = TIME_ATTACK_POINTS.base + TIME_ATTACK_POINTS.perBoard * index + (perfect ? TIME_ATTACK_POINTS.perfect : 0);
+  const points = TIME_ATTACK_POINTS.base + TIME_ATTACK_POINTS.perBoard * cleared + (perfect ? TIME_ATTACK_POINTS.perfect : 0);
   return { points, perfect };
 }

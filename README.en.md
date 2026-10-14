@@ -161,8 +161,8 @@ anything from outside) and builds the game to `dist/`.
 
 - 3 minutes to clear as many small boards as you can, one after another and each a little harder
   (it starts at free-play level 4 and goes up one level per board).
-- Each board gives 100 points plus 20 for every board before it, and a 50-point bonus in the
-  optimum. You can skip one at the cost of 10 s. You can restart a board, but the clock keeps
+- Each board gives 100 points plus 20 for every board already cleared (skipped ones don't count),
+  and a 50-point bonus in the optimum. You can skip one at the cost of 10 s. You can restart a board, but the clock keeps
   running.
 - The week's boards are the same for everyone. Each one is generated the first time someone reaches
   it and stored in `time_attack_boards` (generating many at once doesn't fit in one request).

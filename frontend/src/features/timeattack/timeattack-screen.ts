@@ -31,6 +31,8 @@ export function timeAttackScreen(start: TimeAttackStart, previousBest: number | 
   let mounted: MountedBoard | null = null;
   let disposed = false;
   let clock = 0;
+  /** El tablero que se está enviando: al acabar el tiempo se espera a que llegue. */
+  let sending: Promise<unknown> | null = null;
   // Reloj del servidor visto desde aquí: el tiempo que cuenta es el suyo.
   const offset = run.serverNow - Date.now();
   const serverNow = () => Date.now() + offset;
@@ -120,8 +122,10 @@ export function timeAttackScreen(start: TimeAttackStart, previousBest: number | 
 
   async function submitBoard() {
     sfx.win();
+    const request = finishBoard(run.id, encodeRun(attempt));
+    sending = request.catch(() => {});
     try {
-      const res = await finishBoard(run.id, encodeRun(attempt));
+      const res = await request;
       if (disposed) return;
       run = res.run;
       pop(`+${formatPoints(res.points)}${res.perfect ? ' 🎯' : ''}`);
@@ -172,8 +176,8 @@ export function timeAttackScreen(start: TimeAttackStart, previousBest: number | 
     hud();
     sfx.win();
     const modal = openModal([h('h2', null, t('timeattack.over')), h('p', { class: 'lead' }, t('common.loading'))]);
-    // Por si el último tablero aún se estaba enviando, se deja un momento.
-    await new Promise((r) => setTimeout(r, 600));
+    // Si el último tablero aún se estaba enviando, sus puntos cuentan: se espera a que llegue.
+    await sending;
     try {
       const result = await timeAttackResult(run.id);
       if (disposed) return;
