@@ -12,6 +12,7 @@ import { duelsScreen } from './features/duels/duels-screen';
 import { difficultyLabel } from './features/duels/duels';
 import { duelRoomScreen } from './features/duels/duel-room';
 import { refreshPush, registerServiceWorker } from './features/notifications/notifications';
+import { watchForUpdates } from './shared/update';
 import { timeAttackScreen } from './features/timeattack/timeattack-screen';
 import { duelPlayScreen } from './features/duels/duel-play';
 import { getDuelGhost } from './features/duels/api';
@@ -115,3 +116,6 @@ if (duelLink) {
 // Notificaciones: el service worker que las recibe y, si están activadas, la suscripción al día.
 registerServiceWorker();
 void refreshPush();
+
+// Si se despliega una versión nueva mientras la app está abierta, se recarga (o se avisa).
+watchForUpdates();

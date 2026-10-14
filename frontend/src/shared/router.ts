@@ -38,6 +38,12 @@ type Renderers = { [N in Route['name']]: (route: Extract<Route, { name: N }>) =>
 
 let renderers: Renderers | null = null;
 let current: Screen | null = null;
+let currentName: Route['name'] | null = null;
+
+/** La pantalla que se está viendo. */
+export function currentRoute(): Route['name'] | null {
+  return currentName;
+}
 
 export function setRoutes(r: Renderers): void {
   renderers = r;
@@ -51,6 +57,7 @@ export function go(route: Route): void {
   document.querySelectorAll('.overlay').forEach((o) => o.remove());
   document.getElementById('app')!.replaceChildren(screen.el);
   current = screen;
+  currentName = route.name;
   window.scrollTo(0, 0);
   screen.mount?.();
 }

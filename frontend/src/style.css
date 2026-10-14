@@ -3583,3 +3583,30 @@ input.switch:focus-visible {
 .modal .btn.block + .btn.block {
   margin-top: 8px;
 }
+
+/* Versión nueva desplegada (ver shared/update.ts). */
+.update-banner {
+  position: fixed;
+  left: 50%;
+  bottom: calc(16px + env(safe-area-inset-bottom));
+  transform: translateX(-50%);
+  z-index: 50;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  max-width: calc(100% - 32px);
+  padding: 8px 8px 8px 16px;
+  border-radius: 999px;
+  background: var(--card-solid);
+  box-shadow: var(--shadow);
+  font-weight: 700;
+  white-space: nowrap;
+  animation: update-in 0.3s ease-out;
+}
+
+@keyframes update-in {
+  from {
+    opacity: 0;
+    transform: translate(-50%, 12px);
+  }
+}

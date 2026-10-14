@@ -240,6 +240,10 @@ export const messages = {
     title: 'Idioma',
     change: 'Idioma: {language}. Pulsa para cambiarlo',
   },
+  update: {
+    available: 'Hay una versión nueva',
+    reload: 'Actualizar',
+  },
   notifications: {
     title: 'Notificaciones',
     text: 'Te avisamos aunque tengas el juego cerrado.',
