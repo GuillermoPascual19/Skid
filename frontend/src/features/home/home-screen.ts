@@ -20,12 +20,14 @@ import { startingProgress } from '../free-play/storage';
 import type { Me } from '../profile/api';
 import { NEWS, dismissGuideNews, guideStatus, openGuide } from '../guide/guide';
 import { weeklyCard } from '../weekly/weekly';
+import { duelsCard } from '../duels/duels';
 
 export function homeScreen(): Screen {
   const day = today();
   const dailyCard = h('section', { class: 'card daily-card' });
   // El reto semanal necesita el servidor (el tablero y el ranking están allí).
   const weekly = online.onlineEnabled ? weeklyCard() : null;
+  const duels = online.onlineEnabled ? duelsCard() : null;
   const account = h('div', { class: 'account' });
   const logoPenguin = h('div', { class: 'logo-penguin' }, svg(penguinSvg()));
   const wearHat = (hat: Me['hat']) => logoPenguin.replaceChildren(svg(penguinSvg(hat)));
@@ -294,6 +296,7 @@ export function homeScreen(): Screen {
     news,
     dailyCard,
     weekly?.el ?? null,
+    duels?.el ?? null,
     h(
       'section',
       { class: 'card levels-card' },
@@ -333,6 +336,7 @@ export function homeScreen(): Screen {
       ticker = window.setInterval(tick, 1000);
       void syncWithServer();
       void weekly?.load();
+      void duels?.load();
     },
     dispose() {
       disposed = true;

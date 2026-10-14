@@ -35,6 +35,7 @@ frontend/              el juego en el navegador (Vite)
       free-play/       modo libre
       daily/           reto diario, estadísticas, solución y fantasma de un amigo
       weekly/          reto semanal
+      duels/           duelos
       ranking/         ligas y ranking estilo golf (niveles, reto semanal)
       achievements/    logros y gorros
       community/       multijugador: listado, editor, partida, valorar, denunciar
@@ -55,6 +56,7 @@ common/                lo que usan los dos; sin APIs del navegador ni imports de
     engine/            tablero, movimiento, solver, generador, elementos, aleatorio
     daily/             reto diario, puntuación y rachas
     weekly/            reto semanal
+    duels/             duelos
     achievements/      logros
     community/         validación de niveles creados por jugadores
   art/                 dibujos SVG (pingüino, gorros, elementos)
@@ -89,6 +91,18 @@ fuera) y compila el juego a `dist/`.
   amigos (quienes comparten alguna liga contigo); a igualdad gana quien lo consiguió antes.
 - Lógica en `common/logic/weekly/`, servidor en `backend/src/routes/weekly.ts` y el juego en
   `frontend/src/features/weekly/`.
+
+## Duelos
+
+- Retas a un amigo de tus ligas o a cualquiera con un enlace (`?duelo=`), y eliges dificultad
+  (niveles 6, 12 y 32 del modo libre). El servidor genera el tablero al crear el duelo y lo guarda.
+- Cada uno juega cuantas veces quiera, sin pistas, y entrega su mejor marca. El duelo termina cuando
+  entregan los dos o a las 48 h; hasta entonces no se ve la marca del otro. Gana quien tenga menos
+  movimientos y, a igualdad, quien tardó menos (desde que empezó hasta su mejor intento).
+- Al terminar: el fantasma con los dos mejores intentos y la revancha.
+- Lógica en `common/logic/duels/`, servidor en `backend/src/routes/duels.ts` y el juego en
+  `frontend/src/features/duels/`. La partida «al mejor intento» es común con el reto semanal
+  (`frontend/src/play/attempt-screen.ts`).
 
 ## Seguridad
 

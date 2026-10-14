@@ -2815,3 +2815,110 @@ input.switch:focus-visible {
 .account-actions {
   margin-top: 6px;
 }
+
+/* ------------------------------------------------------------------ Duelos */
+
+.duels-body {
+  display: grid;
+  gap: 16px;
+}
+
+.duel-section {
+  display: grid;
+  gap: 8px;
+}
+
+.duel-card {
+  display: grid;
+  grid-template-columns: 34px 1fr auto;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 14px;
+}
+
+.duel-card.turn {
+  outline: 3px solid var(--gold);
+}
+
+.duel-card.win .duel-detail {
+  color: var(--good);
+  font-weight: 800;
+}
+
+.duel-card.lose .duel-detail {
+  color: var(--bad);
+}
+
+.duel-link-icon {
+  font-size: 24px;
+  text-align: center;
+}
+
+.duel-info {
+  display: grid;
+  line-height: 1.25;
+  min-width: 0;
+}
+
+.duel-info strong {
+  font-size: 17px;
+}
+
+.duel-info small {
+  color: var(--ink-faint);
+  font-weight: 700;
+}
+
+.duel-detail {
+  color: var(--ink-soft);
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.duel-actions {
+  display: grid;
+  gap: 4px;
+  justify-items: end;
+}
+
+.duel-difficulty {
+  align-self: center;
+}
+
+.duel-friends {
+  display: grid;
+  gap: 6px;
+  max-height: 40vh;
+  overflow-y: auto;
+  text-align: left;
+}
+
+.duel-friend {
+  appearance: none;
+  border: 0;
+  display: grid;
+  grid-template-columns: 34px 1fr auto;
+  align-items: center;
+  gap: 10px;
+  background: var(--surface-soft);
+  border-radius: 14px;
+  padding: 8px 12px;
+  font: inherit;
+  font-weight: 700;
+  color: var(--ink);
+  text-align: left;
+  cursor: pointer;
+}
+
+.duel-friend.suggested {
+  outline: 2px solid var(--gold);
+}
+
+.duel-friend .go {
+  font-size: 18px;
+}
+
+.duel-invite-penguin svg {
+  width: 72px;
+  height: auto;
+}
