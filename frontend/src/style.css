@@ -1412,6 +1412,20 @@ p {
   fill: var(--gold-dark);
 }
 
+.score-chart .bar.perfect,
+.swatch.perfect {
+  fill: var(--good);
+  background: var(--good);
+}
+
+.score-chart .bar.perfect.won {
+  fill: var(--gold-dark);
+}
+
+.score-chart .bar.old {
+  fill: var(--muted-fill);
+}
+
 .score-chart:has(.bar.active) .bar:not(.active) {
   opacity: 0.45;
 }

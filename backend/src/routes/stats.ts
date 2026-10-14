@@ -35,10 +35,10 @@ export async function wonDays(env: Env, playerId: string): Promise<Set<string>> 
 /** Estadísticas personales del reto diario: rachas, totales y los últimos 30 días. */
 export async function playerStats(env: Env, playerId: string) {
   const { results: runs } = await env.DB.prepare(
-    'SELECT day, score FROM daily_runs WHERE player_id = ? AND finished_at IS NOT NULL ORDER BY day',
+    'SELECT day, over_par FROM daily_runs WHERE player_id = ? AND finished_at IS NOT NULL ORDER BY day',
   )
     .bind(playerId)
-    .all<{ day: string; score: number }>();
+    .all<{ day: string; over_par: number | null }>();
   const wins = await wonDays(env, playerId);
   const today = dayKey(new Date());
   const streak = streaks(
@@ -46,12 +46,14 @@ export async function playerStats(env: Env, playerId: string) {
     today,
   );
 
-  const byDay = new Map(runs.map((r) => [r.day, r.score]));
+  // Movimientos de más de cada reto. Los de antes de contar por movimientos no
+  // tienen (null): cuentan como jugados, pero no para la media ni los perfectos.
+  const byDay = new Map(runs.map((r) => [r.day, r.over_par]));
   const history = Array.from({ length: HISTORY_DAYS }, (_, i) => {
     const day = shiftDay(today, i - (HISTORY_DAYS - 1));
-    return { day, score: byDay.get(day) ?? null, won: wins.has(day) };
+    return { day, played: byDay.has(day), over: byDay.get(day) ?? null, won: wins.has(day) };
   });
-  const scores = runs.map((r) => r.score);
+  const overs = runs.map((r) => r.over_par).filter((o): o is number => o !== null);
 
   return {
     played: runs.length,
@@ -60,10 +62,12 @@ export async function playerStats(env: Env, playerId: string) {
     playedToday: streak.playedToday,
     freezes: streak.freezes,
     calendar: { played: runs.map((r) => r.day), won: [...wins].sort(), frozen: streak.frozenDays },
-    bestScore: scores.length ? Math.max(...scores) : null,
-    averageScore: scores.length ? Math.round(scores.reduce((a, b) => a + b, 0) / scores.length) : null,
+    /** Retos contados por movimientos (los que tienen over_par). */
+    counted: overs.length,
+    perfect: overs.filter((o) => o === 0).length,
+    /** Media de movimientos por encima del óptimo, con un decimal. */
+    averageOver: overs.length ? Math.round((overs.reduce((a, b) => a + b, 0) / overs.length) * 10) / 10 : null,
     wins: wins.size,
-    perfect: scores.filter((s) => s >= 1000).length,
     history,
   };
 }
