@@ -5,6 +5,7 @@ import type { CustomLevel, CustomLevelSort } from '../features/community/api';
 import type { DailyRecord } from '../features/daily/storage';
 import type { WeeklyInfo } from '../features/weekly/api';
 import type { Duel } from '../features/duels/api';
+import type { TimeAttackStart } from '../features/timeattack/api';
 
 export interface Screen {
   readonly el: HTMLElement;
@@ -21,6 +22,7 @@ export type Route =
   | { name: 'weekly'; info: WeeklyInfo }
   | { name: 'duels'; open?: string }
   | { name: 'duelRoom'; id: string }
+  | { name: 'timeAttack'; start: TimeAttackStart; previousBest: number | null }
   | { name: 'duel'; duel: Duel }
   | { name: 'duelGhost'; duel: Duel }
   | { name: 'ranking'; join?: string }

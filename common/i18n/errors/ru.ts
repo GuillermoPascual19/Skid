@@ -88,6 +88,10 @@ export const errors: ErrorMessages = {
   duelNotOver: 'Дуэль ещё не закончилась',
   rivalDidntFinish: 'Соперник так и не прошёл поле',
 
+  runNotFound: 'Такой партии нет',
+  runNotStarted: 'Партия ещё не началась',
+  timeUp: 'Время вышло',
+  runChanged: 'Партия изменилась на другом устройстве',
   reactionInvalid: 'Такой реакции нет',
   reactionSelf: 'Нельзя реагировать на своё испытание',
   reactionNotAllowed: 'Реагировать можно только на пройденные испытания друзей за последние {days} дн.',

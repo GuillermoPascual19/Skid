@@ -11,6 +11,7 @@ import { weeklyScreen } from './features/weekly/weekly-screen';
 import { duelsScreen } from './features/duels/duels-screen';
 import { difficultyLabel } from './features/duels/duels';
 import { duelRoomScreen } from './features/duels/duel-room';
+import { timeAttackScreen } from './features/timeattack/timeattack-screen';
 import { duelPlayScreen } from './features/duels/duel-play';
 import { getDuelGhost } from './features/duels/api';
 import { customLevelScreen } from './features/community/play-screen';
@@ -71,6 +72,7 @@ setRoutes({
   weekly: (route) => weeklyScreen(route.info),
   duels: (route) => duelsScreen(route.open),
   duelRoom: (route) => duelRoomScreen(route.id),
+  timeAttack: (route) => timeAttackScreen(route.start, route.previousBest),
   duel: (route) => duelPlayScreen(route.duel),
   duelGhost: (route) =>
     ghostScreen({

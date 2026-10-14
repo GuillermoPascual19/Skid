@@ -320,6 +320,34 @@ export const messages: Messages = {
     playAgain: 'Gioca di nuovo',
     firstMark: 'Il tuo primo punteggio della settimana. Puoi migliorarlo fino a domenica.',
   },
+  timeattack: {
+    points: 'Punti',
+    title: 'A tempo',
+    intro: {
+      title: '{minutes} minuti, quanti più tabelloni possibile',
+      boards: 'Tabelloni piccoli, uno dopo l\'altro e sempre più difficili. Puoi ricominciarne uno, ma il cronometro continua.',
+      points: 'Ogni tabellone vale {base} punti o più (di più quanto più avanzi) e {perfect} di bonus se lo fai nell\'ottimo.',
+      skip: 'Se ti blocchi, saltalo: perdi {seconds} secondi.',
+      week: 'Gli stessi tabelloni per tutti per tutta la settimana. Gioca quante volte vuoi: conta la tua partita migliore nella classifica con i tuoi amici.',
+    },
+    boards: { one: '{n} tabellone', other: '{n} tabelloni' },
+    ranking: {
+      empty: 'Nessuno ha ancora giocato questa settimana. Sii il primo!',
+    },
+    card: {
+      title: '{minutes} minuti, quanti più tabelloni possibile',
+      text: 'Gli stessi tabelloni per tutti questa settimana: sfida i tuoi amici.',
+      again: 'Batti il mio record',
+    },
+    board: 'Tabellone',
+    hintKeys: 'Frecce o WASD · R ricomincia il tabellone (il cronometro continua)',
+    hintTouch: 'Scorri il dito · ↺ ricomincia il tabellone (il cronometro continua)',
+    skip: 'Salta (−{seconds} s)',
+    over: 'Tempo!',
+    record: 'Nuovo record!',
+    recordText: '{points} punti: la tua miglior partita della settimana.',
+    weekBest: 'Il tuo record della settimana: {points} punti',
+  },
   duels: {
     difficulty: {
       easy: 'Facile',
@@ -808,8 +836,8 @@ export const messages: Messages = {
     next: 'Avanti',
   },
   news: {
-    title: 'Novità: contano le mosse.',
-    text: 'Basta golf: il tuo risultato è il numero di mosse, meno sono meglio è. E ora puoi condividere su WhatsApp o copiare il link.',
+    title: 'Novità: a tempo.',
+    text: '3 minuti per superare quanti più tabelloni possibile. Gli stessi per tutti per tutta la settimana: sfida i tuoi amici.',
   },
   guide: {
     slide: {
@@ -850,6 +878,13 @@ export const messages: Messages = {
       r2: 'Gioca quante volte vuoi durante la settimana: conta il tuo tentativo migliore.',
       r3: 'Niente suggerimenti.',
       r4: 'Classifica con gli amici di tutte le tue leghe. A parità di mosse, vince chi l\'ha ottenuto prima.',
+    },
+    timeattack: {
+      title: 'A tempo',
+      r1: '{minutes} minuti per superare quanti più tabelloni possibile, uno dopo l\'altro e sempre più difficili.',
+      r2: 'Ogni tabellone vale {base} punti o più (di più quanto più avanzi) e {perfect} di bonus se lo fai nell\'ottimo.',
+      r3: 'Se ti blocchi, puoi saltare il tabellone al costo di {seconds} secondi.',
+      r4: 'I tabelloni sono gli stessi per tutti per tutta la settimana. Conta la tua partita migliore nella classifica con i tuoi amici.',
     },
     duels: {
       title: 'Duelli',

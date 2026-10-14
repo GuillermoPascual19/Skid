@@ -88,6 +88,10 @@ export const errors: ErrorMessages = {
   duelNotOver: 'Il duello non è ancora finito',
   rivalDidntFinish: 'Il tuo avversario non è riuscito a finirlo',
 
+  runNotFound: 'Questa partita non esiste',
+  runNotStarted: 'La partita non è ancora iniziata',
+  timeUp: 'Tempo scaduto',
+  runChanged: 'La partita è cambiata su un altro dispositivo',
   reactionInvalid: 'Questa reazione non esiste',
   reactionSelf: 'Non puoi reagire alla tua sfida',
   reactionNotAllowed: 'Puoi reagire solo alle sfide completate dei tuoi amici degli ultimi {days} giorni',

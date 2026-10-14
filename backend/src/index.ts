@@ -13,6 +13,14 @@ import { errorMessage, requestLocale } from './i18n';
 import { playerAchievements } from './routes/achievements';
 import { finishRun, getRun, ghostRuns, startRun } from './routes/daily';
 import { finishWeekly, getWeekly, startWeekly, weeklyRanking } from './routes/weekly';
+import {
+  finishTimeAttackBoard,
+  skipTimeAttackBoard,
+  startTimeAttack,
+  timeAttackRanking,
+  timeAttackResult,
+  timeAttackSummary,
+} from './routes/timeattack';
 import { acceptDuel, createDuel, declineDuel, duelGhost, finishDuel, getDuel, here, listDuels, listFriends, setReady } from './routes/duels';
 import { createLeague, dailyWins, joinLeague, leagueInvite, leagueRanking, leagueStandings, leaveLeague, myLeagues } from './routes/leagues';
 import {
@@ -132,6 +140,15 @@ async function handleApi(req: Request, url: URL, env: Env): Promise<Response> {
     return json(await finishRun(env, playerId, m[1], log));
   }
 
+  if ((m = route.match(/^GET \/timeattack\/(\d{4}-\d{2}-\d{2})$/))) return json(await timeAttackSummary(env, playerId, m[1]));
+  if ((m = route.match(/^GET \/timeattack\/(\d{4}-\d{2}-\d{2})\/ranking$/))) return json(await timeAttackRanking(env, playerId, m[1]));
+  if ((m = route.match(/^POST \/timeattack\/(\d{4}-\d{2}-\d{2})\/start$/))) return json(await startTimeAttack(env, playerId, m[1]));
+  if ((m = route.match(/^POST \/timeattack\/runs\/([\w-]+)\/board$/))) {
+    const { log } = await body<{ log?: unknown }>(req);
+    return json(await finishTimeAttackBoard(env, playerId, m[1], log));
+  }
+  if ((m = route.match(/^POST \/timeattack\/runs\/([\w-]+)\/skip$/))) return json(await skipTimeAttackBoard(env, playerId, m[1]));
+  if ((m = route.match(/^GET \/timeattack\/runs\/([\w-]+)$/))) return json(await timeAttackResult(env, playerId, m[1]));
   if ((m = route.match(/^GET \/weekly\/(\d{4}-\d{2}-\d{2})$/))) return json(await getWeekly(env, playerId, m[1]));
   if ((m = route.match(/^POST \/weekly\/(\d{4}-\d{2}-\d{2})\/start$/))) return json(await startWeekly(env, playerId, m[1]));
   if ((m = route.match(/^GET \/weekly\/(\d{4}-\d{2}-\d{2})\/ranking$/))) return json(await weeklyRanking(env, playerId, m[1]));

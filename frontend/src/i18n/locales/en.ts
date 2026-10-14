@@ -320,6 +320,34 @@ export const messages: Messages = {
     playAgain: 'Play again',
     firstMark: 'Your first score of the week. You can improve it until Sunday.',
   },
+  timeattack: {
+    points: 'Points',
+    title: 'Time attack',
+    intro: {
+      title: '{minutes} minutes, as many boards as you can',
+      boards: 'Small boards, one after another and each a little harder. You can restart one, but the clock keeps running.',
+      points: 'Each board gives {base} points or more (more the further you get) and a {perfect}-point bonus in the optimum.',
+      skip: 'If you get stuck, skip it: you lose {seconds} seconds.',
+      week: 'The same boards for everyone all week. Play as many times as you like: your best game counts in the ranking with your friends.',
+    },
+    boards: { one: '{n} board', other: '{n} boards' },
+    ranking: {
+      empty: 'Nobody has played yet this week. Be the first!',
+    },
+    card: {
+      title: '{minutes} minutes, as many boards as you can',
+      text: 'The same boards for everyone this week: compete with your friends.',
+      again: 'Beat my score',
+    },
+    board: 'Board',
+    hintKeys: 'Arrows or WASD · R restarts the board (the clock keeps running)',
+    hintTouch: 'Swipe · ↺ restarts the board (the clock keeps running)',
+    skip: 'Skip (−{seconds} s)',
+    over: 'Time\'s up!',
+    record: 'New best score!',
+    recordText: '{points} points: your best game of the week.',
+    weekBest: 'Your best this week: {points} points',
+  },
   duels: {
     difficulty: {
       easy: 'Easy',
@@ -808,8 +836,8 @@ export const messages: Messages = {
     next: 'Next',
   },
   news: {
-    title: 'Change: moves count.',
-    text: 'No more golf: your result in the challenges is your number of moves, the fewer the better. You can also share on WhatsApp or copy the link now.',
+    title: 'New: time attack.',
+    text: '3 minutes to clear as many boards as you can. The same for everyone all week: compete with your friends.',
   },
   guide: {
     slide: {
@@ -850,6 +878,13 @@ export const messages: Messages = {
       r2: 'Play as many times as you like during the week: your best attempt counts.',
       r3: 'No hints.',
       r4: 'Ranking with the friends from all your leagues. With the same number of moves, whoever got there first wins.',
+    },
+    timeattack: {
+      title: 'Time attack',
+      r1: '{minutes} minutes to clear as many boards as you can, one after another and each a little harder.',
+      r2: 'Each board gives {base} points or more (more the further you get) and a {perfect}-point bonus in the optimum.',
+      r3: 'If you get stuck, you can skip the board at the cost of {seconds} seconds.',
+      r4: 'The boards are the same for everyone all week. Your best game counts in the ranking with your friends.',
     },
     duels: {
       title: 'Duels',

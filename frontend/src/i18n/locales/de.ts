@@ -320,6 +320,34 @@ export const messages: Messages = {
     playAgain: 'Noch mal spielen',
     firstMark: 'Dein erstes Ergebnis der Woche. Du kannst es bis Sonntag verbessern.',
   },
+  timeattack: {
+    points: 'Punkte',
+    title: 'Zeitrennen',
+    intro: {
+      title: '{minutes} Minuten, so viele Spielfelder wie möglich',
+      boards: 'Kleine Spielfelder, eins nach dem anderen und immer schwerer. Du kannst eins neu starten, aber die Uhr läuft weiter.',
+      points: 'Jedes Spielfeld bringt {base} Punkte oder mehr (je weiter, desto mehr) und {perfect} Bonuspunkte im Optimum.',
+      skip: 'Wenn du feststeckst, überspring es: Du verlierst {seconds} Sekunden.',
+      week: 'Die ganze Woche dieselben Spielfelder für alle. Spiel so oft du willst: Deine beste Partie zählt in der Rangliste mit deinen Freunden.',
+    },
+    boards: { one: '{n} Spielfeld', other: '{n} Spielfelder' },
+    ranking: {
+      empty: 'Diese Woche hat noch niemand gespielt. Sei der Erste!',
+    },
+    card: {
+      title: '{minutes} Minuten, so viele Spielfelder wie möglich',
+      text: 'Diese Woche dieselben Spielfelder für alle: Tritt gegen deine Freunde an.',
+      again: 'Meinen Rekord schlagen',
+    },
+    board: 'Spielfeld',
+    hintKeys: 'Pfeile oder WASD · R startet das Spielfeld neu (die Uhr läuft weiter)',
+    hintTouch: 'Wischen · ↺ startet das Spielfeld neu (die Uhr läuft weiter)',
+    skip: 'Überspringen (−{seconds} s)',
+    over: 'Zeit um!',
+    record: 'Neuer Rekord!',
+    recordText: '{points} Punkte: deine beste Partie der Woche.',
+    weekBest: 'Dein Wochenrekord: {points} Punkte',
+  },
   duels: {
     difficulty: {
       easy: 'Leicht',
@@ -808,8 +836,8 @@ export const messages: Messages = {
     next: 'Weiter',
   },
   news: {
-    title: 'Neu: Es zählen die Züge.',
-    text: 'Schluss mit Golf: Dein Ergebnis ist die Anzahl deiner Züge, je weniger, desto besser. Außerdem kannst du jetzt per WhatsApp teilen oder den Link kopieren.',
+    title: 'Neu: Zeitrennen.',
+    text: '3 Minuten, um so viele Spielfelder wie möglich zu schaffen. Die ganze Woche für alle gleich: Tritt gegen deine Freunde an.',
   },
   guide: {
     slide: {
@@ -850,6 +878,13 @@ export const messages: Messages = {
       r2: 'Spiel in der Woche so oft du willst: Dein bester Versuch zählt.',
       r3: 'Keine Tipps.',
       r4: 'Rangliste mit den Freunden aus all deinen Ligen. Bei gleich vielen Zügen gewinnt, wer es zuerst geschafft hat.',
+    },
+    timeattack: {
+      title: 'Zeitrennen',
+      r1: '{minutes} Minuten, um so viele Spielfelder wie möglich zu schaffen, eins nach dem anderen und immer schwerer.',
+      r2: 'Jedes Spielfeld bringt {base} Punkte oder mehr (je weiter, desto mehr) und {perfect} Bonuspunkte im Optimum.',
+      r3: 'Wenn du feststeckst, kannst du das Spielfeld überspringen – das kostet {seconds} Sekunden.',
+      r4: 'Die Spielfelder sind die ganze Woche für alle gleich. Deine beste Partie zählt in der Rangliste mit deinen Freunden.',
     },
     duels: {
       title: 'Duelle',

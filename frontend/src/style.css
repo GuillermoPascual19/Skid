@@ -3481,3 +3481,73 @@ input.switch:focus-visible {
     animation: none;
   }
 }
+
+/* ------------------------------------------------------------ Contrarreloj */
+
+.ta-bar {
+  display: flex;
+  justify-content: center;
+  margin-top: 8px;
+}
+
+/* Cuenta atrás de salida, encima del tablero. */
+.ta-countdown {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  display: grid;
+  place-items: center;
+  font-size: 110px;
+  font-weight: 800;
+  color: var(--secondary);
+  text-shadow: 0 4px 0 var(--card-solid), 0 10px 30px rgba(21, 50, 79, 0.25);
+  pointer-events: none;
+}
+
+.ta-countdown[hidden] {
+  display: none;
+}
+
+/* «+150 🎯» al superar un tablero; «−10 s» al saltarlo. */
+.ta-pops {
+  position: absolute;
+  inset: 0;
+  z-index: 3;
+  display: grid;
+  place-items: center;
+  pointer-events: none;
+}
+
+.ta-pop {
+  grid-area: 1 / 1;
+  font-size: 40px;
+  font-weight: 800;
+  color: var(--gold-dark);
+  text-shadow: 0 3px 0 var(--card-solid);
+  animation: ta-pop 1.2s ease-out forwards;
+}
+
+.ta-pop.bad {
+  color: var(--bad);
+}
+
+@keyframes ta-pop {
+  0% {
+    transform: translateY(10px) scale(0.6);
+    opacity: 0;
+  }
+  20% {
+    transform: translateY(0) scale(1.1);
+    opacity: 1;
+  }
+  100% {
+    transform: translateY(-60px) scale(1);
+    opacity: 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ta-pop {
+    animation: none;
+  }
+}

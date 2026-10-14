@@ -15,6 +15,8 @@ friends, and levels made by the players.
 - **Daily challenge**: the same board for everyone; whoever does it in the fewest moves wins. With
   streaks, streak freezes, the solution once you finish, and a friend's ghost.
 - **Weekly challenge**: a big, hard board from Monday to Sunday, with a ranking among friends.
+- **Time attack**: 3 minutes to clear as many boards as you can, the same for everyone all week,
+  with a ranking among friends.
 - **Live duels**: challenge a friend (or anyone, with a link) and play the same brand-new board at
   the same time.
 - **Leagues**: daily and weekly rankings with your friends, and monthly seasons whose champion
@@ -81,6 +83,7 @@ frontend/                  the game in the browser (Vite)
       free-play/           free play
       daily/               daily challenge, stats, solution and a friend's ghost
       weekly/              weekly challenge
+      timeattack/          time attack: game, card and ranking
       duels/               duels: challenge, waiting room, live game, result and rematch
       ranking/             leagues, seasons, reactions and move-based rankings (levels,
                            weekly challenge)
@@ -101,14 +104,15 @@ backend/                   the Cloudflare Worker: serves the game (dist/) and th
     session.ts             sessions, Google sign-in, signing out and deleting the account
     google.ts              Google token verification
     i18n.ts                each request's language for error messages
-    routes/                one file per feature: daily, weekly, duels, leagues, seasons,
-                           reactions, levels, players, stats, achievements
-  migrations/              D1 database schema (0001 to 0015)
+    routes/                one file per feature: daily, weekly, timeattack, duels, leagues,
+                           seasons, reactions, levels, players, stats, achievements
+  migrations/              D1 database schema (0001 to 0016)
 common/                    used by both; no browser APIs and no imports from outside
   logic/                   pure rules: the server replays games with this very same code
     engine/                board, movement, solver, generator, elements, randomness
     daily/                 daily challenge, league points and streaks
     weekly/                weekly challenge
+    timeattack/            time attack: the week's boards and points
     duels/                 duels: difficulties, timings and who wins
     achievements/          achievements
     leagues/               seasons (dates, podium and each month's hat) and reactions
@@ -152,6 +156,22 @@ anything from outside) and builds the game to `dist/`.
   friends (anyone who shares a league with you); ties go to whoever got there first.
 - Logic in `common/logic/weekly/`, server in `backend/src/routes/weekly.ts` and the game in
   `frontend/src/features/weekly/`.
+
+## Time attack
+
+- 3 minutes to clear as many small boards as you can, one after another and each a little harder
+  (it starts at free-play level 4 and goes up one level per board).
+- Each board gives 100 points plus 20 for every board before it, and a 50-point bonus in the
+  optimum. You can skip one at the cost of 10 s. You can restart a board, but the clock keeps
+  running.
+- The week's boards are the same for everyone. Each one is generated the first time someone reaches
+  it and stored in `time_attack_boards` (generating many at once doesn't fit in one request).
+- The server sets the start time (after a 3 s countdown) and the end, and replays every board as it
+  arrives: it checks the board was cleared, that it wasn't played faster than the animations allow
+  and that time wasn't up (with 3 s of slack for the network). Weekly ranking with the friends from
+  all your leagues: each player's best game counts.
+- Logic in `common/logic/timeattack/`, server in `backend/src/routes/timeattack.ts` and the game in
+  `frontend/src/features/timeattack/`.
 
 ## Duels
 
