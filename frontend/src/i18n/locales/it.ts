@@ -452,6 +452,26 @@ export const messages: Messages = {
       text: '{points} punti a {month}. Il tuo premio: {hat}, che si vince solo in quel mese.',
     },
   },
+  reactions: {
+    react: 'Reagisci',
+    title: 'Reagisci alla sfida di {name}',
+    remove: 'Togli la mia reazione',
+    sent: '{emoji} a {name}',
+    names: {
+      clap: 'Applausi',
+      fire: 'Fuoco',
+      laugh: 'Risate',
+      wow: 'Wow',
+      strong: 'Forza',
+      penguin: 'Pinguino',
+    },
+    home: {
+      eyebrow: 'Reazioni',
+      line: '{name} ha reagito {emoji} alla tua sfida ({when})',
+      more: { one: 'e {n} altra', other: 'e altre {n}' },
+      see: 'Vedi la classifica',
+    },
+  },
   levels: {
     ranking: {
       eyebrow: 'Classifica del livello',
@@ -814,6 +834,7 @@ export const messages: Messages = {
       r4: 'Ogni {every} giorni di fila guadagni una protezione (fino a {max}): se un giorno non giochi, la tua serie non si perde.',
       r5: 'I traguardi sbloccano cappelli per il tuo pinguino.',
       r6: 'Ogni mese è una stagione: chi fa più punti nella lega vince il cappello di quel mese, che si ottiene solo così.',
+      r7: 'Reagisci con un\'emoji alle sfide dei tuoi amici dalla classifica.',
     },
     community: {
       title: 'Livelli dei giocatori',

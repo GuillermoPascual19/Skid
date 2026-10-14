@@ -22,6 +22,7 @@ import type { Me } from '../profile/api';
 import { NEWS, dismissGuideNews, guideStatus, openGuide } from '../guide/guide';
 import { weeklyCard } from '../weekly/weekly';
 import { duelsCard } from '../duels/duels';
+import { reactionsCard } from '../ranking/reactions';
 import { t, tn } from '../../i18n/i18n';
 
 export function homeScreen(): Screen {
@@ -30,6 +31,7 @@ export function homeScreen(): Screen {
   // El reto semanal necesita el servidor (el tablero y el ranking están allí).
   const weekly = online.onlineEnabled ? weeklyCard() : null;
   const duels = online.onlineEnabled ? duelsCard() : null;
+  const reactions = online.onlineEnabled ? reactionsCard() : null;
   const account = h('div', { class: 'account' });
   const logoPenguin = h('div', { class: 'logo-penguin' }, svg(penguinSvg()));
   const wearHat = (hat: Me['hat']) => logoPenguin.replaceChildren(svg(penguinSvg(hat)));
@@ -297,6 +299,7 @@ export function homeScreen(): Screen {
     ),
     news,
     dailyCard,
+    reactions?.el ?? null,
     weekly?.el ?? null,
     duels?.el ?? null,
     h(
@@ -339,6 +342,7 @@ export function homeScreen(): Screen {
       void syncWithServer();
       void weekly?.load();
       void duels?.load();
+      void reactions?.load();
     },
     dispose() {
       disposed = true;

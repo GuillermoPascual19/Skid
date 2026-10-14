@@ -17,7 +17,8 @@ friends, and levels made by the players.
 - **Weekly challenge**: a big, hard board from Monday to Sunday, with a ranking among friends.
 - **Duels**: challenge a friend (or anyone, with a link) to the same brand-new board.
 - **Leagues**: daily and weekly rankings with your friends, and monthly seasons whose champion
-  wins that month's hat; achievements unlock more hats.
+  wins that month's hat; emoji reactions to your friends' challenges; achievements unlock more
+  hats.
 - **Player levels**: level editor, publishing (you must beat your level first), ratings, per-level
   ranking, sharing and reporting.
 - A "How to play" guide, dark mode, synthesized music and sound effects, and Google sign-in to play
@@ -98,8 +99,8 @@ backend/                   the Cloudflare Worker: serves the game (dist/) and th
     google.ts              Google token verification
     i18n.ts                each request's language for error messages
     routes/                one file per feature: daily, weekly, duels, leagues, seasons,
-                           levels, players, stats, achievements
-  migrations/              D1 database schema (0001 to 0013)
+                           reactions, levels, players, stats, achievements
+  migrations/              D1 database schema (0001 to 0014)
 common/                    used by both; no browser APIs and no imports from outside
   logic/                   pure rules: the server replays games with this very same code
     engine/                board, movement, solver, generator, elements, randomness
@@ -107,7 +108,7 @@ common/                    used by both; no browser APIs and no imports from out
     weekly/                weekly challenge
     duels/                 duels: difficulties and who wins
     achievements/          achievements
-    leagues/               seasons: dates, podium and each month's hat
+    leagues/               seasons (dates, podium and each month's hat) and reactions
     community/             validation of player-made levels
     players/               player name rules
   i18n/                    languages and the server's error messages in each one

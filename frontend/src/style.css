@@ -3052,3 +3052,97 @@ input.switch:focus-visible {
 .achievement-info .season-titles {
   white-space: pre-line;
 }
+
+/* ------------------------------------------------------------- Reacciones */
+
+.ranking .reactions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px;
+  margin-top: 4px;
+}
+
+.reaction-chip {
+  background: var(--surface-soft);
+  border-radius: 999px;
+  padding: 1px 8px;
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--ink-soft);
+}
+
+.reaction-chip.mine {
+  outline: 2px solid var(--gold);
+}
+
+.reaction-add {
+  appearance: none;
+  border: 2px dashed var(--muted-fill);
+  background: transparent;
+  border-radius: 999px;
+  min-width: 36px;
+  min-height: 28px;
+  padding: 0 8px;
+  font: inherit;
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--ink-faint);
+  cursor: pointer;
+}
+
+.reaction-add:hover,
+.reaction-add:focus-visible {
+  border-color: var(--secondary);
+  color: var(--secondary);
+}
+
+.reaction-picker {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+  margin: 14px 0 8px;
+}
+
+.reaction-option {
+  appearance: none;
+  border: 0;
+  background: var(--surface-soft);
+  border-radius: 18px;
+  padding: 10px 0;
+  font-size: 34px;
+  line-height: 1.2;
+  cursor: pointer;
+  box-shadow: 0 4px 0 var(--press);
+}
+
+.reaction-option:active {
+  transform: translateY(3px);
+  box-shadow: 0 1px 0 var(--press);
+}
+
+.reaction-option.selected {
+  outline: 3px solid var(--gold);
+}
+
+.reactions-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.reaction-list {
+  list-style: none;
+  margin: 4px 0 6px;
+  padding: 0;
+  display: grid;
+  gap: 8px;
+}
+
+.reaction-list li {
+  display: grid;
+  grid-template-columns: 34px 1fr;
+  align-items: center;
+  gap: 10px;
+  line-height: 1.3;
+}

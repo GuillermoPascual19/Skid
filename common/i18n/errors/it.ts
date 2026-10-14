@@ -88,6 +88,9 @@ export const errors: ErrorMessages = {
   duelNotOver: 'Il duello non è ancora finito',
   rivalDidntFinish: 'Il tuo avversario non è riuscito a finirlo',
 
+  reactionInvalid: 'Questa reazione non esiste',
+  reactionSelf: 'Non puoi reagire alla tua sfida',
+  reactionNotAllowed: 'Puoi reagire solo alle sfide completate dei tuoi amici degli ultimi {days} giorni',
   board_empty: 'Il tabellone è vuoto',
   board_rowWidth: 'La riga {row} è larga {length} e dovrebbe esserlo {width}',
   board_manyPlayers: 'Il tabellone ha più di un pinguino',

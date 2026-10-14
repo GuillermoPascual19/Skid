@@ -23,6 +23,7 @@ import {
   myLeagues,
 } from './api';
 import { previousSeasonCard, seasonCard } from './season';
+import { reactionsLine } from './reactions';
 import { intlLocale, t, tn } from '../../i18n/i18n';
 
 type Period = 'today' | 'yesterday' | 'week' | 'season';
@@ -363,6 +364,7 @@ export function rankingScreen(route: { join?: string }): Screen {
                     : t('ranking.notPlayed'),
               ),
               canWatch && !row.isMe && row.status === 'finished' ? ghostButton(row) : null,
+              reactionsLine(row, forDay, () => void fillRanking(list, leagueId, forDay)),
             ),
             row.status === 'finished'
               ? row.overPar !== null

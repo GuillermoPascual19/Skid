@@ -452,6 +452,26 @@ export const messages: Messages = {
       text: '{points} points en {month}. Ton prix : {hat}, qu\'on ne gagne qu\'en remportant ce mois.',
     },
   },
+  reactions: {
+    react: 'Réagir',
+    title: '{name} : réagis à son défi',
+    remove: 'Retirer ma réaction',
+    sent: '{emoji} envoyé à {name}',
+    names: {
+      clap: 'Bravo',
+      fire: 'En feu',
+      laugh: 'Mort de rire',
+      wow: 'Waouh',
+      strong: 'Courage',
+      penguin: 'Pingouin',
+    },
+    home: {
+      eyebrow: 'Réactions',
+      line: '{name} a réagi {emoji} à ton défi ({when})',
+      more: { one: 'et {n} autre', other: 'et {n} autres' },
+      see: 'Voir le classement',
+    },
+  },
   levels: {
     ranking: {
       eyebrow: 'Classement du niveau',
@@ -814,6 +834,7 @@ export const messages: Messages = {
       r4: 'Tous les {every} jours d\'affilée, tu gagnes un protecteur (jusqu\'à {max}) : si tu manques un jour, ta série ne s\'arrête pas.',
       r5: 'Les succès débloquent des chapeaux pour ton pingouin.',
       r6: 'Chaque mois est une saison : celui qui marque le plus de points dans la ligue remporte le chapeau du mois, impossible à obtenir autrement.',
+      r7: 'Réagis avec un emoji aux défis de tes amis depuis le classement.',
     },
     community: {
       title: 'Niveaux des joueurs',

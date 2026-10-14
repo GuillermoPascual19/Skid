@@ -452,6 +452,26 @@ export const messages: Messages = {
       text: '{points} Punkte im {month}. Dein Preis: {hat} – den gibt es nur, wenn man diesen Monat gewinnt.',
     },
   },
+  reactions: {
+    react: 'Reagieren',
+    title: 'Reagiere auf die Herausforderung von {name}',
+    remove: 'Meine Reaktion entfernen',
+    sent: '{emoji} an {name}',
+    names: {
+      clap: 'Applaus',
+      fire: 'Feuer',
+      laugh: 'Lachen',
+      wow: 'Wow',
+      strong: 'Weiter so',
+      penguin: 'Pinguin',
+    },
+    home: {
+      eyebrow: 'Reaktionen',
+      line: '{name} hat mit {emoji} auf deine Herausforderung reagiert ({when})',
+      more: { one: 'und {n} weitere', other: 'und {n} weitere' },
+      see: 'Zur Rangliste',
+    },
+  },
   levels: {
     ranking: {
       eyebrow: 'Rangliste des Levels',
@@ -814,6 +834,7 @@ export const messages: Messages = {
       r4: 'Alle {every} Tage in Folge bekommst du einen Serienschutz (bis zu {max}): Wenn du einen Tag nicht spielst, reißt deine Serie nicht.',
       r5: 'Erfolge schalten Hüte für deinen Pinguin frei.',
       r6: 'Jeder Monat ist eine Saison: Wer in der Liga die meisten Punkte sammelt, bekommt den Hut des Monats – anders gibt es ihn nicht.',
+      r7: 'Reagiere in der Rangliste mit einem Emoji auf die Herausforderungen deiner Freunde.',
     },
     community: {
       title: 'Spieler-Level',

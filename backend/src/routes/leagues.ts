@@ -4,6 +4,7 @@ import { isHatId } from '../../../common/art/hats';
 import type { SeasonTotal } from '../../../common/logic/leagues/seasons';
 import { type Env, HttpError, cleanText } from '../http';
 import { requireName } from './players';
+import { leagueReactions } from './reactions';
 
 /** Ligas que puede crear cada jugador. */
 const MAX_LEAGUES_PER_PLAYER = 10;
@@ -110,6 +111,7 @@ interface RankingDbRow {
 export async function leagueRanking(env: Env, playerId: string, leagueId: string, day: string) {
   await requireMember(env, playerId, leagueId);
 
+  const reactions = await leagueReactions(env, playerId, leagueId, day);
   const { results } = await env.DB.prepare(
     `SELECT p.id, p.name, p.hat, p.id = ?1 AS is_me, r.started_at, r.finished_at, r.score, r.moves, r.retries, r.hints, r.time_ms, r.over_par
      FROM league_members m
@@ -135,6 +137,8 @@ export async function leagueRanking(env: Env, playerId: string, leagueId: string
       hints: finished ? r.hints : null,
       timeMs: finished ? r.time_ms : null,
       overPar: finished ? r.over_par : null,
+      reactions: reactions.get(r.id)?.counts ?? [],
+      myReaction: reactions.get(r.id)?.mine ?? null,
     };
   });
 }

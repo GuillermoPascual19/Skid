@@ -451,6 +451,26 @@ export const messages = {
       text: '{points} puntos en {month}. Tu premio: {hat}, que solo se consigue ganando ese mes.',
     },
   },
+  reactions: {
+    react: 'Reaccionar',
+    title: 'Reacciona al reto de {name}',
+    remove: 'Quitar mi reacción',
+    sent: '{emoji} para {name}',
+    names: {
+      clap: 'Aplausos',
+      fire: 'Fuego',
+      laugh: 'Risas',
+      wow: 'Alucino',
+      strong: 'Ánimo',
+      penguin: 'Pingüino',
+    },
+    home: {
+      eyebrow: 'Reacciones',
+      line: '{name} reaccionó {emoji} a tu reto ({when})',
+      more: { one: 'y {n} más', other: 'y {n} más' },
+      see: 'Ver ranking',
+    },
+  },
   levels: {
     ranking: {
       eyebrow: 'Ranking del nivel',
@@ -813,6 +833,7 @@ export const messages = {
       r4: 'Cada {every} días seguidos ganas un protector (hasta {max}): si un día no juegas, tu racha no se rompe.',
       r5: 'Los logros desbloquean gorros para tu pingüino.',
       r6: 'Cada mes es una temporada: quien más puntos sume en la liga se lleva el gorro de ese mes, que solo se consigue así.',
+      r7: 'Reacciona con un emoji a los retos de tus amigos desde el ranking.',
     },
     community: {
       title: 'Niveles de jugadores',

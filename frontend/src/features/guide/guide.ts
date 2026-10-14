@@ -159,6 +159,7 @@ const PAGES: Page[] = [
         ['🏆', t('guide.leagues.r1')],
         ['📅', t('guide.leagues.r2', { par: GOLF.parPoints, stroke: GOLF.perStroke })],
         ['🎃', t('guide.leagues.r6')],
+        ['👏', t('guide.leagues.r7')],
         ['🔥', t('guide.leagues.r3')],
         ['🛡️', t('guide.leagues.r4', { every: FREEZE_EVERY, max: MAX_FREEZES })],
         ['🎩', t('guide.leagues.r5')],
