@@ -2,6 +2,7 @@
 
 import { api } from '../../shared/api';
 import type { HatId } from '../../../../common/art/hats';
+import type { ReactionId } from '../../../../common/logic/leagues/reactions';
 
 export interface League {
   id: string;
@@ -45,6 +46,10 @@ export interface RankingRow {
   timeMs: number | null;
   /** Golpes por encima del óptimo; null en retos de antes del golf (solo puntos). */
   overPar: number | null;
+  /** Reacciones que recibió ese día de los miembros de la liga, las más repetidas primero. */
+  reactions: { id: ReactionId; n: number }[];
+  /** La que le pusiste tú (null si ninguna). */
+  myReaction: ReactionId | null;
 }
 
 export interface StandingRow {
@@ -93,4 +98,24 @@ export function leagueStandings(leagueId: string, from: string, to: string): Pro
 
 export function leagueRanking(leagueId: string, day: string): Promise<RankingRow[]> {
   return api<RankingRow[]>('GET', `/leagues/${encodeURIComponent(leagueId)}/ranking?day=${day}`);
+}
+
+/** Pone, cambia o quita (null) tu reacción al reto de `day` de un amigo. */
+export async function react(day: string, playerId: string, reaction: ReactionId | null): Promise<void> {
+  await api('PUT', `/daily/${day}/reactions/${encodeURIComponent(playerId)}`, { reaction });
+}
+
+export interface ReceivedReaction {
+  name: string | null;
+  hat: HatId | null;
+  reaction: ReactionId;
+  /** Día del reto al que reaccionaron. */
+  day: string;
+  /** Cuándo (ms). */
+  at: number;
+}
+
+/** Reacciones recibidas después de `since` (ms), las más nuevas primero (como mucho 20). */
+export function newReactions(since: number): Promise<ReceivedReaction[]> {
+  return api<ReceivedReaction[]>('GET', `/reactions?since=${since}`);
 }

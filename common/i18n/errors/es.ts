@@ -97,6 +97,11 @@ export const errors = {
   duelNotOver: 'El duelo aún no ha terminado',
   rivalDidntFinish: 'Tu rival no llegó a terminarlo',
 
+  // Reacciones
+  reactionInvalid: 'Esa reacción no existe',
+  reactionSelf: 'No puedes reaccionar a tu propio reto',
+  reactionNotAllowed: 'Solo puedes reaccionar a retos terminados de tus amigos de los últimos {days} días',
+
   // Tableros (editor de niveles)
   board_empty: 'El tablero está vacío',
   board_rowWidth: 'La fila {row} mide {length} y debería medir {width}',

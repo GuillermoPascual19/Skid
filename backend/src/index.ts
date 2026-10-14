@@ -27,6 +27,7 @@ import {
 } from './routes/levels';
 import { playerProfile } from './routes/players';
 import { leagueSeason, seasonHats, seasonTitles, settleSeasons } from './routes/seasons';
+import { newReactions, react } from './routes/reactions';
 import { playerStats } from './routes/stats';
 import { authenticate, createSession, deleteAccount, googleLogin, logoutEverywhere } from './session';
 import { nameKey, nameProblem, NAME_MAX, NAME_MIN } from '../../common/logic/players/names';
@@ -118,6 +119,14 @@ async function handleApi(req: Request, url: URL, env: Env): Promise<Response> {
   if ((m = route.match(/^POST \/daily\/(\d{4}-\d{2}-\d{2})\/start$/))) return json(await startRun(env, playerId, m[1]));
   if ((m = route.match(/^GET \/daily\/(\d{4}-\d{2}-\d{2})\/wins$/))) return json(await dailyWins(env, playerId, m[1]));
   if ((m = route.match(/^GET \/daily\/(\d{4}-\d{2}-\d{2})\/ghost\/([\w-]+)$/))) return json(await ghostRuns(env, playerId, m[1], m[2]));
+  if ((m = route.match(/^PUT \/daily\/(\d{4}-\d{2}-\d{2})\/reactions\/([\w-]+)$/))) {
+    const { reaction } = await body<{ reaction?: unknown }>(req);
+    return json(await react(env, playerId, m[2], m[1], reaction ?? null));
+  }
+  if (route === 'GET /reactions') {
+    const since = Math.max(0, Number(url.searchParams.get('since')) || 0);
+    return json(await newReactions(env, playerId, since));
+  }
   if ((m = route.match(/^POST \/daily\/(\d{4}-\d{2}-\d{2})\/finish$/))) {
     const { log } = await body<{ log?: unknown }>(req);
     return json(await finishRun(env, playerId, m[1], log));

@@ -452,6 +452,26 @@ export const messages: Messages = {
       text: '{points} points in {month}. Your prize: {hat}, which can only be won that month.',
     },
   },
+  reactions: {
+    react: 'React',
+    title: 'React to {name}\'s challenge',
+    remove: 'Remove my reaction',
+    sent: '{emoji} sent to {name}',
+    names: {
+      clap: 'Applause',
+      fire: 'Fire',
+      laugh: 'Laughing',
+      wow: 'Wow',
+      strong: 'Keep going',
+      penguin: 'Penguin',
+    },
+    home: {
+      eyebrow: 'Reactions',
+      line: '{name} reacted {emoji} to your challenge ({when})',
+      more: { one: 'and {n} more', other: 'and {n} more' },
+      see: 'See ranking',
+    },
+  },
   levels: {
     ranking: {
       eyebrow: 'Level ranking',
@@ -814,6 +834,7 @@ export const messages: Messages = {
       r4: 'Every {every} days in a row you earn a streak freeze (up to {max}): if you miss a day, your streak won\'t break.',
       r5: 'Achievements unlock hats for your penguin.',
       r6: 'Every month is a season: whoever scores the most points in the league wins that month\'s hat, which can\'t be won any other way.',
+      r7: 'React with an emoji to your friends\' challenges from the ranking.',
     },
     community: {
       title: 'Player levels',

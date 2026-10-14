@@ -452,6 +452,26 @@ export const messages: Messages = {
       text: '{points} pontos em {month}. O teu prémio: {hat}, que só se ganha nesse mês.',
     },
   },
+  reactions: {
+    react: 'Reagir',
+    title: 'Reage ao desafio de {name}',
+    remove: 'Remover a minha reação',
+    sent: '{emoji} para {name}',
+    names: {
+      clap: 'Aplausos',
+      fire: 'Fogo',
+      laugh: 'Risos',
+      wow: 'Uau',
+      strong: 'Força',
+      penguin: 'Pinguim',
+    },
+    home: {
+      eyebrow: 'Reações',
+      line: '{name} reagiu {emoji} ao teu desafio ({when})',
+      more: { one: 'e mais {n}', other: 'e mais {n}' },
+      see: 'Ver classificação',
+    },
+  },
   levels: {
     ranking: {
       eyebrow: 'Classificação do nível',
@@ -814,6 +834,7 @@ export const messages: Messages = {
       r4: 'A cada {every} dias seguidos ganhas um protetor (até {max}): se um dia não jogares, a tua sequência não se perde.',
       r5: 'As conquistas desbloqueiam chapéus para o teu pinguim.',
       r6: 'Cada mês é uma temporada: quem somar mais pontos na liga leva o chapéu desse mês, que só se consegue assim.',
+      r7: 'Reage com um emoji aos desafios dos teus amigos a partir da classificação.',
     },
     community: {
       title: 'Níveis dos jogadores',

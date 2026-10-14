@@ -17,7 +17,8 @@ y niveles creados por los jugadores.
 - **Reto semanal**: un tablero grande y difícil de lunes a domingo, con ranking entre amigos.
 - **Duelos**: retas a un amigo (o a quien quieras con un enlace) al mismo tablero nuevo.
 - **Ligas**: ranking del día y de la semana con tus amigos, y temporadas mensuales cuyo campeón se
-  lleva el gorro de ese mes; logros que desbloquean más gorros.
+  lleva el gorro de ese mes; reacciones con emojis a los retos de tus amigos; logros que
+  desbloquean más gorros.
 - **Niveles de jugadores**: editor, publicar (hay que superarlo antes), valorar, ranking por nivel,
   compartir y denunciar.
 - Guía «Cómo se juega», modo oscuro, música y efectos sintetizados, y login con Google para jugar en
@@ -98,8 +99,8 @@ backend/                   el Worker de Cloudflare: sirve el juego (dist/) y la 
     google.ts              verificación de los tokens de Google
     i18n.ts                idioma de cada petición para los mensajes de error
     routes/                un archivo por apartado: daily, weekly, duels, leagues, seasons,
-                           levels, players, stats, achievements
-  migrations/              esquema de la base de datos D1 (0001 a 0013)
+                           reactions, levels, players, stats, achievements
+  migrations/              esquema de la base de datos D1 (0001 a 0014)
 common/                    lo que usan los dos; sin APIs del navegador ni imports de fuera
   logic/                   reglas puras: el servidor reproduce las partidas con este mismo código
     engine/                tablero, movimiento, solver, generador, elementos, aleatorio
@@ -107,7 +108,7 @@ common/                    lo que usan los dos; sin APIs del navegador ni import
     weekly/                reto semanal
     duels/                 duelos: dificultades y quién gana
     achievements/          logros
-    leagues/               temporadas: fechas, podio y el gorro de cada mes
+    leagues/               temporadas (fechas, podio y el gorro de cada mes) y reacciones
     community/             validación de niveles creados por jugadores
     players/               reglas de los nombres
   i18n/                    idiomas y mensajes de error del servidor en cada uno

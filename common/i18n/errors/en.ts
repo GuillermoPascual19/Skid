@@ -88,6 +88,9 @@ export const errors: ErrorMessages = {
   duelNotOver: "The duel isn't over yet",
   rivalDidntFinish: "Your opponent didn't finish it",
 
+  reactionInvalid: "That reaction doesn't exist",
+  reactionSelf: "You can't react to your own challenge",
+  reactionNotAllowed: "You can only react to your friends' finished challenges from the last {days} days",
   board_empty: 'The board is empty',
   board_rowWidth: 'Row {row} is {length} wide and should be {width}',
   board_manyPlayers: 'The board has more than one penguin',
