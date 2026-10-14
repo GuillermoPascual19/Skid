@@ -12,16 +12,16 @@ import { read, write } from '../../shared/storage';
 import { t, tn } from '../../i18n/i18n';
 
 /** Sube cuando cambian las reglas o hay algo nuevo (ver NEWS): quien ya jugaba ve el aviso. */
-export const GUIDE_VERSION = 5;
+export const GUIDE_VERSION = 6;
 const GUIDE_SEEN_KEY = 'skid.guide.v1';
 
 export type GuidePage = 'slide' | 'pieces' | 'free' | 'daily' | 'weekly' | 'duels' | 'leagues' | 'elements' | 'community';
 
 /** Aviso de la portada para quien ya jugaba: lo último que ha cambiado (sube GUIDE_VERSION al cambiarlo). */
 export const NEWS = {
-  icon: '🏆',
+  icon: '🧊',
   // El título y el texto están en los diccionarios: news.title y news.text.
-  page: 'leagues' as GuidePage,
+  page: 'daily' as GuidePage,
 };
 
 interface Page {
@@ -114,11 +114,11 @@ const PAGES: Page[] = [
     body: () => [
       h(
         'div',
-        { class: 'guide-golf' },
-        h('div', null, h('span', null, t('guide.daily.optimal')), h('strong', null, tn('common.strokes', 12))),
-        h('div', null, h('span', null, t('guide.daily.doneIn', { n: 12 })), h('strong', { class: 'par' }, 'Par')),
-        h('div', null, h('span', null, t('guide.daily.doneIn', { n: 14 })), h('strong', null, '+2')),
-        h('div', null, h('span', null, t('guide.daily.withHint', { n: 12 })), h('strong', null, '+1')),
+        { class: 'guide-result' },
+        h('div', null, h('span', null, t('guide.daily.optimal')), h('strong', null, tn('common.moves', 12))),
+        h('div', null, h('span', null, t('guide.daily.doneIn', { n: 12 })), h('strong', { class: 'perfect' }, `${t('common.movesShort', { n: 12 })} 🎯`)),
+        h('div', null, h('span', null, t('guide.daily.doneIn', { n: 14 })), h('strong', null, t('common.movesShort', { n: 14 }))),
+        h('div', null, h('span', null, t('guide.daily.withHint', { n: 12 })), h('strong', null, t('common.movesShort', { n: 13 }))),
       ),
       rules(
         ['🎯', t('guide.daily.r1')],

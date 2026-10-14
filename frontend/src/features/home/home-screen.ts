@@ -4,7 +4,7 @@ import { DAILY_TIME_ZONE } from '../../../../common/logic/daily/daily';
 import * as online from '../../shared/api';
 import { celebrate } from '../../shared/celebrate';
 import { adoptServerResult, canImprove, improveDaily, openDaily, shareText, showDailyResult, today } from '../daily/daily';
-import { golfLabel } from '../../../../common/logic/daily/score';
+import { movesBig } from '../../shared/result';
 import { penguinSvg } from '../../../../common/art/hats';
 import { celebrateNewAchievements } from '../achievements/achievements-screen';
 import { audioToggles } from '../../audio/audio-controls';
@@ -59,12 +59,15 @@ export function homeScreen(): Screen {
     if (result) {
       dailyCard.append(
         result.overPar != null
-          ? h('div', { class: `score-big golf${result.overPar === 0 ? ' par' : ''}` }, golfLabel(result.overPar))
+          ? movesBig(result.optimal + result.overPar, result.optimal)
           : h('div', { class: 'score-big' }, String(result.score), h('small', null, t('common.pts'))),
         h(
           'div',
           { class: 'chips' },
-          h('span', { class: 'chip' }, `🧊 ${t('common.movesShort', { n: result.moves })}`),
+          // Con movimientos, el resultado ya está en grande: aquí, el óptimo.
+          result.overPar != null
+            ? h('span', { class: 'chip' }, `🎯 ${t('common.optimalN', { n: result.optimal })}`)
+            : h('span', { class: 'chip' }, `🧊 ${t('common.movesShort', { n: result.moves })}`),
           result.overPar == null ? h('span', { class: 'chip' }, `↺ ${result.retries}`) : null,
           result.hints ? h('span', { class: 'chip' }, `💡 ${result.hints}`) : null,
           h('span', { class: 'chip' }, `⏱ ${formatTime(result.timeMs)}`),

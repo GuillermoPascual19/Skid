@@ -5,12 +5,13 @@ import { initialState, type GameState } from '../../../../common/logic/engine/bo
 import { dailyLevel, decodeRun, encodeRun, replayRun, type RunEvent } from '../../../../common/logic/daily/daily';
 import { applyMove, isComplete } from '../../../../common/logic/engine/move';
 import { solve } from '../../../../common/logic/engine/solver';
-import { golfLabel, golfPoints, overPar } from '../../../../common/logic/daily/score';
+import { golfPoints, overPar } from '../../../../common/logic/daily/score';
 import type { BoardHooks } from '../../game/BoardScene';
 import type { MountedBoard } from '../../game/mount';
 import * as online from '../../shared/api';
 import { canImprove, celebrateStreak, showDailyResult } from './daily';
 import { formatDay, formatTime, h, haptic, openModal } from '../../shared/dom';
+import { movesLabel } from '../../shared/result';
 import { sfx } from '../../audio/sound';
 import { go, type Screen } from '../../shared/router';
 import { loadBoard, onKey, openPauseMenu, playLayout, wearHat } from '../../play/play';
@@ -69,12 +70,12 @@ export function dailyScreen(record: DailyRecord): Screen {
   ui.setTitle(t('home.daily.eyebrow'), formatDay(day));
 
   const elapsed = () => Date.now() - record.startedAt;
-  /** Golpes del intento en curso: sus movimientos más todas las pistas pedidas. */
+  /** Resultado del intento en curso: sus movimientos más uno por cada pista pedida. */
   const strokes = () => moves + hints;
   const hud = () => {
     ui.setStat('moves', strokes(), strokes() > optimal ? 'warn' : undefined);
     ui.setStat('optimal', optimal);
-    ui.setStat('best', result?.overPar != null ? golfLabel(result.overPar) : '—');
+    ui.setStat('best', result?.overPar != null ? movesLabel(optimal + result.overPar) : '—');
     ui.setHintCount(hints);
     // Terminado, se queda el tiempo del mejor intento; mientras se juega, corre el reloj.
     ui.setStat('time', formatTime(finished && result?.overPar != null ? result.timeMs : elapsed()));
@@ -163,8 +164,8 @@ export function dailyScreen(record: DailyRecord): Screen {
   /** Mensaje bajo el resultado según cómo ha ido este intento frente al mejor anterior. */
   function attemptNote(previous: DailyResult | undefined, next: DailyResult, attemptOverPar: number): string | undefined {
     if (previous?.overPar == null) return undefined; // Primer intento terminado.
-    if (next.overPar! < previous.overPar) return t('daily.play.improved', { before: golfLabel(previous.overPar) });
-    return t('daily.play.notImproved', { attempt: golfLabel(attemptOverPar), best: golfLabel(next.overPar!) });
+    if (next.overPar! < previous.overPar) return t('daily.play.improved', { before: movesLabel(optimal + previous.overPar) });
+    return t('daily.play.notImproved', { attempt: movesLabel(optimal + attemptOverPar), best: movesLabel(optimal + next.overPar!) });
   }
 
   async function submit() {

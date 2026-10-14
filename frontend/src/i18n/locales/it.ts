@@ -18,6 +18,7 @@ export const messages: Messages = {
     days: { one: '{n} giorno', other: '{n} giorni' },
     pts: 'pt',
     movesShort: '{n} mosse',
+    movesUnit: 'mosse',
     share: 'Condividi',
     friends: { one: '{n} amico', other: '{n} amici' },
     cancel: 'Annulla',
@@ -25,13 +26,19 @@ export const messages: Messages = {
     levelN: 'Livello {n}',
     play: 'Gioca',
     notNow: 'Non ora',
-    strokes: { one: '{n} colpo', other: '{n} colpi' },
+    strokes: { one: '{n} mossa', other: '{n} mosse' },
     hints: { one: '{n} suggerimento', other: '{n} suggerimenti' },
     watchAgain: 'Rivedi',
     back: 'Indietro',
     retry: 'Riprova',
     loading: 'Caricamento…',
     anonymous: 'Anonimo',
+  },
+  share: {
+    copyLink: 'Copia link',
+    copyText: 'Copia messaggio',
+    more: 'Altre opzioni',
+    linkCopied: 'Link copiato',
   },
   sound: {
     sfxOff: 'Disattiva gli effetti sonori',
@@ -86,7 +93,7 @@ export const messages: Messages = {
   },
   golf: {
     headline: {
-      par: 'In par!',
+      par: 'Perfetto!',
       close: 'Quasi!',
       done: 'Ce l\'hai fatta!',
     },
@@ -96,13 +103,13 @@ export const messages: Messages = {
     keepBest: 'Ti resta il tuo record: {best}.',
   },
   stats: {
-    strokes: 'Colpi',
+    strokes: 'Mosse',
     optimal: 'Ottimo',
     yourBest: 'Il tuo migliore',
     time: 'Tempo',
     best: 'Migliore',
     move: 'Mossa',
-    stroke: 'Colpo',
+    stroke: 'Mossa',
     screen: {
       title: 'Le tue statistiche',
       needsOnline: 'Le statistiche richiedono la classifica online.',
@@ -182,7 +189,7 @@ export const messages: Messages = {
       details: 'Dettagli',
       improve: 'Migliora il risultato',
       inProgress: 'In corso. Il cronometro continua a girare:',
-      pitch: 'Stile golf: completa il tabellone con meno colpi possibile. Ricominciare è gratis.',
+      pitch: 'Completa il tabellone con meno mosse possibile. Ricominciare è gratis.',
       play: 'Gioca la sfida',
       nextIn: 'Nuova sfida tra {time}',
     },
@@ -236,10 +243,10 @@ export const messages: Messages = {
   daily: {
     intro: {
       start: 'Inizia',
-      golf: 'Ogni mossa è un colpo. Il tuo risultato è quanto superi l\'ottimo: «Par» se lo centri, «+2» con due in più.',
+      golf: 'Il tuo risultato è il numero di mosse del tuo tentativo migliore: meno sono, meglio è. L\'ottimo è il minimo possibile.',
       restart: 'Ricominciare è gratis e conta il tuo tentativo migliore. Puoi continuare a migliorarlo per tutto il giorno.',
-      hint: 'Se ti blocchi, chiedi un suggerimento: ti mostra la prossima mossa e aggiunge un colpo.',
-      clock: 'Il cronometro parte quando tocchi Inizia e non si ferma. A parità di colpi, vince chi impiega meno tempo.',
+      hint: 'Se ti blocchi, chiedi un suggerimento: ti mostra la prossima mossa e conta come una mossa in più.',
+      clock: 'Il cronometro parte quando tocchi Inizia e non si ferma. A parità di mosse, vince chi impiega meno tempo.',
       same: 'Lo stesso tabellone per tutti i tuoi amici.',
       allRules: 'Vedi tutte le regole',
     },
@@ -273,10 +280,10 @@ export const messages: Messages = {
       retrySend: 'Invia di nuovo',
     },
     play: {
-      clockNote: 'Il cronometro continua a girare: a parità di colpi, vince chi impiega meno tempo.',
+      clockNote: 'Il cronometro continua a girare: a parità di mosse, vince chi impiega meno tempo.',
       hintTitle: 'Usare un suggerimento?',
-      hintText: 'Ti mostra la prossima mossa, ma aggiunge un colpo a questo tentativo e ai successivi.',
-      hintButton: 'Suggerimento (+1 colpo)',
+      hintText: 'Ti mostra la prossima mossa, ma conta come una mossa in più in questo tentativo e nei successivi.',
+      hintButton: 'Suggerimento (+1 mossa)',
       improved: 'Hai migliorato! Prima avevi {before}.',
       notImproved: 'Questo tentativo: {attempt}. Ti resta il tuo {best}.',
       sending: 'Invio del risultato…',
@@ -332,7 +339,7 @@ export const messages: Messages = {
     invite: {
       accept: 'Accetta',
       title: '{name} ti sfida',
-      text: 'Un tabellone nuovo per entrambi. {left} per giocare: vince chi lo completa con meno colpi.',
+      text: 'Un tabellone nuovo per entrambi. {left} per giocare: vince chi lo completa con meno mosse.',
     },
     decline: {
       title: 'Rifiutare il duello?',
@@ -367,7 +374,7 @@ export const messages: Messages = {
       duels: { one: '{n} duello', other: '{n} duelli' },
       challenge: 'Sfida un amico',
       turnText: 'Giocali prima che passino le 48 h.',
-      text: 'Lo stesso tabellone per entrambi: vince chi lo completa con meno colpi.',
+      text: 'Lo stesso tabellone per entrambi: vince chi lo completa con meno mosse.',
       button: 'Sfida',
     },
     screen: {
@@ -633,7 +640,7 @@ export const messages: Messages = {
     },
     perfect: {
       name: 'Perfezione',
-      description: 'Completa una sfida in par: con le mosse giuste.',
+      description: 'Completa una sfida nell\'ottimo: con le mosse giuste.',
     },
     streak14: {
       name: 'Quindicina polare',
@@ -775,8 +782,8 @@ export const messages: Messages = {
     next: 'Avanti',
   },
   news: {
-    title: 'Novità: stagioni.',
-    text: 'Ogni mese è una stagione nelle tue leghe: chi fa più punti vince un cappello che si ottiene solo in quel mese.',
+    title: 'Novità: contano le mosse.',
+    text: 'Basta golf: il tuo risultato è il numero di mosse, meno sono meglio è. E ora puoi condividere su WhatsApp o copiare il link.',
   },
   guide: {
     slide: {
@@ -801,14 +808,14 @@ export const messages: Messages = {
       fromLevel: 'Dal livello {n}',
     },
     daily: {
-      title: 'Sfida giornaliera: stile golf',
+      title: 'Sfida giornaliera',
       optimal: 'Ottimo del giorno',
       doneIn: 'Lo fai in {n}',
       withHint: 'In {n}, con 1 suggerimento',
-      r1: 'Un tabellone nuovo ogni giorno, lo stesso per tutti. Ogni mossa è un colpo.',
+      r1: 'Un tabellone nuovo ogni giorno, lo stesso per tutti. Il tuo risultato sono le mosse: meno sono, meglio è.',
       r2: 'Ricominciare è gratis e conta il tuo tentativo migliore. Puoi migliorarlo per tutto il giorno.',
-      r3: 'Ogni suggerimento aggiunge un colpo.',
-      r4: 'Il cronometro non si ferma. A parità di colpi, vince chi impiega meno tempo.',
+      r3: 'Ogni suggerimento conta come una mossa in più.',
+      r4: 'Il cronometro non si ferma. A parità di mosse, vince chi impiega meno tempo.',
       r5: 'Alla fine puoi vedere la soluzione, ma dopo non puoi più migliorare.',
     },
     weekly: {
@@ -816,7 +823,7 @@ export const messages: Messages = {
       r1: 'Un tabellone più grande e difficile, da lunedì a domenica, lo stesso per tutti.',
       r2: 'Gioca quante volte vuoi durante la settimana: conta il tuo tentativo migliore.',
       r3: 'Niente suggerimenti.',
-      r4: 'Classifica con gli amici di tutte le tue leghe. A parità di colpi, vince chi l\'ha ottenuto prima.',
+      r4: 'Classifica con gli amici di tutte le tue leghe. A parità di mosse, vince chi l\'ha ottenuto prima.',
     },
     duels: {
       title: 'Duelli',
@@ -824,12 +831,12 @@ export const messages: Messages = {
       r2: 'Un tabellone nuovo che nessuno di voi ha visto, lo stesso per entrambi.',
       r3: 'Gioca quante volte vuoi e, quando il tuo punteggio ti convince, consegnalo. Niente suggerimenti.',
       r4: 'Non vedi il punteggio dell\'altro finché entrambi non lo consegnate (o passano 48 h).',
-      r5: 'Vince chi ha meno colpi; a parità, chi ha impiegato meno tempo. Poi potete rivedere il duello con il fantasma e chiedere la rivincita.',
+      r5: 'Vince chi ha meno mosse; a parità, chi ha impiegato meno tempo. Poi potete rivedere il duello con il fantasma e chiedere la rivincita.',
     },
     leagues: {
       title: 'Leghe, serie e cappelli',
       r1: 'Crea una lega e passa il codice ai tuoi amici: vedrete chi vince la sfida ogni giorno.',
-      r2: 'Classifica settimanale e mensile: ogni sfida vale {par} punti in par e {stroke} in meno per ogni colpo in più.',
+      r2: 'Classifica settimanale e di stagione: ogni sfida vale {par} punti nell\'ottimo e {stroke} in meno per ogni mossa in più.',
       r3: 'Gioca la sfida più giorni di fila per fare una serie.',
       r4: 'Ogni {every} giorni di fila guadagni una protezione (fino a {max}): se un giorno non giochi, la tua serie non si perde.',
       r5: 'I traguardi sbloccano cappelli per il tuo pinguino.',

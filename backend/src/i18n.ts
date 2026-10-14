@@ -9,8 +9,9 @@ import { errors as es, type ErrorKey, type ErrorMessages } from '../../common/i1
 import { errors as fr } from '../../common/i18n/errors/fr';
 import { errors as it } from '../../common/i18n/errors/it';
 import { errors as pt } from '../../common/i18n/errors/pt';
+import { errors as ru } from '../../common/i18n/errors/ru';
 
-const MESSAGES: Record<Locale, ErrorMessages> = { es, en, de, fr, pt, it };
+const MESSAGES: Record<Locale, ErrorMessages> = { es, en, de, fr, pt, it, ru };
 
 export function requestLocale(req: Request): Locale {
   const chosen = req.headers.get('X-Skid-Lang');

@@ -71,22 +71,74 @@ export function toast(message: string): void {
   setTimeout(() => el.remove(), 2500);
 }
 
-/** Comparte con el diálogo del sistema si existe; si no, copia al portapapeles. */
-export async function share(text: string): Promise<void> {
+/**
+ * Copia al portapapeles. Algunos navegadores dentro de apps (WhatsApp,
+ * Instagram…) bloquean la API moderna: entonces se copia a la antigua.
+ */
+async function copyText(value: string): Promise<boolean> {
   try {
-    if (navigator.share) {
-      await navigator.share({ text });
-      return;
-    }
-  } catch (err) {
-    if ((err as Error).name === 'AbortError') return;
-  }
-  try {
-    await navigator.clipboard.writeText(text);
-    toast(t('common.copied'));
+    await navigator.clipboard.writeText(value);
+    return true;
   } catch {
-    toast(t('common.copyFailed'));
+    const area = h('textarea', { readOnly: true, style: 'position: fixed; opacity: 0; pointer-events: none' });
+    area.value = value;
+    document.body.append(area);
+    area.select();
+    try {
+      return document.execCommand('copy');
+    } catch {
+      return false;
+    } finally {
+      area.remove();
+    }
   }
+}
+
+/** Hoja para compartir: WhatsApp, Telegram, copiar el enlace o el mensaje y, si lo hay, el menú del sistema. */
+export function share(text: string): void {
+  // El enlace va en la última línea del mensaje (si la hay).
+  const lines = text.split('\n');
+  const url = /^https?:\/\//.test(lines.at(-1) ?? '') ? lines.at(-1)! : null;
+  const message = url ? lines.slice(0, -1).join('\n') : text;
+
+  const copy = async (value: string, done: string) => {
+    modal.close();
+    toast((await copyText(value)) ? done : t('common.copyFailed'));
+  };
+  /** Abre la app (o su web) con el mensaje ya escrito. */
+  const app = (name: string, label: string, href: string) =>
+    h(
+      'a',
+      { class: `share-option ${name}`, href, target: '_blank', rel: 'noopener noreferrer', onclick: () => modal.close() },
+      h('span', { class: 'share-icon', 'aria-hidden': 'true' }, name === 'whatsapp' ? '💬' : '✈️'),
+      label,
+    );
+  const action = (icon: string, label: string, onclick: () => void) =>
+    h('button', { class: 'share-option', onclick }, h('span', { class: 'share-icon', 'aria-hidden': 'true' }, icon), label);
+
+  const modal = openModal(
+    [
+      h('h2', null, t('common.share')),
+      h('p', { class: 'share-preview' }, text),
+      h(
+        'div',
+        { class: 'share-options' },
+        app('whatsapp', 'WhatsApp', `https://wa.me/?text=${encodeURIComponent(text)}`),
+        url ? app('telegram', 'Telegram', `https://t.me/share/url?url=${encodeURIComponent(url)}&text=${encodeURIComponent(message)}`) : null,
+        url ? action('🔗', t('share.copyLink'), () => void copy(url, t('share.linkCopied'))) : null,
+        action('📋', t('share.copyText'), () => void copy(text, t('common.copied'))),
+        // El menú del sistema (Instagram, SMS, correo…), donde lo haya.
+        'share' in navigator
+          ? action('⋯', t('share.more'), () => {
+              modal.close();
+              navigator.share({ text }).catch(() => {});
+            })
+          : null,
+      ),
+      h('button', { class: 'link-btn', onclick: () => modal.close() }, t('common.close')),
+    ],
+    { dismissable: true },
+  );
 }
 
 // ------------------------------------------------------------------- Móvil
@@ -137,7 +189,14 @@ export function untilMidnight(timeZone: string, now = new Date()): string {
   const minutesLeft = 24 * 60 - (parts.hour * 60 + parts.minute);
   const hours = Math.floor(minutesLeft / 60);
   const minutes = minutesLeft % 60;
-  return hours > 0 ? `${hours} h ${minutes} min` : `${minutes} min`;
+  return formatDuration(hours, minutes);
+}
+
+/** «9 h 7 min», «9 ч 7 мин», «9 Std. 7 Min.»… en el idioma del jugador (sin horas si son 0). */
+export function formatDuration(hours: number, minutes: number | null = null): string {
+  const unit = (n: number, u: 'hour' | 'minute') => new Intl.NumberFormat(intlLocale(), { style: 'unit', unit: u, unitDisplay: 'short' }).format(n);
+  if (minutes === null) return unit(hours, 'hour');
+  return hours > 0 ? `${unit(hours, 'hour')} ${unit(minutes, 'minute')}` : unit(minutes, 'minute');
 }
 
 // -------------------------------------------------------------------- Iconos

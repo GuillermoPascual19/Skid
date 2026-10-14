@@ -1,10 +1,10 @@
-// Ranking al estilo golf en un modal («Par», «+2»): lo usan los niveles de
+// Ranking por movimientos en un modal (menos es mejor): lo usan los niveles de
 // jugadores y el reto semanal.
 
 import { penguinSvg, type HatId } from '../../../../common/art/hats';
-import { golfLabel } from '../../../../common/logic/daily/score';
+import { movesLabel } from '../../shared/result';
 import { h, openModal, svg } from '../../shared/dom';
-import { playerName, t, tn } from '../../i18n/i18n';
+import { playerName, t } from '../../i18n/i18n';
 
 export interface GolfRankingEntry {
   id: string;
@@ -40,9 +40,9 @@ function row(entry: GolfRankingEntry): HTMLElement {
       'span',
       { class: 'who' },
       h('strong', null, entry.isMe ? t('ranking.me', { name: playerName(entry.name) }) : playerName(entry.name)),
-      h('small', null, [tn('common.moves', entry.moves), entry.isAuthor ? `✏️ ${t('ranking.author')}` : null].filter(Boolean).join(' · ')),
+      entry.isAuthor ? h('small', null, `✏️ ${t('ranking.author')}`) : null,
     ),
-    h('span', { class: `pts golf${entry.overPar === 0 ? ' par' : ''}` }, golfLabel(entry.overPar)),
+    h('span', { class: `pts moves${entry.overPar === 0 ? ' perfect' : ''}` }, movesLabel(entry.moves)),
   );
 }
 

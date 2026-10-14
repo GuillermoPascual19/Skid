@@ -18,6 +18,7 @@ export const messages: Messages = {
     days: { one: '{n} jour', other: '{n} jours' },
     pts: 'pts',
     movesShort: '{n} dépl.',
+    movesUnit: 'dépl.',
     share: 'Partager',
     friends: { one: '{n} ami', other: '{n} amis' },
     cancel: 'Annuler',
@@ -25,13 +26,19 @@ export const messages: Messages = {
     levelN: 'Niveau {n}',
     play: 'Jouer',
     notNow: 'Pas maintenant',
-    strokes: { one: '{n} coup', other: '{n} coups' },
+    strokes: { one: '{n} déplacement', other: '{n} déplacements' },
     hints: { one: '{n} indice', other: '{n} indices' },
     watchAgain: 'Revoir',
     back: 'Retour',
     retry: 'Réessayer',
     loading: 'Chargement…',
     anonymous: 'Anonyme',
+  },
+  share: {
+    copyLink: 'Copier le lien',
+    copyText: 'Copier le message',
+    more: 'Plus d\'options',
+    linkCopied: 'Lien copié',
   },
   sound: {
     sfxOff: 'Couper les effets sonores',
@@ -86,7 +93,7 @@ export const messages: Messages = {
   },
   golf: {
     headline: {
-      par: 'Dans le par !',
+      par: 'Parfait !',
       close: 'Tout près !',
       done: 'Réussi !',
     },
@@ -96,13 +103,13 @@ export const messages: Messages = {
     keepBest: 'Tu gardes ton meilleur score : {best}.',
   },
   stats: {
-    strokes: 'Coups',
+    strokes: 'Déplacements',
     optimal: 'Optimum',
     yourBest: 'Ton meilleur',
     time: 'Temps',
     best: 'Meilleur',
     move: 'Déplacement',
-    stroke: 'Coup',
+    stroke: 'Déplacement',
     screen: {
       title: 'Tes statistiques',
       needsOnline: 'Les statistiques ont besoin du classement en ligne.',
@@ -182,7 +189,7 @@ export const messages: Messages = {
       details: 'Détails',
       improve: 'Améliorer le résultat',
       inProgress: 'En cours. Le chrono tourne toujours :',
-      pitch: 'Façon golf : finis le plateau en un minimum de coups. Recommencer est gratuit.',
+      pitch: 'Finis le plateau en un minimum de déplacements. Recommencer est gratuit.',
       play: 'Jouer le défi',
       nextIn: 'Nouveau défi dans {time}',
     },
@@ -236,10 +243,10 @@ export const messages: Messages = {
   daily: {
     intro: {
       start: 'Commencer',
-      golf: 'Chaque déplacement est un coup. Ton résultat, c\'est ton écart avec l\'optimum : « Par » si tu le réussis pile, « +2 » avec deux de trop.',
+      golf: 'Ton résultat, c\'est le nombre de déplacements de ton meilleur essai : moins il y en a, mieux c\'est. L\'optimum est le minimum possible.',
       restart: 'Recommencer est gratuit et ton meilleur essai compte. Tu peux l\'améliorer toute la journée.',
-      hint: 'Si tu bloques, demande un indice : il te montre le prochain déplacement et ajoute un coup.',
-      clock: 'Le chrono démarre quand tu touches Commencer et ne s\'arrête plus. À coups égaux, le plus rapide gagne.',
+      hint: 'Si tu bloques, demande un indice : il te montre le prochain déplacement et compte comme un déplacement de plus.',
+      clock: 'Le chrono démarre quand tu touches Commencer et ne s\'arrête plus. À déplacements égaux, le plus rapide gagne.',
       same: 'Le même plateau pour tous tes amis.',
       allRules: 'Voir toutes les règles',
     },
@@ -273,10 +280,10 @@ export const messages: Messages = {
       retrySend: 'Réessayer l\'envoi',
     },
     play: {
-      clockNote: 'Le chrono tourne toujours : à coups égaux, le plus rapide gagne.',
+      clockNote: 'Le chrono tourne toujours : à déplacements égaux, le plus rapide gagne.',
       hintTitle: 'Utiliser un indice ?',
-      hintText: 'Il te montre le prochain déplacement, mais ajoute un coup à cet essai et aux suivants.',
-      hintButton: 'Indice (+1 coup)',
+      hintText: 'Il te montre le prochain déplacement, mais compte comme un déplacement de plus dans cet essai et les suivants.',
+      hintButton: 'Indice (+1 déplacement)',
       improved: 'Tu t\'es amélioré ! Avant, tu avais {before}.',
       notImproved: 'Cet essai : {attempt}. Tu gardes ton {best}.',
       sending: 'Envoi de ton résultat…',
@@ -332,7 +339,7 @@ export const messages: Messages = {
     invite: {
       accept: 'Accepter',
       title: '{name} te défie',
-      text: 'Un plateau inédit pour vous deux. {left} pour jouer : celui qui le fait en moins de coups gagne.',
+      text: 'Un plateau inédit pour vous deux. {left} pour jouer : celui qui le fait en moins de déplacements gagne.',
     },
     decline: {
       title: 'Refuser le duel ?',
@@ -367,7 +374,7 @@ export const messages: Messages = {
       duels: { one: '{n} duel', other: '{n} duels' },
       challenge: 'Défie un ami',
       turnText: 'Joue-les avant la fin des 48 h.',
-      text: 'Le même plateau pour vous deux : celui qui le fait en moins de coups gagne.',
+      text: 'Le même plateau pour vous deux : celui qui le fait en moins de déplacements gagne.',
       button: 'Défier',
     },
     screen: {
@@ -633,7 +640,7 @@ export const messages: Messages = {
     },
     perfect: {
       name: 'Perfection',
-      description: 'Réussis un défi dans le par : avec juste les déplacements nécessaires.',
+      description: 'Réussis un défi à l\'optimum : avec juste les déplacements nécessaires.',
     },
     streak14: {
       name: 'Quinzaine polaire',
@@ -775,8 +782,8 @@ export const messages: Messages = {
     next: 'Suivant',
   },
   news: {
-    title: 'Nouveau : les saisons.',
-    text: 'Chaque mois est une saison dans tes ligues : celui qui marque le plus de points gagne un chapeau qu\'on ne peut obtenir que ce mois-là.',
+    title: 'Changement : les déplacements comptent.',
+    text: 'Fini le golf : ton résultat, c\'est ton nombre de déplacements, moins il y en a, mieux c\'est. Et tu peux maintenant partager sur WhatsApp ou copier le lien.',
   },
   guide: {
     slide: {
@@ -801,14 +808,14 @@ export const messages: Messages = {
       fromLevel: 'À partir du niveau {n}',
     },
     daily: {
-      title: 'Défi du jour : façon golf',
+      title: 'Défi du jour',
       optimal: 'Optimum du jour',
       doneIn: 'Tu le fais en {n}',
       withHint: 'En {n}, avec 1 indice',
-      r1: 'Un nouveau plateau chaque jour, le même pour tous. Chaque déplacement est un coup.',
+      r1: 'Un nouveau plateau chaque jour, le même pour tous. Ton résultat, ce sont tes déplacements : moins il y en a, mieux c\'est.',
       r2: 'Recommencer est gratuit et ton meilleur essai compte. Tu peux l\'améliorer toute la journée.',
-      r3: 'Chaque indice ajoute un coup.',
-      r4: 'Le chrono ne s\'arrête jamais. À coups égaux, le plus rapide gagne.',
+      r3: 'Chaque indice compte comme un déplacement de plus.',
+      r4: 'Le chrono ne s\'arrête jamais. À déplacements égaux, le plus rapide gagne.',
       r5: 'À la fin, tu peux voir la solution, mais tu ne peux plus t\'améliorer ensuite.',
     },
     weekly: {
@@ -816,7 +823,7 @@ export const messages: Messages = {
       r1: 'Un plateau plus grand et plus difficile, du lundi au dimanche, le même pour tous.',
       r2: 'Joue autant de fois que tu veux pendant la semaine : ton meilleur essai compte.',
       r3: 'Pas d\'indices.',
-      r4: 'Classement avec les amis de toutes tes ligues. À coups égaux, le premier à l\'avoir fait gagne.',
+      r4: 'Classement avec les amis de toutes tes ligues. À déplacements égaux, le premier à l\'avoir fait gagne.',
     },
     duels: {
       title: 'Duels',
@@ -824,12 +831,12 @@ export const messages: Messages = {
       r2: 'Un plateau inédit que personne n\'a vu, le même pour vous deux.',
       r3: 'Joue autant que tu veux et, quand ton score te plaît, rends-le. Pas d\'indices.',
       r4: 'Tu ne vois le score de l\'autre que quand vous avez rendu les vôtres (ou après 48 h).',
-      r5: 'Le moins de coups gagne ; en cas d\'égalité, le plus rapide. Ensuite, revoyez le duel avec le fantôme et demandez une revanche.',
+      r5: 'Le moins de déplacements gagne ; en cas d\'égalité, le plus rapide. Ensuite, revoyez le duel avec le fantôme et demandez une revanche.',
     },
     leagues: {
       title: 'Ligues, séries et chapeaux',
       r1: 'Crée une ligue et donne le code à tes amis : vous verrez qui gagne le défi chaque jour.',
-      r2: 'Classement hebdomadaire et mensuel : chaque défi rapporte {par} points dans le par et {stroke} de moins par coup en trop.',
+      r2: 'Classement hebdomadaire et de saison : chaque défi rapporte {par} points à l\'optimum et {stroke} de moins par déplacement en trop.',
       r3: 'Joue le défi plusieurs jours d\'affilée pour faire une série.',
       r4: 'Tous les {every} jours d\'affilée, tu gagnes un protecteur (jusqu\'à {max}) : si tu manques un jour, ta série ne s\'arrête pas.',
       r5: 'Les succès débloquent des chapeaux pour ton pingouin.',

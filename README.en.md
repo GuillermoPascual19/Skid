@@ -12,8 +12,8 @@ friends, and levels made by the players.
 
 - **Free play**: generated levels that get harder and harder, with stars based on your moves and
   elements that unlock along the way (snow, currents, teleporters and holes).
-- **Daily challenge**: the same board for everyone, golf style ("Par", "+2"), with streaks, streak
-  freezes, the solution once you finish, and a friend's ghost.
+- **Daily challenge**: the same board for everyone; whoever does it in the fewest moves wins. With
+  streaks, streak freezes, the solution once you finish, and a friend's ghost.
 - **Weekly challenge**: a big, hard board from Monday to Sunday, with a ranking among friends.
 - **Duels**: challenge a friend (or anyone, with a link) to the same brand-new board.
 - **Leagues**: daily and weekly rankings with your friends, and monthly seasons whose champion
@@ -23,8 +23,9 @@ friends, and levels made by the players.
   ranking, sharing and reporting.
 - A "How to play" guide, dark mode, synthesized music and sound effects, and Google sign-in to play
   on several devices.
-- In six languages: Spanish, English, German, French, Portuguese and Italian. It picks the browser's
-  language and can be changed from the home screen.
+- In seven languages: Spanish, English, German, French, Portuguese, Italian and Russian. It picks
+  the browser's language and can be changed from the home screen.
+- Share on WhatsApp or Telegram, copy the link or the message, or use the system share menu.
 
 ## Tech stack
 
@@ -80,7 +81,8 @@ frontend/                  the game in the browser (Vite)
       daily/               daily challenge, stats, solution and a friend's ghost
       weekly/              weekly challenge
       duels/               duels: challenge, accept, play, result and rematch
-      ranking/             leagues and golf-style rankings (levels, weekly challenge)
+      ranking/             leagues, seasons, reactions and move-based rankings (levels,
+                           weekly challenge)
       achievements/        achievements and hats
       community/           player levels: list, editor, play, rate, report
       profile/             name, Google sign-in, other players' profiles and account
@@ -104,7 +106,7 @@ backend/                   the Cloudflare Worker: serves the game (dist/) and th
 common/                    used by both; no browser APIs and no imports from outside
   logic/                   pure rules: the server replays games with this very same code
     engine/                board, movement, solver, generator, elements, randomness
-    daily/                 daily challenge, golf scoring and streaks
+    daily/                 daily challenge, league points and streaks
     weekly/                weekly challenge
     duels/                 duels: difficulties and who wins
     achievements/          achievements
@@ -126,13 +128,14 @@ anything from outside) and builds the game to `dist/`.
 ## Daily challenge and scoring
 
 - The same board for everyone; it changes at midnight, Madrid time.
-- Golf style: every move is a stroke and every hint adds one more. Your result is how far you are
-  over the optimum ("Par", "+2"). Restarting is free and your best attempt counts; you can keep
-  improving all day (unless you've looked at the solution). With the same strokes, the faster player
-  wins: the clock starts when you press *Empezar* (Start) and never stops.
-- For the weekly and monthly standings each challenge gives points: 1000 at par and 100 less per
-  extra stroke (minimum 100). The constants live in `common/logic/daily/score.ts`. Challenges played
-  before golf scoring keep their points.
+- Your result is the number of moves in your best attempt, and every hint counts as one more: the
+  fewer, the better. Restarting is free; you can keep improving all day (unless you've looked at the
+  solution). With the same number of moves, the faster player wins: the clock starts when you press
+  *Start* and never stops.
+- Behind the scenes, for the weekly standings and the seasons, each challenge gives points: 1000 in
+  the optimum and 100 less per extra move (minimum 100). The constants live in
+  `common/logic/daily/score.ts`. The daily ranking sorts by moves (`over_par`), not by points;
+  challenges played before move-based scoring keep their points.
 - When you finish you can watch the optimal solution, played by the penguin.
 - The server doesn't trust the client: the browser sends the move log and the Worker replays it to
   work out the best attempt, the time (with its own clock) and the points.
@@ -202,9 +205,11 @@ anything from outside) and builds the game to `dist/`.
 ## Languages
 
 Spanish (`frontend/src/i18n/locales/es.ts`) is the reference: the other dictionaries must have the
-same keys, and `pnpm run build` fails if one is missing. Shared logic carries no text: it returns codes
-(`BoardError`, `nameProblem`…) and each side translates them. The server answers errors in the
-language of the `X-Skid-Lang` header (or `Accept-Language`).
+same keys, and `pnpm run build` fails if one is missing. Plurals have `one` and `other`, and Russian
+also `few` and `many`. Shared logic carries no text: it returns codes (`BoardError`, `nameProblem`…)
+and each side translates them. The server answers errors in the language of the `X-Skid-Lang` header
+(or `Accept-Language`). Baloo 2 has no Cyrillic, so Russian is shown in Nunito (the browser only
+downloads it when there's Cyrillic text).
 
 ## Deploying to Cloudflare
 

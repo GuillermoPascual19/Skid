@@ -3,9 +3,9 @@
 // y seguir mejorándolo o ver la solución.
 
 import { dailyLevel, dayKey, decodeRun, replayRun } from '../../../../common/logic/daily/daily';
-import { golfLabel } from '../../../../common/logic/daily/score';
 import * as online from '../../shared/api';
 import { formatDay, formatTime, h, openModal, share, toast } from '../../shared/dom';
+import { movesBig, movesLabel } from '../../shared/result';
 import { celebrate } from '../../shared/celebrate';
 import { ensureName } from '../profile/profile';
 import { openGuide } from '../guide/guide';
@@ -80,7 +80,7 @@ function showIntro(day: string): void {
       h(
         'ul',
         { class: 'rules' },
-        h('li', null, h('b', null, '⛳'), h('span', null, t('daily.intro.golf'))),
+        h('li', null, h('b', null, '🧊'), h('span', null, t('daily.intro.golf'))),
         h('li', null, h('b', null, '↺'), h('span', null, t('daily.intro.restart'))),
         h('li', null, h('b', null, '💡'), h('span', null, t('daily.intro.hint'))),
         h('li', null, h('b', null, '⏱'), h('span', null, t('daily.intro.clock'))),
@@ -113,12 +113,14 @@ function showIntro(day: string): void {
 
 export function shareText(day: string, r: DailyResult): string {
   const link = `${location.origin}${location.pathname}`;
-  const golf = r.overPar ?? null;
+  const over = r.overPar ?? null;
   return [
     `🐧 ${t('daily.share.title', { day: formatDay(day) })}`,
-    golf !== null ? `⛳ ${golfLabel(golf)}${golf === 0 ? ' 🎯' : ''}` : `⭐ ${t('daily.share.points', { n: r.score })}`,
-    golf !== null
-      ? `🧊 ${t('daily.share.moves', { n: r.moves, optimal: r.optimal })}${r.hints ? ` · 💡 ${r.hints}` : ''} · ⏱ ${formatTime(r.timeMs)}`
+    over !== null
+      ? `🧊 ${t('daily.share.moves', { n: r.optimal + over, optimal: r.optimal })}${over === 0 ? ' 🎯' : ''}`
+      : `⭐ ${t('daily.share.points', { n: r.score })}`,
+    over !== null
+      ? `${r.hints ? `💡 ${r.hints} · ` : ''}⏱ ${formatTime(r.timeMs)}`
       : `🧊 ${t('daily.share.moves', { n: r.moves, optimal: r.optimal })} · ↺ ${r.retries}${r.hints ? ` · 💡 ${r.hints}` : ''} · ⏱ ${formatTime(r.timeMs)}`,
     r.streak && r.streak > 1 ? `🔥 ${t('daily.share.streak', { days: tn('common.days', r.streak) })}` : null,
     link,
@@ -146,7 +148,7 @@ export async function celebrateStreak(r: DailyResult): Promise<void> {
   });
 }
 
-/** Se puede seguir mejorando: es el reto de hoy, no está al par y no ha visto la solución. */
+/** Se puede seguir mejorando: es el reto de hoy, no está en el óptimo y no ha visto la solución. */
 export function canImprove(day: string, r: DailyResult): boolean {
   const record = loadDaily(day);
   return day === today() && r.overPar != null && r.overPar > 0 && !!record && !record.solutionSeen;
@@ -173,7 +175,7 @@ export function openSolution(day: string, r: DailyResult): void {
   const modal = openModal(
     [
       h('h2', null, t('daily.solution.confirmTitle')),
-      h('p', { class: 'lead' }, t('daily.solution.confirmText', { result: golfLabel(r.overPar!) })),
+      h('p', { class: 'lead' }, t('daily.solution.confirmText', { result: movesLabel(r.optimal + r.overPar!) })),
       h(
         'div',
         { class: 'row' },
@@ -196,7 +198,7 @@ export function openSolution(day: string, r: DailyResult): void {
   );
 }
 
-function golfHeadline(over: number): string {
+function headline(over: number): string {
   if (over === 0) return t('golf.headline.par');
   if (over === 1) return t('daily.result.almost');
   if (over <= 3) return t('daily.result.veryGood');
@@ -210,20 +212,20 @@ export function showDailyResult(day: string, r: DailyResult, opts: { error?: str
   const modal = openModal(
     [
       h('p', { class: 'eyebrow' }, t('ghost.dailySubtitle', { day: formatDay(day) })),
-      h('h2', null, golfHeadline(over)),
-      h('div', { class: `score-big golf${over === 0 ? ' par' : ''}` }, golfLabel(over)),
-      opts.note ? h('p', { class: 'golf-note' }, opts.note) : null,
+      h('h2', null, headline(over)),
+      movesBig(strokes, r.optimal),
+      opts.note ? h('p', { class: 'result-note' }, opts.note) : null,
       r.streak ? h('p', { class: 'streak-line' }, `🔥 ${t('daily.share.streak', { days: tn('common.days', r.streak) })}`) : null,
       r.freezeEarned ? h('p', { class: 'freeze-line' }, `🛡️ ${t('daily.result.freezeEarned')}`) : null,
       h(
         'div',
         { class: 'breakdown' },
-        h('div', null, h('span', null, t('stats.optimal')), h('span', null, tn('common.strokes', r.optimal))),
+        h('div', null, h('span', null, t('stats.optimal')), h('span', null, tn('common.moves', r.optimal))),
         h(
           'div',
           null,
           h('span', null, r.hints ? t('daily.result.bestWithHints', { hints: tn('common.hints', r.hints) }) : t('daily.result.best')),
-          h('span', null, tn('common.strokes', strokes)),
+          h('span', null, tn('common.moves', strokes)),
         ),
         h('div', null, h('span', null, t('stats.time')), h('span', null, formatTime(r.timeMs))),
         h('div', { class: 'total' }, h('span', null, t('daily.result.leaguePoints')), h('span', null, String(r.score))),
@@ -248,7 +250,7 @@ export function showDailyResult(day: string, r: DailyResult, opts: { error?: str
   );
 }
 
-/** Resultado de un reto de antes del golf: solo sus puntos. */
+/** Resultado de un reto de antes de contar por movimientos: solo sus puntos. */
 function showPointsResult(day: string, r: DailyResult, opts: { error?: string; retry?: () => void }): void {
   const modal = openModal(
     [

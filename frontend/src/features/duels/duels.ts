@@ -3,9 +3,9 @@
 
 import { penguinSvg } from '../../../../common/art/hats';
 import { type DuelDifficulty } from '../../../../common/logic/duels/duels';
-import { golfLabel } from '../../../../common/logic/daily/score';
+import { movesLabel } from '../../shared/result';
 import { attemptScreen } from '../../play/attempt-screen';
-import { formatTime, h, openModal, share, svg, toast } from '../../shared/dom';
+import { formatDuration, formatTime, h, openModal, share, svg, toast } from '../../shared/dom';
 import { go, type Screen } from '../../shared/router';
 import { ensureName } from '../profile/profile';
 import { type Duel, type DuelInvite, type Friend, acceptDuel, createDuel, declineDuel, finishDuel, handInDuel, listDuels, listFriends, startDuel } from './api';
@@ -18,7 +18,7 @@ export const difficultyLabel = (d: DuelDifficulty) => t(`duels.difficulty.${d}`)
 /** «Quedan 47 h», «Quedan 12 min». */
 export function timeLeft(expiresAt: number): string {
   const minutes = Math.max(0, Math.round((expiresAt - Date.now()) / 60_000));
-  return t('duels.timeLeft', { time: minutes >= 60 ? `${Math.floor(minutes / 60)} h` : `${minutes} min` });
+  return t('duels.timeLeft', { time: minutes >= 60 ? formatDuration(Math.floor(minutes / 60)) : formatDuration(0, minutes) });
 }
 
 export const avatar = (hat: Friend['hat']) => h('span', { class: 'avatar' }, svg(penguinSvg(hat)));
@@ -191,7 +191,7 @@ const sideLine = (name: string, side: Duel['me']) =>
     'div',
     null,
     h('span', null, name),
-    h('span', null, side.finished && side.moves !== null ? `${golfLabel(side.overPar ?? 0)} · ${t('common.movesShort', { n: side.moves })} · ⏱ ${formatTime(side.timeMs ?? 0)}` : t('duels.result.notFinished')),
+    h('span', null, side.finished && side.moves !== null ? `${movesLabel(side.moves)} · ⏱ ${formatTime(side.timeMs ?? 0)}` : t('duels.result.notFinished')),
   );
 
 /** Resultado de un duelo terminado: quién gana, las dos marcas, el fantasma y la revancha. */
@@ -232,15 +232,16 @@ export function showDuelResult(duel: Duel, onChange: () => void): void {
 function duelOutcome(duel: Duel) {
   const rival = rivalName(duel);
   const best = duel.me.overPar;
+  const mark = movesLabel(duel.optimal + (best ?? 0));
   if (duel.status === 'finished') {
-    return { bestOverPar: best, note: t('duels.play.yourMark', { mark: golfLabel(best ?? 0) }), highlight: `⚔️ ${outcomeText(duel)}`, closed: true };
+    return { bestOverPar: best, note: t('duels.play.yourMark', { mark }), highlight: `⚔️ ${outcomeText(duel)}`, closed: true };
   }
   if (duel.me.handedIn) {
-    return { bestOverPar: best, note: t('duels.play.handedIn', { mark: golfLabel(best ?? 0), name: rival }), closed: true };
+    return { bestOverPar: best, note: t('duels.play.handedIn', { mark, name: rival }), closed: true };
   }
   return {
     bestOverPar: best,
-    note: t('duels.play.keepImproving', { mark: golfLabel(best ?? 0) }),
+    note: t('duels.play.keepImproving', { mark }),
     highlight: duel.rival?.handedIn ? t('duels.play.rivalHandedIn', { name: rival }) : undefined,
   };
 }

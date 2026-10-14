@@ -12,8 +12,8 @@ y niveles creados por los jugadores.
 
 - **Modo libre**: niveles generados cada vez más difíciles, con estrellas según los movimientos y
   elementos que se desbloquean (nieve, corrientes, teletransportes y agujeros).
-- **Reto diario**: el mismo tablero para todos, estilo golf («Par», «+2»), con rachas, protectores de
-  racha, solución al terminar y el fantasma de un amigo.
+- **Reto diario**: el mismo tablero para todos; gana quien lo haga en menos movimientos. Con rachas,
+  protectores de racha, solución al terminar y el fantasma de un amigo.
 - **Reto semanal**: un tablero grande y difícil de lunes a domingo, con ranking entre amigos.
 - **Duelos**: retas a un amigo (o a quien quieras con un enlace) al mismo tablero nuevo.
 - **Ligas**: ranking del día y de la semana con tus amigos, y temporadas mensuales cuyo campeón se
@@ -23,8 +23,9 @@ y niveles creados por los jugadores.
   compartir y denunciar.
 - Guía «Cómo se juega», modo oscuro, música y efectos sintetizados, y login con Google para jugar en
   varios dispositivos.
-- En seis idiomas: español, inglés, alemán, francés, portugués e italiano. Usa el del navegador y
-  se cambia desde el inicio.
+- En siete idiomas: español, inglés, alemán, francés, portugués, italiano y ruso. Usa el del
+  navegador y se cambia desde el inicio.
+- Compartir por WhatsApp o Telegram, copiar el enlace o el mensaje, o el menú del sistema.
 
 ## Tecnologías
 
@@ -80,7 +81,8 @@ frontend/                  el juego en el navegador (Vite)
       daily/               reto diario, estadísticas, solución y fantasma de un amigo
       weekly/              reto semanal
       duels/               duelos: retar, aceptar, jugar, resultado y revancha
-      ranking/             ligas y ranking estilo golf (niveles, reto semanal)
+      ranking/             ligas, temporadas, reacciones y ranking por movimientos (niveles,
+                           reto semanal)
       achievements/        logros y gorros
       community/           niveles de jugadores: listado, editor, partida, valorar, denunciar
       profile/             nombre, login con Google, perfil de otros jugadores y cuenta
@@ -104,7 +106,7 @@ backend/                   el Worker de Cloudflare: sirve el juego (dist/) y la 
 common/                    lo que usan los dos; sin APIs del navegador ni imports de fuera
   logic/                   reglas puras: el servidor reproduce las partidas con este mismo código
     engine/                tablero, movimiento, solver, generador, elementos, aleatorio
-    daily/                 reto diario, puntuación estilo golf y rachas
+    daily/                 reto diario, puntos de liga y rachas
     weekly/                reto semanal
     duels/                 duelos: dificultades y quién gana
     achievements/          logros
@@ -126,13 +128,14 @@ fuera) y compila el juego a `dist/`.
 ## Reto diario y puntuación
 
 - El mismo tablero para todos, cambia a medianoche de Madrid.
-- Estilo golf: cada movimiento es un golpe y cada pista suma otro. El resultado es lo que te pasas
-  del óptimo («Par», «+2»). Volver a empezar es gratis y cuenta el mejor intento; se puede seguir
-  mejorando todo el día (salvo tras ver la solución). A igualdad de golpes, gana quien tarda menos:
-  el reloj empieza al pulsar *Empezar* y no se para.
-- Para las clasificaciones semanales y mensuales cada reto da puntos: 1000 al par y 100 menos por
-  golpe de más (mínimo 100). Las constantes están en `common/logic/daily/score.ts`. Los retos de
-  antes del golf conservan sus puntos.
+- El resultado son los movimientos del mejor intento, y cada pista cuenta como uno más: cuantos
+  menos, mejor. Volver a empezar es gratis; se puede seguir mejorando todo el día (salvo tras ver la
+  solución). A igualdad de movimientos, gana quien tarda menos: el reloj empieza al pulsar *Empezar*
+  y no se para.
+- Por detrás, para la clasificación semanal y las temporadas, cada reto da puntos: 1000 en el óptimo
+  y 100 menos por movimiento de más (mínimo 100). Las constantes están en
+  `common/logic/daily/score.ts`. El ranking del día ordena por movimientos (`over_par`), no por
+  puntos; los retos de antes de contar por movimientos conservan sus puntos.
 - Al terminar se puede ver la solución óptima, jugada por el pingüino.
 - El servidor no se fía del cliente: el navegador envía el registro de movimientos y el Worker
   lo reproduce para calcular el mejor intento, el tiempo (con su propio reloj) y los puntos.
@@ -198,9 +201,11 @@ fuera) y compila el juego a `dist/`.
 ## Idiomas
 
 El español (`frontend/src/i18n/locales/es.ts`) es la referencia: los demás diccionarios tienen que
-tener las mismas claves, y si falta alguna `pnpm run build` falla. La lógica compartida no lleva
-textos: devuelve códigos (`BoardError`, `nameProblem`…) y cada lado los traduce. El servidor responde
-los errores en el idioma de la cabecera `X-Skid-Lang` (o `Accept-Language`).
+tener las mismas claves, y si falta alguna `pnpm run build` falla. Los plurales llevan `one` y
+`other`, y el ruso además `few` y `many`. La lógica compartida no lleva textos: devuelve códigos
+(`BoardError`, `nameProblem`…) y cada lado los traduce. El servidor responde los errores en el idioma
+de la cabecera `X-Skid-Lang` (o `Accept-Language`). Baloo 2 no tiene cirílico, así que el ruso sale
+en Nunito (el navegador solo la descarga si hay texto en cirílico).
 
 ## Publicar en Cloudflare
 

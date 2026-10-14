@@ -1,7 +1,7 @@
 // Idiomas del juego. El juego elige uno (el guardado o el del navegador) y se lo
 // dice al servidor en cada petición para que los mensajes de error lleguen en ese idioma.
 
-export const LOCALES = ['es', 'en', 'de', 'fr', 'pt', 'it'] as const;
+export const LOCALES = ['es', 'en', 'de', 'fr', 'pt', 'it', 'ru'] as const;
 
 export type Locale = (typeof LOCALES)[number];
 
@@ -16,6 +16,7 @@ export const LOCALE_NAMES: Record<Locale, string> = {
   fr: 'Français',
   pt: 'Português',
   it: 'Italiano',
+  ru: 'Русский',
 };
 
 export function isLocale(value: unknown): value is Locale {

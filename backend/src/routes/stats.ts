@@ -13,7 +13,7 @@ const HISTORY_DAYS = 30;
 export async function wonDays(env: Env, playerId: string): Promise<Set<string>> {
   const { results } = await env.DB.prepare(
     `WITH runs AS (
-       SELECT lm.league_id, r.player_id, r.day, r.score, r.time_ms
+       SELECT lm.league_id, r.player_id, r.day, r.score, r.time_ms, COALESCE(r.over_par, -r.score) AS rank_key
        FROM daily_runs r
        JOIN league_members lm ON lm.player_id = r.player_id
        WHERE r.finished_at IS NOT NULL
@@ -21,7 +21,7 @@ export async function wonDays(env: Env, playerId: string): Promise<Set<string>> 
      ),
      ranked AS (
        SELECT *,
-              RANK() OVER (PARTITION BY league_id, day ORDER BY score DESC, time_ms ASC) AS pos,
+              RANK() OVER (PARTITION BY league_id, day ORDER BY rank_key, time_ms ASC) AS pos,
               COUNT(*) OVER (PARTITION BY league_id, day) AS finishers
        FROM runs
      )

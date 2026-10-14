@@ -5,7 +5,6 @@
 import { initialState, parseBoard, type Direction, type GameState } from '../../../../common/logic/engine/board';
 import { decodeRun } from '../../../../common/logic/daily/daily';
 import { applyMove } from '../../../../common/logic/engine/move';
-import { golfLabel } from '../../../../common/logic/daily/score';
 import type { HatId } from '../../../../common/art/hats';
 import type { BoardHooks } from '../../game/BoardScene';
 import type { MountedBoard } from '../../game/mount';
@@ -31,8 +30,11 @@ export interface GhostSource {
 const FIRST_DELAY = 900;
 const STEP_DELAY = 350;
 
-/** "Par", "+2" o, en retos de antes del golf, los puntos. */
-const resultLabel = (run: GhostRun) => (run.overPar !== null ? golfLabel(run.overPar) : `${run.score ?? 0} ${t('common.pts')}`);
+/** Movimientos (cada pista cuenta como uno) o, en retos de antes de contar por movimientos, los puntos. */
+const resultLabel = (run: GhostRun) =>
+  run.overPar !== null
+    ? `${t('common.movesShort', { n: decodeRun(run.path).length + run.hints })}${run.hints ? ` · 💡 ${run.hints}` : ''}`
+    : `${run.score ?? 0} ${t('common.pts')} · ${t('common.movesShort', { n: decodeRun(run.path).length })}${run.hints ? ` · 💡 ${run.hints}` : ''}`;
 
 export function ghostScreen(source: GhostSource): Screen {
   const board = parseBoard(source.rows);
@@ -135,7 +137,7 @@ export function ghostScreen(source: GhostSource): Screen {
     schedule(FIRST_DELAY);
   }
 
-  /** Quién gana: menos golpes y, a igualdad, menos tiempo (como el ranking). */
+  /** Quién gana: menos movimientos y, a igualdad, menos tiempo (como el ranking). */
   function verdict(): string {
     if (!me || !friend) return '';
     const a = me.overPar ?? -(me.score ?? 0);
@@ -156,7 +158,7 @@ export function ghostScreen(source: GhostSource): Screen {
           'div',
           null,
           h('span', null, who),
-          h('span', null, `${resultLabel(r)} · ${t('common.movesShort', { n: decodeRun(r.path).length })}${r.hints ? ` · 💡 ${r.hints}` : ''} · ⏱ ${formatTime(r.timeMs ?? 0)}`),
+          h('span', null, `${resultLabel(r)} · ⏱ ${formatTime(r.timeMs ?? 0)}`),
         );
       const modal = openModal(
         [
