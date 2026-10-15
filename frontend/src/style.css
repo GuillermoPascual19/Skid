@@ -1262,7 +1262,8 @@ p {
 
 .cal-grid {
   display: grid;
-  grid-template-columns: repeat(7, 1fr);
+  /* minmax(0, …): las columnas pueden encogerse en móviles estrechos (con 1fr no bajan de su contenido). */
+  grid-template-columns: repeat(7, minmax(0, 1fr));
   gap: 4px;
 }
 

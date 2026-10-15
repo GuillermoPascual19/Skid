@@ -115,14 +115,19 @@ export function weeklyCard(): { el: HTMLElement; load(): Promise<void> } {
       ),
     );
   };
-  return {
+  const card = {
     el,
     async load() {
       try {
         render(await getWeekly(currentWeek()));
       } catch (err) {
-        el.replaceChildren(h('p', { class: 'eyebrow' }, t('weekly.eyebrow')), h('p', { class: 'error' }, (err as Error).message));
+        el.replaceChildren(
+          h('p', { class: 'eyebrow' }, t('weekly.eyebrow')),
+          h('p', { class: 'error' }, (err as Error).message),
+          h('button', { class: 'btn ghost', onclick: () => void card.load() }, t('common.retry')),
+        );
       }
     },
   };
+  return card;
 }

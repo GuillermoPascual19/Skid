@@ -86,7 +86,9 @@ export function duelsScreen(open?: string): Screen {
           : [h('section', { class: 'card empty' }, h('div', { style: 'font-size: 44px' }, '⚔️'), h('p', { class: 'muted' }, t('duels.screen.empty')))]),
       );
     } catch (err) {
-      body.replaceChildren(h('p', { class: 'error' }, (err as Error).message));
+      body.replaceChildren(
+        h('section', { class: 'card empty' }, h('p', { class: 'error' }, (err as Error).message), h('button', { class: 'btn', onclick: () => void load() }, t('common.retry'))),
+      );
     }
   }
 

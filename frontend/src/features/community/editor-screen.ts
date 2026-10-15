@@ -141,17 +141,29 @@ export function editorScreen(): Screen {
   const sizeLabel = h('strong');
   const help = h('p', { class: 'editor-help' });
   const palette = h('div', { class: 'palette', role: 'radiogroup', 'aria-label': t('editor.tool') });
+  /** El error del nombre (o al publicar), junto al campo y no en un aviso suelto. */
+  const nameError = h('p', { class: 'error field-error', id: 'editor-name-error', role: 'alert', hidden: true });
   const nameInput = h('input', {
     class: 'field',
     placeholder: t('editor.namePlaceholder'),
+    'aria-label': t('editor.namePlaceholder'),
+    'aria-describedby': 'editor-name-error',
     maxLength: CUSTOM_LIMITS.maxName,
     value: name,
     oninput: () => {
       name = nameInput.value;
+      showNameError(null);
       persist();
       renderStatus();
     },
   });
+
+  function showNameError(message: string | null) {
+    nameError.textContent = message ?? '';
+    nameError.hidden = !message;
+    nameInput.toggleAttribute('aria-invalid', !!message);
+    if (message) nameInput.focus();
+  }
   const testBtn = h('button', { class: 'btn secondary', onclick: () => testLevel() }, `▶ ${t('editor.test')}`);
   const publishBtn = h('button', { class: 'btn', onclick: () => void publish() }, t('editor.publish'));
 
@@ -254,7 +266,7 @@ export function editorScreen(): Screen {
   async function publish() {
     if (!proof.proofLog || !proven()) return;
     const clean = name.trim();
-    if (clean.length < CUSTOM_LIMITS.minName) return toast(t('editor.nameTooShort', { n: CUSTOM_LIMITS.minName }));
+    if (clean.length < CUSTOM_LIMITS.minName) return showNameError(t('editor.nameTooShort', { n: CUSTOM_LIMITS.minName }));
     publishBtn.disabled = true;
     try {
       if (!(await ensureName())) return;
@@ -263,7 +275,8 @@ export function editorScreen(): Screen {
       toast(t('editor.published'));
       go({ name: 'community', tab: 'mine' });
     } catch (err) {
-      toast((err as Error).message);
+      // Lo que rechaza el servidor (nombre ocupado, inapropiado, nivel repetido…), junto al nombre.
+      showNameError((err as Error).message);
     } finally {
       publishBtn.disabled = false;
       renderStatus();
@@ -320,6 +333,7 @@ export function editorScreen(): Screen {
       h('div', { class: 'title' }, h('h1', null, t('levels.create.button')), h('p', null, t('home.community.eyebrow'))),
     ),
     nameInput,
+    nameError,
     h(
       'div',
       { class: 'editor-size' },
