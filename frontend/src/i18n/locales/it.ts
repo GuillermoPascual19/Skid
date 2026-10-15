@@ -241,6 +241,12 @@ export const messages: Messages = {
     title: 'Lingua',
     change: 'Lingua: {language}. Tocca per cambiare',
   },
+  footer: {
+    privacy: 'Privacy',
+    terms: 'Termini',
+    legal: 'Note legali',
+    contact: 'Contatti',
+  },
   meta: {
     title: 'Skid · Puzzle di scivolate sul ghiaccio',
     description: 'Fai scivolare il pinguino sul ghiaccio e raccogli i pezzi in ordine. Sfida giornaliera, duelli dal vivo, a tempo e leghe con i tuoi amici.',
@@ -828,6 +834,7 @@ export const messages: Messages = {
     },
   },
   google: {
+    continue: 'Continua con Google',
     noResponse: 'Google non ha risposto',
     loadFailed: 'Impossibile caricare l\'accesso con Google',
   },

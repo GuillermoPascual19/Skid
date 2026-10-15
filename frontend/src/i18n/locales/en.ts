@@ -241,6 +241,12 @@ export const messages: Messages = {
     title: 'Language',
     change: 'Language: {language}. Tap to change it',
   },
+  footer: {
+    privacy: 'Privacy',
+    terms: 'Terms',
+    legal: 'Legal notice',
+    contact: 'Contact',
+  },
   meta: {
     title: 'Skid · Ice-sliding puzzle',
     description: 'Slide the penguin across the ice and collect the pieces in order. Daily challenge, live duels, time attack and leagues with your friends.',
@@ -828,6 +834,7 @@ export const messages: Messages = {
     },
   },
   google: {
+    continue: 'Continue with Google',
     noResponse: 'Google didn\'t respond',
     loadFailed: 'Couldn\'t load Google sign-in',
   },

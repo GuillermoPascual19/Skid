@@ -246,6 +246,12 @@ anything from outside) and builds the game to `dist/`.
 - Cheating: the server replays every game and rejects impossible ones or ones sent without playing,
   but it can't know whether someone worked out the solution on their own (the whole game runs in the
   browser).
+- The email of Google accounts is stored encrypted (AES-GCM with the `EMAIL_KEY` secret,
+  `backend/src/seal.ts`); without the key it isn't stored.
+- HTTPS enforced: the Worker redirects pages and the API to HTTPS (workers.dev has no such setting).
+- Privacy (GDPR/LSSI): no cookies. Fonts are served from here (not from Google Fonts) and Google's
+  script only loads when the player taps "Continue with Google". Analytics, if enabled, are Cloudflare
+  Web Analytics, cookieless. Legal pages in `frontend/public/legal/` (Spanish).
 
 ## Languages
 
@@ -279,3 +285,10 @@ Notifications: the public VAPID key is in `wrangler.jsonc` and the private one i
 (once: `pnpm exec wrangler secret put VAPID_PRIVATE_KEY`). Without it the game works the same, just
 without notifications. Locally it's read from `.dev.vars` (not committed). To generate a new pair,
 change both at once (existing subscriptions stop working).
+
+Encrypted email: the `EMAIL_KEY` secret (32 random bytes in base64url; see `.dev.vars.example`).
+Without it, Google sign-in works but the email isn't stored. It can't be changed without losing the
+emails already encrypted.
+
+Analytics: create the site in the Cloudflare dashboard (*Web Analytics*, manual JavaScript setup) and
+put its token in `CF_ANALYTICS_TOKEN` (`wrangler.jsonc`). If it's empty, nothing is loaded.

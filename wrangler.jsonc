@@ -45,6 +45,8 @@
   // ID de cliente OAuth de Google (público). Sin él no aparece el botón de Google.
   "vars": {
     "GOOGLE_CLIENT_ID": "1097617216037-1n4sbfi7fpman0fc3on4b5b23985g4fn.apps.googleusercontent.com",
+    // Cloudflare Web Analytics (sin cookies): el token del sitio, del panel de Cloudflare. Vacío, sin analíticas.
+    "CF_ANALYTICS_TOKEN": "",
     // Clave pública VAPID de las notificaciones (la privada es el secreto VAPID_PRIVATE_KEY).
     "VAPID_PUBLIC_KEY": "BJmwTicRwRFCqeHJTNHkdKJifK-JaekC5lIyPBaBiRU6UXPTLhWNBm9kCu9PTPqlq8tLN2qF22GGEZMEp5Y754o"
   },

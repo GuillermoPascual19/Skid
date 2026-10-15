@@ -242,6 +242,12 @@ fuera) y compila el juego a `dist/`.
   (`common/logic/players/names.ts`).
 - Trampas: el servidor reproduce cada partida y rechaza las imposibles o enviadas sin jugar, pero no
   puede saber si alguien ha calculado la solución por su cuenta (el juego entero corre en el navegador).
+- El email de las cuentas de Google se guarda cifrado (AES-GCM con el secreto `EMAIL_KEY`,
+  `backend/src/seal.ts`); sin la clave no se guarda.
+- HTTPS forzado: el Worker redirige a HTTPS las páginas y la API (workers.dev no tiene ese ajuste).
+- Privacidad (RGPD/LSSI): sin cookies. Las tipografías se sirven desde aquí (no desde Google Fonts) y
+  el script de Google solo se carga al pulsar «Continuar con Google». Las analíticas, si se activan,
+  son de Cloudflare Web Analytics, sin cookies. Textos legales en `frontend/public/legal/`.
 
 ## Idiomas
 
@@ -275,3 +281,10 @@ Notificaciones: la clave pública VAPID está en `wrangler.jsonc` y la privada e
 (una sola vez: `pnpm exec wrangler secret put VAPID_PRIVATE_KEY`). Sin ella el juego funciona igual,
 pero sin notificaciones. En local se lee de `.dev.vars` (no se sube al repositorio). Para generar un
 par nuevo hay que cambiar las dos a la vez (las suscripciones existentes dejan de valer).
+
+Email cifrado: el secreto `EMAIL_KEY` (32 bytes aleatorios en base64url; ver `.dev.vars.example`).
+Sin él, el login con Google funciona pero no se guarda el email. No se puede cambiar sin perder los
+emails ya cifrados.
+
+Analíticas: crea el sitio en el panel de Cloudflare (*Web Analytics*, configuración manual con
+JavaScript) y pon su token en `CF_ANALYTICS_TOKEN` (`wrangler.jsonc`). Vacío, no se cargan.

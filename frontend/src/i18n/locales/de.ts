@@ -241,6 +241,12 @@ export const messages: Messages = {
     title: 'Sprache',
     change: 'Sprache: {language}. Tippen zum Ändern',
   },
+  footer: {
+    privacy: 'Datenschutz',
+    terms: 'Nutzungsbedingungen',
+    legal: 'Impressum',
+    contact: 'Kontakt',
+  },
   meta: {
     title: 'Skid · Rutsch-Puzzle auf dem Eis',
     description: 'Lass den Pinguin übers Eis gleiten und sammle die Teile der Reihe nach. Tagesherausforderung, Live-Duelle, Zeitrennen und Ligen mit deinen Freunden.',
@@ -828,6 +834,7 @@ export const messages: Messages = {
     },
   },
   google: {
+    continue: 'Weiter mit Google',
     noResponse: 'Google hat nicht geantwortet',
     loadFailed: 'Die Google-Anmeldung konnte nicht geladen werden',
   },

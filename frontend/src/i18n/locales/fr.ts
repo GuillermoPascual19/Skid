@@ -241,6 +241,12 @@ export const messages: Messages = {
     title: 'Langue',
     change: 'Langue : {language}. Touche pour la changer',
   },
+  footer: {
+    privacy: 'Confidentialité',
+    terms: 'Conditions',
+    legal: 'Mentions légales',
+    contact: 'Contact',
+  },
   meta: {
     title: 'Skid · Puzzle de glisse sur la glace',
     description: 'Fais glisser le pingouin sur la glace et ramasse les pièces dans l\'ordre. Défi du jour, duels en direct, contre-la-montre et ligues entre amis.',
@@ -828,6 +834,7 @@ export const messages: Messages = {
     },
   },
   google: {
+    continue: 'Continuer avec Google',
     noResponse: 'Google n\'a pas répondu',
     loadFailed: 'Impossible de charger la connexion Google',
   },

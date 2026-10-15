@@ -75,7 +75,7 @@ async function handleApi(req: Request, url: URL, env: Env): Promise<Response> {
   let m: RegExpMatchArray | null;
 
   if (route === 'POST /session') return json(await createSession(req, env));
-  if (route === 'GET /config') return json({ googleClientId: env.GOOGLE_CLIENT_ID || null });
+  if (route === 'GET /config') return json({ googleClientId: env.GOOGLE_CLIENT_ID || null, analyticsToken: env.CF_ANALYTICS_TOKEN || null });
 
   const session = await authenticate(req, env);
   const { playerId } = session;

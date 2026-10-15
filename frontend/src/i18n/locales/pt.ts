@@ -241,6 +241,12 @@ export const messages: Messages = {
     title: 'Idioma',
     change: 'Idioma: {language}. Toca para mudar',
   },
+  footer: {
+    privacy: 'Privacidade',
+    terms: 'Termos',
+    legal: 'Aviso legal',
+    contact: 'Contacto',
+  },
   meta: {
     title: 'Skid · Puzzle de deslizar no gelo',
     description: 'Desliza o pinguim pelo gelo e apanha as peças por ordem. Desafio diário, duelos em direto, contrarrelógio e ligas com os teus amigos.',
@@ -828,6 +834,7 @@ export const messages: Messages = {
     },
   },
   google: {
+    continue: 'Continuar com o Google',
     noResponse: 'O Google não respondeu',
     loadFailed: 'Não foi possível carregar o início de sessão do Google',
   },

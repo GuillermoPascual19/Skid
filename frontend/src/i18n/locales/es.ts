@@ -240,6 +240,12 @@ export const messages = {
     title: 'Idioma',
     change: 'Idioma: {language}. Pulsa para cambiarlo',
   },
+  footer: {
+    privacy: 'Privacidad',
+    terms: 'Términos',
+    legal: 'Aviso legal',
+    contact: 'Contacto',
+  },
   meta: {
     title: 'Skid · Puzzle de deslizamiento sobre hielo',
     description: 'Desliza el pingüino por el hielo y recoge las piezas en orden. Reto diario, duelos en directo, contrarreloj y ligas con tus amigos.',
@@ -827,6 +833,7 @@ export const messages = {
     },
   },
   google: {
+    continue: 'Continuar con Google',
     noResponse: 'Google no respondió',
     loadFailed: 'No se pudo cargar el login de Google',
   },
