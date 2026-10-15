@@ -1,4 +1,21 @@
-import { defineConfig } from 'vitest/config';
+import { defineConfig, type Plugin } from 'vitest/config';
+
+/** Identificador de esta compilación: va dentro del juego y en dist/version.json. */
+const BUILD_ID = new Date().toISOString();
+
+/**
+ * Deja dist/version.json con el identificador de la compilación: el juego lo
+ * consulta para saber si se ha desplegado una versión nueva (ver shared/update.ts).
+ */
+function versionFile(): Plugin {
+  return {
+    name: 'skid-version',
+    apply: 'build',
+    generateBundle() {
+      this.emitFile({ type: 'asset', fileName: 'version.json', source: JSON.stringify({ build: BUILD_ID }) });
+    },
+  };
+}
 
 // En desarrollo, /api va al Worker local (`npm run dev:api`, puerto 8787).
 const api = { '/api': 'http://localhost:8787' };
@@ -9,6 +26,8 @@ export default defineConfig({
   // .env.local sigue en la raíz del proyecto (relativo a `root`).
   envDir: '..',
   base: './',
+  define: { __BUILD_ID__: JSON.stringify(BUILD_ID) },
+  plugins: [versionFile()],
   server: { proxy: api },
   preview: { proxy: api },
   build: {

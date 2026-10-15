@@ -241,6 +241,10 @@ export const messages: Messages = {
     title: 'Язык',
     change: 'Язык: {language}. Нажми, чтобы сменить',
   },
+  update: {
+    available: 'Доступна новая версия',
+    reload: 'Обновить',
+  },
   notifications: {
     title: 'Уведомления',
     text: 'Мы сообщим, даже если игра закрыта.',

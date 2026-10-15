@@ -241,6 +241,10 @@ export const messages: Messages = {
     title: 'Idioma',
     change: 'Idioma: {language}. Toca para mudar',
   },
+  update: {
+    available: 'Há uma versão nova',
+    reload: 'Atualizar',
+  },
   notifications: {
     title: 'Notificações',
     text: 'Avisamos-te mesmo com o jogo fechado.',
