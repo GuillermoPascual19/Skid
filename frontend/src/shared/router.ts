@@ -33,7 +33,8 @@ export type Route =
   | { name: 'community'; tab?: CustomLevelSort; open?: string }
   | { name: 'editor' }
   | { name: 'custom'; level: CustomLevel }
-  | { name: 'customTest'; rows: string[] };
+  | { name: 'customTest'; rows: string[] }
+  | { name: 'admin' };
 
 type Renderers = { [N in Route['name']]: (route: Extract<Route, { name: N }>) => Screen };
 

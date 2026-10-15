@@ -27,6 +27,7 @@ import { rankingScreen } from './features/ranking/ranking-screen';
 import { statsScreen } from './features/daily/stats-screen';
 import { achievementsScreen } from './features/achievements/achievements-screen';
 import { playerScreen } from './features/profile/player-screen';
+import { adminScreen } from './features/admin/admin-screen';
 import { go, setRoutes } from './shared/router';
 import { applyTheme } from './shared/theme';
 import { initI18n, t } from './i18n/i18n';
@@ -94,6 +95,7 @@ setRoutes({
   editor: () => editorScreen(),
   custom: (route) => customLevelScreen({ level: route.level }),
   customTest: (route) => customLevelScreen({ testRows: route.rows }),
+  admin: () => adminScreen(),
 });
 
 // Lo primero: así también se avisa de los errores al arrancar.

@@ -110,6 +110,8 @@ export function homeScreen(): Screen {
       const me = await currentMe();
       renderAccount(me);
       wearHat(me.hat);
+      // Solo para administradores (el panel va en español: no lo ven los jugadores).
+      if (me.admin && !disposed) navTiles.append(navTile('🛡️', 'Admin', () => go({ name: 'admin' })));
       // Primero la victoria de ayer y después los logros nuevos, nunca dos a la vez.
       void celebrateYesterday(me.name)
         .then(() => (disposed || !me.name ? undefined : celebrateNewAchievements(wearHat)))
@@ -214,7 +216,7 @@ export function homeScreen(): Screen {
         return;
       }
       toast(t('home.account.linked'));
-      renderAccount({ name: result.name, email: result.email, hat: null });
+      renderAccount({ name: result.name, email: result.email, hat: null, admin: false });
     }).then((shown) => (card.hidden = !shown));
   }
 
@@ -292,6 +294,14 @@ export function homeScreen(): Screen {
       : null;
   const audio = audioToggles();
   audio.el.prepend(languageButton(), themeButton(), ...(online.onlineEnabled ? [notificationsButton()] : []));
+  const navTiles = h(
+    'nav',
+    { class: 'nav-tiles' },
+    navTile('🏆', t('nav.ranking'), () => go({ name: 'ranking' })),
+    navTile('❓', t('nav.rules'), () => openGuide()),
+    online.onlineEnabled ? navTile('📊', t('nav.stats'), () => go({ name: 'stats' })) : null,
+    online.onlineEnabled ? navTile('🎩', t('nav.achievements'), () => go({ name: 'achievements' })) : null,
+  );
   const el = h(
     'div',
     { class: 'screen home' },
@@ -315,14 +325,7 @@ export function homeScreen(): Screen {
       h('div', { class: 'info' }, h('p', { class: 'eyebrow' }, t('home.free.eyebrow')), h('h2', null, t('common.levelN', { n: level })), h('p', { class: 'muted' }, t('home.free.text'))),
       h('button', { class: 'btn secondary', onclick: () => go({ name: 'levels' }) }, t('common.play')),
     ),
-    h(
-      'nav',
-      { class: 'nav-tiles' },
-      navTile('🏆', t('nav.ranking'), () => go({ name: 'ranking' })),
-      navTile('❓', t('nav.rules'), () => openGuide()),
-      online.onlineEnabled ? navTile('📊', t('nav.stats'), () => go({ name: 'stats' })) : null,
-      online.onlineEnabled ? navTile('🎩', t('nav.achievements'), () => go({ name: 'achievements' })) : null,
-    ),
+    navTiles,
     online.onlineEnabled
       ? h(
           'section',

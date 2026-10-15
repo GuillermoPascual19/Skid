@@ -39,6 +39,7 @@ import { newReactions, react } from './routes/reactions';
 import { deleteSubscription, pushKey, saveSubscription, streakReminders, testPush } from './routes/push';
 import { playerStats } from './routes/stats';
 import { logClientError } from './routes/errors';
+import { adminClearReports, adminDeleteLevel, adminLevels, adminPlayers, adminResetName, adminSummary, isAdmin } from './routes/admin';
 import { authenticate, createSession, deleteAccount, googleLogin, logoutEverywhere, sealLegacyEmails } from './session';
 import { unseal } from './seal';
 import { nameKey, nameProblem, NAME_MAX, NAME_MIN } from '../../common/logic/players/names';
@@ -104,7 +105,12 @@ async function handleApi(req: Request, url: URL, env: Env): Promise<Response> {
     const row = await env.DB.prepare('SELECT name, email, hat FROM players WHERE id = ?')
       .bind(playerId)
       .first<{ name: string | null; email: string | null; hat: string | null }>();
-    return json({ name: row?.name ?? null, email: await unseal(env.EMAIL_KEY, row?.email ?? null), hat: isHatId(row?.hat) ? row.hat : null });
+    return json({
+      name: row?.name ?? null,
+      email: await unseal(env.EMAIL_KEY, row?.email ?? null),
+      hat: isHatId(row?.hat) ? row.hat : null,
+      admin: await isAdmin(env, playerId),
+    });
   }
   if (route === 'GET /achievements') {
     // Al abrir la portada se piden los logros: así se cierran las temporadas del mes pasado.
@@ -243,6 +249,17 @@ async function handleApi(req: Request, url: URL, env: Env): Promise<Response> {
     return json(await createCustomLevel(env, playerId, await body(req)));
   }
   if ((m = route.match(/^GET \/levels\/([\w-]+)$/))) return json(await getCustomLevel(env, playerId, m[1]));
+  // Panel de administración (routes/admin.ts comprueba que lo seas).
+  if (route === 'GET /admin/summary') return json(await adminSummary(env, playerId));
+  if (route === 'GET /admin/levels') {
+    const offset = Math.max(0, Number(url.searchParams.get('offset')) || 0);
+    return json(await adminLevels(env, playerId, url.searchParams.get('filter'), url.searchParams.get('q'), offset));
+  }
+  if ((m = route.match(/^DELETE \/admin\/levels\/([\w-]+)$/))) return json(await adminDeleteLevel(env, playerId, m[1]));
+  if ((m = route.match(/^POST \/admin\/levels\/([\w-]+)\/clear-reports$/))) return json(await adminClearReports(env, playerId, m[1]));
+  if (route === 'GET /admin/players') return json(await adminPlayers(env, playerId, url.searchParams.get('q')));
+  if ((m = route.match(/^POST \/admin\/players\/([\w-]+)\/reset-name$/))) return json(await adminResetName(env, playerId, m[1]));
+
   if ((m = route.match(/^DELETE \/levels\/([\w-]+)$/))) return json(await deleteCustomLevel(env, playerId, m[1]));
   if ((m = route.match(/^GET \/levels\/([\w-]+)\/ranking$/))) return json(await customLevelRanking(env, playerId, m[1]));
   if ((m = route.match(/^POST \/levels\/([\w-]+)\/finish$/))) {

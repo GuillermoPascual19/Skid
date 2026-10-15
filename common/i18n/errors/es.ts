@@ -54,6 +54,7 @@ export const errors = {
 
   // Jugadores y ligas
   playerNotFound: 'No existe ese jugador',
+  adminOnly: 'Solo para administradores',
   onlyLeagueProfiles: 'Solo puedes ver el perfil de jugadores de tus ligas',
   onlyLeagueGames: 'Solo puedes ver partidas de jugadores de tus ligas',
   leagueNameLength: 'El nombre de la liga debe tener entre {min} y {max} caracteres',

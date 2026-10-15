@@ -292,3 +292,10 @@ emails ya cifrados.
 
 Analíticas: crea el sitio en el panel de Cloudflare (*Web Analytics*, configuración manual con
 JavaScript) y pon su token en `CF_ANALYTICS_TOKEN` (`wrangler.jsonc`). Vacío, no se cargan.
+
+Panel de administración: el secreto `ADMIN_GOOGLE_SUBS` lleva los identificadores («sub») de las
+cuentas de Google con acceso, separados por comas. Para ver el tuyo, entra en Skid con Google y busca
+tu jugador: `pnpm exec wrangler d1 execute skid --remote --command "SELECT name, google_sub FROM players
+WHERE google_sub IS NOT NULL"`. Con el secreto puesto, sale la casilla «Admin» en la portada (resumen,
+niveles denunciados, cualquier nivel y nombres de jugadores). Cada acción queda en los logs del Worker
+(`event = adminAction`).

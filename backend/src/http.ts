@@ -22,6 +22,8 @@ export interface Env {
   CF_ANALYTICS_TOKEN?: string;
   /** Clave (32 bytes, base64url) con la que se cifra el email en la base de datos (secreto). Sin ella no se guarda. */
   EMAIL_KEY?: string;
+  /** Cuentas de Google con acceso al panel de administración: sus «sub», separados por comas (secreto). */
+  ADMIN_GOOGLE_SUBS?: string;
   /** Deja una tarea corriendo después de responder (ctx.waitUntil de la petición). */
   waitUntil?(task: Promise<unknown>): void;
 }
