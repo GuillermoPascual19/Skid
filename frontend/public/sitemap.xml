@@ -2,7 +2,7 @@
 <!-- Si el juego pasa a otro dominio, cambia aquí las direcciones (y en robots.txt e index.html). -->
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <url><loc>https://skid.gpm-854.workers.dev/</loc><changefreq>daily</changefreq><priority>1.0</priority></url>
-  <url><loc>https://skid.gpm-854.workers.dev/legal/privacidad.html</loc><changefreq>yearly</changefreq><priority>0.3</priority></url>
-  <url><loc>https://skid.gpm-854.workers.dev/legal/terminos.html</loc><changefreq>yearly</changefreq><priority>0.3</priority></url>
-  <url><loc>https://skid.gpm-854.workers.dev/legal/aviso-legal.html</loc><changefreq>yearly</changefreq><priority>0.3</priority></url>
+  <url><loc>https://skid.gpm-854.workers.dev/legal/privacidad</loc><changefreq>yearly</changefreq><priority>0.3</priority></url>
+  <url><loc>https://skid.gpm-854.workers.dev/legal/terminos</loc><changefreq>yearly</changefreq><priority>0.3</priority></url>
+  <url><loc>https://skid.gpm-854.workers.dev/legal/aviso-legal</loc><changefreq>yearly</changefreq><priority>0.3</priority></url>
 </urlset>
