@@ -38,12 +38,18 @@ import { leagueSeason, seasonHats, seasonTitles, settleSeasons } from './routes/
 import { newReactions, react } from './routes/reactions';
 import { deleteSubscription, pushKey, saveSubscription, streakReminders, testPush } from './routes/push';
 import { playerStats } from './routes/stats';
-import { authenticate, createSession, deleteAccount, googleLogin, logoutEverywhere } from './session';
+import { authenticate, createSession, deleteAccount, googleLogin, logoutEverywhere, sealLegacyEmails } from './session';
+import { unseal } from './seal';
 import { nameKey, nameProblem, NAME_MAX, NAME_MIN } from '../../common/logic/players/names';
 
 export default {
   async fetch(req, rawEnv, ctx): Promise<Response> {
     const url = new URL(req.url);
+    // Siempre por HTTPS (en workers.dev no hay ajuste para forzarlo). En local, no.
+    if (url.protocol === 'http:' && !['localhost', '127.0.0.1'].includes(url.hostname)) {
+      url.protocol = 'https:';
+      return Response.redirect(url.toString(), 301);
+    }
     if (!url.pathname.startsWith('/api/')) return rawEnv.ASSETS.fetch(req);
     // Las notificaciones se envían después de responder, sin que el jugador espere.
     const env: Env = { ...rawEnv, waitUntil: (task) => ctx.waitUntil(task) };
@@ -59,6 +65,8 @@ export default {
   /** Tarea programada de cada tarde (wrangler.jsonc): el recordatorio de racha. */
   async scheduled(_event, env, ctx): Promise<void> {
     ctx.waitUntil(streakReminders(env).then((n) => console.log(`recordatorios de racha: ${n}`)));
+    // Y de paso, se cifran los emails que quedaran en claro de antes.
+    ctx.waitUntil(sealLegacyEmails(env).then((n) => n && console.log(`emails cifrados: ${n}`)));
   },
 } satisfies ExportedHandler<Env>;
 
@@ -94,7 +102,7 @@ async function handleApi(req: Request, url: URL, env: Env): Promise<Response> {
     const row = await env.DB.prepare('SELECT name, email, hat FROM players WHERE id = ?')
       .bind(playerId)
       .first<{ name: string | null; email: string | null; hat: string | null }>();
-    return json({ name: row?.name ?? null, email: row?.email ?? null, hat: isHatId(row?.hat) ? row.hat : null });
+    return json({ name: row?.name ?? null, email: await unseal(env.EMAIL_KEY, row?.email ?? null), hat: isHatId(row?.hat) ? row.hat : null });
   }
   if (route === 'GET /achievements') {
     // Al abrir la portada se piden los logros: así se cierran las temporadas del mes pasado.

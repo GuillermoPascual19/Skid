@@ -6,11 +6,14 @@
   // URL pública: https://skid.gpm-854.workers.dev
   "workers_dev": true,
   "preview_urls": false,
-  // El juego compilado (npm run build). Las rutas /api/* las atiende el Worker.
+  // El juego compilado (npm run build). Las rutas /api/* las atiende el Worker, y
+  // también las páginas (para forzar HTTPS); el resto de archivos se sirven directos.
+  // Una dirección que no existe muestra 404.html.
   "assets": {
     "directory": "./dist",
     "binding": "ASSETS",
-    "run_worker_first": ["/api/*"]
+    "run_worker_first": ["/api/*", "/", "/index.html", "/legal/*"],
+    "not_found_handling": "404-page"
   },
   "d1_databases": [
     {
