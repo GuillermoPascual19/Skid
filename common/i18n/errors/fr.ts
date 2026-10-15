@@ -47,6 +47,8 @@ export const errors: ErrorMessages = {
   weeklyNotStarted: "Tu n'as pas commencé le défi de cette semaine",
 
   playerNotFound: "Ce joueur n'existe pas",
+
+  adminOnly: 'Réservé aux administrateurs',
   onlyLeagueProfiles: 'Tu ne peux voir que le profil des joueurs de tes ligues',
   onlyLeagueGames: 'Tu ne peux voir que les parties des joueurs de tes ligues',
   leagueNameLength: 'Le nom de la ligue doit contenir entre {min} et {max} caractères',

@@ -24,6 +24,7 @@ const TITLES: Record<Route['name'], TextKey | null> = {
   editor: 'levels.create.button',
   custom: 'home.community.title',
   customTest: 'levels.play.testTitle',
+  admin: null,
 };
 
 /** Al cambiar de pantalla. */

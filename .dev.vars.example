@@ -9,3 +9,6 @@ VAPID_PRIVATE_KEY=
 # Clave con la que se cifra el email en la base de datos: 32 bytes aleatorios en base64url.
 # Para generarla: node -e "console.log(require('crypto').randomBytes(32).toString('base64url'))"
 EMAIL_KEY=
+
+# Cuentas de Google con acceso al panel de administración: sus «sub», separados por comas.
+ADMIN_GOOGLE_SUBS=

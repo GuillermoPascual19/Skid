@@ -11,6 +11,8 @@ export interface Me {
   email: string | null;
   /** Gorro que lleva el pingüino. */
   hat: HatId | null;
+  /** Tiene acceso al panel de administración. */
+  admin: boolean;
 }
 
 export function getMe(): Promise<Me> {

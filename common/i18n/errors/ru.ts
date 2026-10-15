@@ -47,6 +47,8 @@ export const errors: ErrorMessages = {
   weeklyNotStarted: 'Испытание этой недели не начато',
 
   playerNotFound: 'Такого игрока нет',
+
+  adminOnly: 'Только для администраторов',
   onlyLeagueProfiles: 'Можно смотреть профили только игроков из твоих лиг',
   onlyLeagueGames: 'Можно смотреть партии только игроков из твоих лиг',
   leagueNameLength: 'Название лиги должно быть от {min} до {max} символов',

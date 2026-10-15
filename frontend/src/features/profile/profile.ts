@@ -78,7 +78,7 @@ export function askName(initial = ''): Promise<string | null> {
           save.disabled = true;
           try {
             await setName(name);
-            const me = await currentMe().catch(() => ({ name, email: null, hat: null }));
+            const me = await currentMe().catch(() => ({ name, email: null, hat: null, admin: false }));
             cachedMe = Promise.resolve({ ...me, name });
             finish(name);
           } catch (err) {
