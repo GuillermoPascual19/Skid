@@ -895,6 +895,32 @@ export const messages: Messages = {
     addButton: 'Add',
     requests: 'Friend requests: {n}',
   },
+  tutorial: {
+    title: 'How to play',
+    step: 'Step {n} of {total}',
+    slide: {
+      title: 'Slide',
+      text: 'Move the penguin towards the arrow. On ice it doesn\'t stop: it keeps going until it hits something.',
+    },
+    walls: {
+      title: 'Use the walls to turn',
+      text: 'You only stop when you hit something, so the walls are your brakes. Reach the 1.',
+    },
+    order: {
+      title: 'In order',
+      text: 'Collect the numbers in order: first the 1, then the 2. Until it\'s its turn, a number is a wall.',
+    },
+    wellDone: 'Well done!',
+    again: 'You can\'t get there from here: let\'s start again.',
+    skip: 'Skip the tutorial',
+    practice: 'Learn by playing (tutorial)',
+    finished: {
+      title: 'You know how to play!',
+      text: 'There is a new challenge every day, the same for everyone: solve it in as few moves as you can.',
+      daily: 'Play today\'s challenge',
+      rules: 'See all the rules',
+    },
+  },
   seasonHats: {
     title: 'Season hats',
     text: 'Every month is a season in your leagues: whoever scores the most points wins that month\'s hat.',

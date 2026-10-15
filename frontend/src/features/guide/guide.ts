@@ -9,6 +9,7 @@ import { TIME_ATTACK_MS, TIME_ATTACK_POINTS, TIME_ATTACK_SKIP_MS } from '../../.
 import { FREEZE_EVERY, MAX_FREEZES } from '../../../../common/logic/daily/streaks';
 import * as online from '../../shared/api';
 import { h, openModal, starSvg, svg } from '../../shared/dom';
+import { go } from '../../shared/router';
 import { read, write } from '../../shared/storage';
 import { t, tn } from '../../i18n/i18n';
 
@@ -225,7 +226,9 @@ export function openGuide(start: GuidePage = 'slide'): void {
     if (e.key === 'ArrowLeft') show(index - 1);
   };
   document.addEventListener('keydown', onKey);
-  const modal = openModal([eyebrow, title, content, dots, h('div', { class: 'row' }, back, next)], {
+  // El tutorial, para quien prefiera aprender jugando.
+  const practice = h('button', { class: 'link-btn', onclick: () => (modal.close(), go({ name: 'tutorial' })) }, `▶ ${t('tutorial.practice')}`);
+  const modal = openModal([eyebrow, title, content, dots, h('div', { class: 'row' }, back, next), practice], {
     dismissable: true,
     onClose: () => document.removeEventListener('keydown', onKey),
   });

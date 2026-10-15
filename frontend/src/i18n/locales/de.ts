@@ -895,6 +895,32 @@ export const messages: Messages = {
     addButton: 'Hinzufügen',
     requests: 'Freundschaftsanfragen: {n}',
   },
+  tutorial: {
+    title: 'So wird gespielt',
+    step: 'Schritt {n} von {total}',
+    slide: {
+      title: 'Rutschen',
+      text: 'Bewege den Pinguin in Pfeilrichtung. Auf dem Eis bremst er nicht: Er rutscht, bis er gegen etwas stößt.',
+    },
+    walls: {
+      title: 'Nutze die Wände zum Abbiegen',
+      text: 'Du hältst nur an, wenn du anstößt – die Wände sind deine Bremsen. Erreiche die 1.',
+    },
+    order: {
+      title: 'Der Reihe nach',
+      text: 'Sammle die Zahlen der Reihe nach: erst die 1, dann die 2. Solange sie nicht dran ist, ist eine Zahl eine Wand.',
+    },
+    wellDone: 'Gut gemacht!',
+    again: 'Von hier kommst du nicht mehr hin: Wir fangen neu an.',
+    skip: 'Tutorial überspringen',
+    practice: 'Spielend lernen (Tutorial)',
+    finished: {
+      title: 'Jetzt kannst du spielen!',
+      text: 'Jeden Tag gibt es eine neue Aufgabe, für alle gleich: Löse sie mit so wenigen Zügen wie möglich.',
+      daily: 'Heutige Aufgabe spielen',
+      rules: 'Alle Regeln ansehen',
+    },
+  },
   seasonHats: {
     title: 'Saisonhüte',
     text: 'Jeder Monat ist eine Saison in deinen Ligen: Wer die meisten Punkte sammelt, bekommt den Hut des Monats.',

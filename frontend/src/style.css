@@ -3793,3 +3793,31 @@ input.switch:focus-visible {
   width: 88px;
   margin: 0 auto 4px;
 }
+
+/* Tutorial interactivo */
+.tutorial-card {
+  text-align: center;
+  transition: background-color 0.2s;
+}
+
+.tutorial-card h2 {
+  margin: 0 0 4px;
+}
+
+.tutorial-card .lead {
+  margin: 0;
+}
+
+.tutorial-card.done {
+  background: var(--good-soft);
+  border-color: var(--good-line);
+}
+
+.tutorial-card.done h2 {
+  color: var(--good);
+}
+
+.tutorial-skip {
+  display: block;
+  margin: 4px auto 0;
+}

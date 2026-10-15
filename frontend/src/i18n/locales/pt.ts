@@ -895,6 +895,32 @@ export const messages: Messages = {
     addButton: 'Adicionar',
     requests: 'Pedidos de amizade: {n}',
   },
+  tutorial: {
+    title: 'Como se joga',
+    step: 'Passo {n} de {total}',
+    slide: {
+      title: 'Desliza',
+      text: 'Move o pinguim na direção da seta. No gelo não trava: continua até bater em algo.',
+    },
+    walls: {
+      title: 'Usa as paredes para virar',
+      text: 'Só paras ao bater, por isso as paredes são os teus travões. Chega ao 1.',
+    },
+    order: {
+      title: 'Por ordem',
+      text: 'Apanha os números por ordem: primeiro o 1, depois o 2. Enquanto não for a vez dele, um número é uma parede.',
+    },
+    wellDone: 'Muito bem!',
+    again: 'Por aí já não chegas: vamos recomeçar.',
+    skip: 'Saltar o tutorial',
+    practice: 'Aprender a jogar (tutorial)',
+    finished: {
+      title: 'Já sabes jogar!',
+      text: 'Todos os dias há um desafio novo, igual para todos: fá-lo com o menor número de movimentos.',
+      daily: 'Jogar o desafio de hoje',
+      rules: 'Ver todas as regras',
+    },
+  },
   seasonHats: {
     title: 'Chapéus de temporada',
     text: 'Cada mês é uma temporada nas tuas ligas: quem somar mais pontos leva o chapéu desse mês.',

@@ -35,7 +35,8 @@ export type Route =
   | { name: 'custom'; level: CustomLevel }
   | { name: 'customTest'; rows: string[] }
   | { name: 'admin' }
-  | { name: 'friends'; add?: string };
+  | { name: 'friends'; add?: string }
+  | { name: 'tutorial' };
 
 type Renderers = { [N in Route['name']]: (route: Extract<Route, { name: N }>) => Screen };
 
