@@ -127,6 +127,14 @@ export function snow(ctx: Ctx, out: AudioNode, t: number): void {
   thud(ctx, out, t, 0.5);
 }
 
+/** Crujido seco del hielo frágil al romperse: chasquidos agudos y un golpe de agua. */
+export function crack(ctx: Ctx, out: AudioNode, t: number): void {
+  for (let i = 0; i < 3; i++) {
+    noiseBurst(ctx, out, t + i * 0.035 + Math.random() * 0.012, 'highpass', 2600 + i * 500, 0.9, 0.2 - i * 0.04, 0.045);
+  }
+  noiseBurst(ctx, out, t + 0.07, 'lowpass', 700, 1, 0.12, 0.18);
+}
+
 /** Silbido corto al girar en una corriente. */
 export function turn(ctx: Ctx, out: AudioNode, t: number): void {
   const band = noiseBurst(ctx, out, t, 'bandpass', 900, 6, 0.12, 0.14);

@@ -32,6 +32,8 @@ const DAY = {
   waterDeep: 0x123f5e,
   ripple: 0x8fd3f7,
   iceEdge: 0xe6f6fd,
+  crackIce: 0xd3f0fb,
+  crackLine: 0x5aa9d6,
 };
 
 /** De noche (tema oscuro) cambian el hielo, la nieve y las piezas; el pingüino y el agua no. */
@@ -47,6 +49,8 @@ const NIGHT: Partial<typeof DAY> = {
   coin: 0xe3edf6,
   coinRim: 0x7891a8,
   iceEdge: 0x3a6d90,
+  crackIce: 0x4a7fa3,
+  crackLine: 0xa9d8f2,
 };
 
 /** Colores en uso: los de día, o los de noche tras usePalette(true). */

@@ -106,6 +106,7 @@ export const errors: ErrorMessages = {
   board_noPieces: 'Aggiungi almeno un pezzo',
   board_missingPiece: 'Manca il pezzo {piece}: devono andare da 1 a {count}',
   board_portalPair: 'Un teletrasporto compare {count} volte: devono andare a coppie',
+  board_manyCracks: 'Troppo ghiaccio fragile: al massimo {max} caselle',
   board_invalid: 'Tabellone non valido',
   board_size: 'Il tabellone deve misurare tra {min}×{min} e {maxWidth}×{maxHeight}',
   board_loops: 'Alcune correnti formano un giro senza fine',

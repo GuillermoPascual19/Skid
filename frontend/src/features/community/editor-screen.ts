@@ -4,7 +4,7 @@
 
 import { penguinSvg } from '../../../../common/art/hats';
 import { elementSvg } from '../../../../common/art/elements';
-import { BoardError, PORTAL_CHARS } from '../../../../common/logic/engine/board';
+import { BoardError, MAX_CRACKS, PORTAL_CHARS } from '../../../../common/logic/engine/board';
 import { checkCustomLevel, CUSTOM_LIMITS, encodeRows } from '../../../../common/logic/community/community';
 import { ELEMENTS, unlockedElements, type ElementId } from '../../../../common/logic/engine/elements';
 import { cellArt } from './board-art';
@@ -16,7 +16,7 @@ import { type EditorDraft, loadEditorDraft, saveEditorDraft } from './storage';
 import { startingProgress } from '../free-play/storage';
 import { t, te } from '../../i18n/i18n';
 
-type Tool = 'wall' | 'ice' | 'start' | 'piece' | 'snow' | 'arrow' | 'portal' | 'hole';
+type Tool = 'wall' | 'ice' | 'start' | 'piece' | 'snow' | 'arrow' | 'portal' | 'hole' | 'crack';
 
 interface ToolDef {
   readonly id: Tool;
@@ -36,6 +36,7 @@ const TOOLS: readonly ToolDef[] = [
   { id: 'arrow', element: 'arrow' },
   { id: 'portal', element: 'portal' },
   { id: 'hole', element: 'hole', paint: true },
+  { id: 'crack', element: 'crack', paint: true },
 ];
 
 const ARROW_TURN: Record<string, string> = { '>': 'v', v: '<', '<': '^', '^': '>' };
@@ -88,6 +89,10 @@ export function editorScreen(): Screen {
         break;
       case 'hole':
         next = 'O';
+        break;
+      case 'crack':
+        if (ch !== 'x' && countOf((c) => c === 'x') >= MAX_CRACKS) return toast(te('board_manyCracks', { max: MAX_CRACKS }));
+        next = 'x';
         break;
       case 'start':
         grid = grid.map((row) => row.map((c) => (c === '@' ? '.' : c)));

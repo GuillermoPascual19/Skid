@@ -680,6 +680,10 @@ export const messages: Messages = {
         label: 'Buraco',
         help: 'Quem cai volta à partida (com as peças que tiver).',
       },
+      crack: {
+        label: 'Gelo frágil',
+        help: 'Parte-se na primeira vez que passam por cima e depois é um buraco. No máximo 6 por nível.',
+      },
     },
     maxPieces: 'No máximo {n} peças',
     maxPortals: 'No máximo {n} pares de teletransportes',
@@ -901,6 +905,10 @@ export const messages: Messages = {
     hole: {
       name: 'Buracos',
       description: 'Se caíres na água voltas à partida, mas manténs as peças que tens.',
+    },
+    crack: {
+      name: 'Gelo frágil',
+      description: 'Aguenta uma só passagem: ao passares por cima parte-se e fica um buraco. Se voltares a passar, cais na água.',
     },
   },
   free: {

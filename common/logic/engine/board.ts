@@ -22,8 +22,14 @@ export const DIRECTION_DELTA: Readonly<Record<Direction, Pos>> = {
  *   arrow-* corriente: gira hacia donde apunta y sigue deslizando.
  *   portal  teletransporte: sale por su pareja y sigue en la misma dirección.
  *   hole    agujero: cae al agua y vuelve a la salida (conserva las piezas).
+ *   crack   hielo frágil: la primera vez que se pasa (o se para) encima se
+ *           rompe y desde entonces es un agujero. Lo roto se lleva en el
+ *           estado de la partida (GameState.broken), no en el tablero.
  */
-export type Cell = 'wall' | 'ice' | 'snow' | 'hole' | 'portal' | `arrow-${Direction}`;
+export type Cell = 'wall' | 'ice' | 'snow' | 'hole' | 'portal' | 'crack' | `arrow-${Direction}`;
+
+/** Casillas de hielo frágil como mucho por tablero (cada una duplica los estados que explora el solver). */
+export const MAX_CRACKS = 6;
 
 export interface Piece {
   /** Número de la pieza, empezando en 1. Se recogen en orden ascendente. */
@@ -42,6 +48,8 @@ export interface Board {
   readonly start: Pos;
   /** Parejas de teletransportes: entrar por uno te saca por el otro. */
   readonly portals: readonly (readonly [Pos, Pos])[];
+  /** Casillas de hielo frágil, en orden de lectura: su índice es su bit en GameState.broken. */
+  readonly cracks: readonly Pos[];
 }
 
 /** Parte dinámica de una partida. */
@@ -49,10 +57,17 @@ export interface GameState {
   readonly player: Pos;
   /** Cuántas piezas se han recogido. La siguiente que toca es pieces[collected]. */
   readonly collected: number;
+  /** Hielo frágil ya roto: el bit i es board.cracks[i]. */
+  readonly broken: number;
 }
 
 export function initialState(board: Board): GameState {
-  return { player: board.start, collected: 0 };
+  return { player: board.start, collected: 0, broken: 0 };
+}
+
+/** Índice del hielo frágil que hay en `pos` (-1 si no hay). */
+export function crackIndex(board: Board, pos: Pos): number {
+  return board.cracks.findIndex((c) => samePos(c, pos));
 }
 
 /** Las casillas fuera del tablero cuentan como muro. */
@@ -96,6 +111,7 @@ export type BoardProblem =
   | 'noPieces'
   | 'missingPiece'
   | 'portalPair'
+  | 'manyCracks'
   | 'invalid'
   | 'size'
   | 'loops'
@@ -122,6 +138,7 @@ export class BoardError extends Error {
  *   ^ v < >  flecha (corriente) hacia arriba, abajo, izquierda o derecha
  *   a-e  teletransporte: cada letra, exactamente dos veces (una pareja)
  *   O  agujero en el hielo
+ *   x  hielo frágil
  *
  * Lanza un BoardError si el tablero no es rectangular, contiene caracteres
  * desconocidos, no tiene exactamente un '@', las piezas no son 1..n sin
@@ -135,6 +152,7 @@ export function parseBoard(rows: readonly string[]): Board {
   const cells: Cell[][] = [];
   const pieceMap = new Map<number, Pos>();
   const portalMap = new Map<string, Pos[]>();
+  const cracks: Pos[] = [];
   let start: Pos | undefined;
 
   rows.forEach((row, y) => {
@@ -147,6 +165,7 @@ export function parseBoard(rows: readonly string[]): Board {
       if (special) {
         line.push(special);
         if (special === 'portal') portalMap.set(ch, [...(portalMap.get(ch) ?? []), { x, y }]);
+        if (special === 'crack') cracks.push({ x, y });
         return;
       }
       line.push('ice');
@@ -181,7 +200,9 @@ export function parseBoard(rows: readonly string[]): Board {
     portals.push([ends[0], ends[1]]);
   }
 
-  return { width, height: rows.length, cells, pieces, start, portals };
+  if (cracks.length > MAX_CRACKS) throw new BoardError('manyCracks', { max: MAX_CRACKS });
+
+  return { width, height: rows.length, cells, pieces, start, portals, cracks };
 }
 
 /** Caracteres de las casillas que no son hielo normal. */
@@ -189,6 +210,7 @@ const SPECIAL_CHARS: Readonly<Record<string, Cell>> = {
   '#': 'wall',
   '*': 'snow',
   O: 'hole',
+  x: 'crack',
   '^': 'arrow-up',
   v: 'arrow-down',
   '<': 'arrow-left',

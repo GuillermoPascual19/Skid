@@ -28,6 +28,11 @@ const DRAWINGS: Record<ElementId, string> = {
     <ellipse cx="50" cy="50" rx="30" ry="25" fill="#1d5f8a"/>
     <ellipse cx="50" cy="54" rx="20" ry="15" fill="#123f5e"/>
     <ellipse cx="44" cy="44" rx="14" ry="7" fill="none" stroke="#8fd3f7" stroke-width="2.5" opacity=".6"/>`,
+  crack: `
+    <rect x="14" y="14" width="72" height="72" rx="12" fill="#d3f0fb" stroke="#8fd3f7" stroke-width="3"/>
+    <path d="M50 50 L32 22 M50 50 L78 34 M50 50 L70 80 M50 50 L22 66 M50 50 L46 84" stroke="#5aa9d6" stroke-width="4" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+    <path d="M38 31 L30 36 M66 41 L70 50 M60 66 L68 64 M34 59 L36 70" stroke="#5aa9d6" stroke-width="3" stroke-linecap="round"/>
+    <circle cx="50" cy="50" r="5" fill="#5aa9d6"/>`,
 };
 
 export function elementSvg(id: ElementId): string {

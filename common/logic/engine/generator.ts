@@ -166,6 +166,9 @@ function placeElements(rng: Rng, grid: string[][], elements: readonly ElementId[
       case 'hole':
         for (let i = rng.int(1, 2); i > 0; i--) put('O');
         break;
+      case 'crack':
+        for (let i = rng.int(1, 2) + extra; i > 0; i--) put('x');
+        break;
     }
   }
 }

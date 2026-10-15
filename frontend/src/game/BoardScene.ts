@@ -3,14 +3,14 @@
 // casillas está en tiles.ts y los efectos de partículas en effects.ts.
 
 import Phaser from 'phaser';
-import { DIRECTION_DELTA, nextPiece, type Board, type Direction, type GameState, type Piece, type Pos } from '../../../common/logic/engine/board';
+import { DIRECTION_DELTA, crackIndex, nextPiece, type Board, type Direction, type GameState, type Piece, type Pos } from '../../../common/logic/engine/board';
 import { slideDurationMs } from '../../../common/logic/daily/daily';
 import { traceMove, type MoveTrace } from '../../../common/logic/engine/move';
 import { HAT_BOX, hatSvg, type HatId } from '../../../common/art/hats';
 import { sfx } from '../audio/sound';
 import { puff, sparkle, splash } from './effects';
 import { C, FONT, TILE, tileCenter } from './palette';
-import { drawBoard } from './tiles';
+import { createCrack, drawBoard, setCrackBroken, type CrackView } from './tiles';
 
 /** Tramo recto del recorrido de un deslizamiento, de una casilla a la siguiente. */
 interface Segment {
@@ -22,6 +22,8 @@ interface Segment {
   readonly turn: Direction | null;
   /** Al llegar se teletransporta a esta casilla. */
   readonly teleport: Pos | null;
+  /** Al llegar rompe el hielo frágil de la casilla. */
+  readonly breaks: boolean;
 }
 
 /** Tramos rectos de un movimiento ya calculado, y dónde reaparece si cae al agua. */
@@ -32,7 +34,7 @@ function segmentsOf(before: GameState, trace: MoveTrace, dir: Direction): { segm
   let fall: Pos | null = null;
   for (const step of trace.steps) {
     if (step.kind === 'slide') {
-      segments.push({ from: at, to: step.pos, collects: step.collects, turn: step.dir !== moving ? step.dir : null, teleport: null });
+      segments.push({ from: at, to: step.pos, collects: step.collects, turn: step.dir !== moving ? step.dir : null, teleport: null, breaks: step.breaks });
       moving = step.dir;
     } else if (step.kind === 'teleport') {
       segments[segments.length - 1] = { ...segments[segments.length - 1], teleport: step.pos };
@@ -84,6 +86,8 @@ export class BoardScene extends Phaser.Scene {
 
   private layer!: Phaser.GameObjects.Container;
   private pieceViews = new Map<number, PieceView>();
+  /** Hielo frágil, en el orden de board.cracks. */
+  private crackViews: CrackView[] = [];
   private penguin!: Phaser.GameObjects.Container;
   private face!: Phaser.GameObjects.Container;
   private pulse: Phaser.Tweens.Tween | null = null;
@@ -123,6 +127,7 @@ export class BoardScene extends Phaser.Scene {
     this.pieceViews.clear();
     this.ghost = null;
     drawBoard(this, this.layer, board);
+    this.crackViews = board.cracks.map((pos) => createCrack(this, this.layer, pos));
     for (const piece of board.pieces) this.pieceViews.set(piece.order, this.createPiece(piece));
     this.createPenguin();
 
@@ -146,6 +151,10 @@ export class BoardScene extends Phaser.Scene {
       const visible = view.piece.order > state.collected;
       view.container.setVisible(visible).setAlpha(1).setScale(1);
     }
+    this.crackViews.forEach((view, i) => {
+      this.tweens.killTweensOf([view.intact, view.hole]);
+      setCrackBroken(view, (state.broken & (1 << i)) !== 0);
+    });
     const { x, y } = this.center(state.player.x, state.player.y);
     this.penguin.setPosition(x, y).setScale(1).setAngle(0);
     this.look('down');
@@ -224,6 +233,7 @@ export class BoardScene extends Phaser.Scene {
           this.look(seg.turn);
           sfx.turn();
         }
+        if (seg.breaks) this.breakCrack(seg.to);
         if (seg.teleport) this.teleportFx(seg.to, seg.teleport);
       }
       const i = Math.min(Math.floor(progress.v), segments.length - 1);
@@ -271,6 +281,24 @@ export class BoardScene extends Phaser.Scene {
     }
     this.penguin.setScale(0.6);
     this.tweens.add({ targets: this.penguin, scale: 1, duration: 200, ease: 'Back.easeOut' });
+  }
+
+  /** El hielo frágil de `pos` se rompe: la placa se agrieta y se hunde y aparece el agujero. */
+  private breakCrack(pos: Pos): void {
+    const view = this.crackViews[crackIndex(this.board!, pos)];
+    if (!view) return;
+    sfx.crack();
+    view.hole.setVisible(true).setScale(0.4).setAlpha(0);
+    this.tweens.add({ targets: view.hole, scale: 1, alpha: 1, duration: 260, ease: 'Back.easeOut' });
+    this.tweens.add({
+      targets: view.intact,
+      scale: 0.7,
+      angle: 12,
+      alpha: 0,
+      duration: 300,
+      ease: 'Quad.easeIn',
+      onComplete: () => view.intact.setVisible(false),
+    });
   }
 
   /** Cae al agua en `hole`, salpica y reaparece en `start`. */
@@ -428,7 +456,7 @@ export class BoardScene extends Phaser.Scene {
 
   /** Resalta la pieza que toca. `collected` permite adelantarse a la animación. */
   private highlightNext(collected = this.shown.collected): void {
-    const target = nextPiece(this.board!, { player: this.shown.player, collected });
+    const target = nextPiece(this.board!, { ...this.shown, collected });
     this.pulse?.stop();
     this.pulse = null;
     for (const view of this.pieceViews.values()) this.drawPiece(view, view.piece === target);

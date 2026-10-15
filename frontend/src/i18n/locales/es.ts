@@ -679,6 +679,10 @@ export const messages = {
         label: 'Agujero',
         help: 'Quien cae vuelve a la salida (con las piezas que lleve).',
       },
+      crack: {
+        label: 'Hielo frágil',
+        help: 'Se rompe la primera vez que pasan por encima y luego es un agujero. Como mucho 6 por nivel.',
+      },
     },
     maxPieces: 'Como mucho {n} piezas',
     maxPortals: 'Como mucho {n} parejas de teletransportes',
@@ -900,6 +904,10 @@ export const messages = {
     hole: {
       name: 'Agujeros',
       description: 'Si caes al agua vuelves a la salida, pero conservas las piezas que llevas.',
+    },
+    crack: {
+      name: 'Hielo frágil',
+      description: 'Aguanta una sola pasada: al pasar por encima se rompe y queda un agujero. Si vuelves a pasar, caes al agua.',
     },
   },
   free: {

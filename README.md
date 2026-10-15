@@ -11,7 +11,7 @@ y niveles creados por los jugadores.
 ## Qué tiene
 
 - **Modo libre**: niveles generados cada vez más difíciles, con estrellas según los movimientos y
-  elementos que se desbloquean (nieve, corrientes, teletransportes y agujeros).
+  elementos que se desbloquean (nieve, corrientes, teletransportes, agujeros y hielo frágil).
 - **Reto diario**: el mismo tablero para todos; gana quien lo haga en menos movimientos. Con rachas,
   protectores de racha, solución al terminar y el fantasma de un amigo.
 - **Reto semanal**: un tablero grande y difícil de lunes a domingo, con ranking entre amigos.
