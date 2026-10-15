@@ -2,7 +2,7 @@
 // de los logros recién desbloqueados.
 
 import { penguinSvg, type HatId } from '../../../../common/art/hats';
-import { ACHIEVEMENTS } from '../../../../common/logic/achievements/achievements';
+import { ACHIEVEMENT_MODES, ACHIEVEMENTS } from '../../../../common/logic/achievements/achievements';
 import { SEASON_HATS, seasonOf, shiftSeason } from '../../../../common/logic/leagues/seasons';
 import { today } from '../daily/daily';
 import { monthName, seasonName } from '../ranking/season';
@@ -24,7 +24,15 @@ export function achievementsScreen(): Screen {
     h(
       'header',
       { class: 'topbar' },
-      h('button', { class: 'icon-btn', 'aria-label': t('common.back'), onclick: () => go({ name: 'home' }) }, '←'),
+      h(
+        'button',
+        {
+          class: 'icon-btn',
+          'aria-label': t('common.back'),
+          onclick: () => go({ name: 'home' }),
+        },
+        '←',
+      ),
       h('div', { class: 'title' }, h('h1', null, t('nav.achievements')), subtitle),
     ),
     body,
@@ -67,7 +75,10 @@ export function achievementsScreen(): Screen {
     if (!data) return;
     const { hat, items, seasons } = data;
     const unlocked = items.filter((i) => i.unlocked).length;
-    subtitle.textContent = t('achievementsScreen.unlocked', { n: unlocked, total: items.length });
+    subtitle.textContent = t('achievementsScreen.unlocked', {
+      n: unlocked,
+      total: items.length,
+    });
 
     body.replaceChildren(
       h(
@@ -83,33 +94,56 @@ export function achievementsScreen(): Screen {
           hat ? h('button', { class: 'link-btn', onclick: () => wear(null) }, t('achievementsScreen.removeHat')) : null,
         ),
       ),
-      h(
-        'ul',
-        { class: 'achievements' },
-        ...ACHIEVEMENTS.map((def) => {
-          const p = items.find((i) => i.id === def.id)!;
-          return h(
-            'li',
-            { class: `card achievement ${p.unlocked ? 'unlocked' : 'locked'}` },
-            h('div', { class: 'achievement-penguin' }, svg(penguinSvg(def.hat, { locked: !p.unlocked }))),
-            h(
-              'div',
-              { class: 'achievement-info' },
-              h('strong', null, t(`achievements.${def.id}.name`)),
-              h('span', { class: 'muted' }, t(`achievements.${def.id}.description`)),
+      ...ACHIEVEMENT_MODES.flatMap((mode) => [
+        h('h2', { class: 'section-title' }, t(`achievementsScreen.mode.${mode}`)),
+        h(
+          'ul',
+          { class: 'achievements' },
+          ...ACHIEVEMENTS.filter((def) => def.mode === mode).map((def) => {
+            const p = items.find((i) => i.id === def.id)!;
+            return h(
+              'li',
+              {
+                class: `card achievement ${p.unlocked ? 'unlocked' : 'locked'}`,
+              },
+              h('div', { class: 'achievement-penguin' }, svg(penguinSvg(def.hat, { locked: !p.unlocked }))),
+              h(
+                'div',
+                { class: 'achievement-info' },
+                h('strong', null, t(`achievements.${def.id}.name`)),
+                h('span', { class: 'muted' }, t(`achievements.${def.id}.description`)),
+                p.unlocked
+                  ? h('small', null, `🎁 ${t(`hats.${def.hat}`)}`)
+                  : h(
+                      'div',
+                      {
+                        class: 'meter',
+                        role: 'progressbar',
+                        'aria-valuemin': 0,
+                        'aria-valuemax': p.target,
+                        'aria-valuenow': p.current,
+                      },
+                      h('div', {
+                        class: 'meter-fill',
+                        style: `width: ${(p.current / p.target) * 100}%`,
+                      }),
+                      h('span', null, `${p.current} / ${p.target}`),
+                    ),
+              ),
               p.unlocked
-                ? h('small', null, `🎁 ${t(`hats.${def.hat}`)}`)
+                ? wearButton(def.hat)
                 : h(
-                    'div',
-                    { class: 'meter', role: 'progressbar', 'aria-valuemin': 0, 'aria-valuemax': p.target, 'aria-valuenow': p.current },
-                    h('div', { class: 'meter-fill', style: `width: ${(p.current / p.target) * 100}%` }),
-                    h('span', null, `${p.current} / ${p.target}`),
+                    'span',
+                    {
+                      class: 'lock',
+                      'aria-label': t('achievementsScreen.locked'),
+                    },
+                    '🔒',
                   ),
-            ),
-            p.unlocked ? wearButton(def.hat) : h('span', { class: 'lock', 'aria-label': t('achievementsScreen.locked') }, '🔒'),
-          );
-        }),
-      ),
+            );
+          }),
+        ),
+      ]),
       h('h2', { class: 'section-title' }, t('seasonHats.title')),
       h('p', { class: 'muted section-text' }, t('seasonHats.text')),
       h(
@@ -128,9 +162,24 @@ export function achievementsScreen(): Screen {
               h('strong', null, t(`hats.${seasonHat}`)),
               won.length
                 ? h('span', { class: 'muted season-titles' }, won.map((s) => `🏆 ${s.leagueName} · ${seasonName(s.season)}`).join('\n'))
-                : h('span', { class: 'muted' }, t('seasonHats.locked', { month: monthName(`2026-${String(month + 1).padStart(2, '0')}`) })),
+                : h(
+                    'span',
+                    { class: 'muted' },
+                    t('seasonHats.locked', {
+                      month: monthName(`2026-${String(month + 1).padStart(2, '0')}`),
+                    }),
+                  ),
             ),
-            won.length ? wearButton(seasonHat) : h('span', { class: 'lock', 'aria-label': t('achievementsScreen.locked') }, '🔒'),
+            won.length
+              ? wearButton(seasonHat)
+              : h(
+                  'span',
+                  {
+                    class: 'lock',
+                    'aria-label': t('achievementsScreen.locked'),
+                  },
+                  '🔒',
+                ),
           );
         }),
       ),
@@ -185,7 +234,10 @@ export async function celebrateNewAchievements(onHat: (hat: HatId) => void): Pro
       iconSvg: penguinSvg(def.hat),
       eyebrow: t('achievementsScreen.newOne'),
       title: t(`achievements.${def.id}.name`),
-      text: t('achievementsScreen.newOneText', { description: t(`achievements.${def.id}.description`), hat: t(`hats.${def.hat}`) }),
+      text: t('achievementsScreen.newOneText', {
+        description: t(`achievements.${def.id}.description`),
+        hat: t(`hats.${def.hat}`),
+      }),
       button: t('achievementsScreen.wear'),
     });
     if (wantsIt) {
@@ -214,8 +266,14 @@ async function celebrateSeasons(seasons: SeasonTitle[], onHat: (hat: HatId) => v
     icon: '🏆',
     iconSvg: penguinSvg(fresh[0].hat),
     eyebrow: t('season.won.eyebrow', { season: seasonName(last) }),
-    title: t('season.won.title', { league: fresh.map((s) => s.leagueName).join(' · ') }),
-    text: t('season.won.text', { points: fresh[0].points.toLocaleString(intlLocale()), hat: t(`hats.${fresh[0].hat}`), month: monthName(last) }),
+    title: t('season.won.title', {
+      league: fresh.map((s) => s.leagueName).join(' · '),
+    }),
+    text: t('season.won.text', {
+      points: fresh[0].points.toLocaleString(intlLocale()),
+      hat: t(`hats.${fresh[0].hat}`),
+      month: monthName(last),
+    }),
     button: t('achievementsScreen.wear'),
   });
   if (!wantsIt) return;

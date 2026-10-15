@@ -746,6 +746,38 @@ export const messages: Messages = {
       name: 'Campione della settimana',
       description: 'Vinci un\'intera settimana nella tua lega.',
     },
+    duelWin: {
+      name: 'Duellante',
+      description: 'Vinci un duello contro un avversario che l\'ha giocato anche lui.',
+    },
+    duelWin10: {
+      name: 'Cavaliere del ghiaccio',
+      description: 'Vinci 10 duelli.',
+    },
+    timeAttack10: {
+      name: 'A tutta elica',
+      description: 'Risolvi 10 tavole in una sola cronometro.',
+    },
+    timeAttackPerfect5: {
+      name: 'Pilota perfetto',
+      description: 'Fai 5 tavole con le mosse ottimali in una sola cronometro.',
+    },
+    weeklyPar: {
+      name: 'Artista della settimana',
+      description: 'Risolvi la sfida settimanale con le mosse ottimali.',
+    },
+    explorer10: {
+      name: 'Esploratore',
+      description: 'Completa 10 livelli di altri giocatori.',
+    },
+    creator5: {
+      name: 'Costruttore',
+      description: 'Fai completare uno dei tuoi livelli a 5 giocatori.',
+    },
+    creatorStar: {
+      name: 'Capolavoro',
+      description: 'Ottieni ★4 o più in uno dei tuoi livelli, con almeno 3 valutazioni.',
+    },
   },
   hats: {
     beanie: 'Berretto di lana',
@@ -758,6 +790,14 @@ export const messages: Messages = {
     ushanka: 'Colbacco',
     wizard: 'Cappello da mago',
     crown: 'Corona',
+    headband: 'Fascia da duellante',
+    knight: 'Elmo da cavaliere',
+    propeller: 'Cappellino a elica',
+    racing: 'Cappellino da corsa',
+    beret: 'Basco',
+    explorer: 'Casco coloniale',
+    hardhat: 'Elmetto da cantiere',
+    laurel: 'Corona di alloro',
     scarf: 'Sciarpa',
     hearts: 'Cerchietto a cuori',
     clover: 'Cappello col trifoglio',
@@ -787,6 +827,13 @@ export const messages: Messages = {
     seeHats: 'Vedi i miei cappelli',
     newOne: 'Nuovo traguardo!',
     newOneText: '{description} Hai sbloccato: {hat}.',
+    mode: {
+      daily: 'Sfida del giorno',
+      duels: 'Duelli',
+      timeAttack: 'Cronometro',
+      weekly: 'Sfida settimanale',
+      community: 'Livelli della community',
+    },
   },
   seasonHats: {
     title: 'Cappelli di stagione',

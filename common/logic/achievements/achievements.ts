@@ -1,10 +1,13 @@
-// Logros del reto diario. Cada uno desbloquea un gorro para el pingüino. Se
-// calculan en el servidor a partir de las partidas verificadas, así que no se
-// pueden falsear y valen en todos los dispositivos.
+// Logros del reto diario y de los demás modos con partidas en el servidor
+// (duelos, contrarreloj, reto semanal y niveles de la comunidad; el modo libre
+// solo se guarda en el navegador). Cada uno desbloquea un gorro para el
+// pingüino. Se calculan en el servidor a partir de las partidas verificadas, así
+// que no se pueden falsear y valen en todos los dispositivos.
 
 import type { HatId } from '../../art/hats.ts';
 import { weekRange } from '../daily/daily.ts';
 import { streaks } from '../daily/streaks.ts';
+import { duelVerdict, type DuelResult } from '../duels/duels.ts';
 
 export type AchievementId =
   | 'first'
@@ -16,28 +19,51 @@ export type AchievementId =
   | 'clean5'
   | 'firstWin'
   | 'veteran'
-  | 'weekChampion';
+  | 'weekChampion'
+  | 'duelWin'
+  | 'duelWin10'
+  | 'timeAttack10'
+  | 'timeAttackPerfect5'
+  | 'weeklyPar'
+  | 'explorer10'
+  | 'creator5'
+  | 'creatorStar';
+
+/** Modo al que pertenece un logro: en la pantalla de logros salen agrupados por modo. */
+export type AchievementMode = 'daily' | 'duels' | 'timeAttack' | 'weekly' | 'community';
 
 /** El nombre y la descripción de cada logro están en los diccionarios del juego (achievements.<id>). */
 export interface AchievementDef {
   readonly id: AchievementId;
+  readonly mode: AchievementMode;
   readonly hat: HatId;
   readonly target: number;
 }
 
-/** En el orden en que se muestran (de más fácil a más difícil). */
+/** En el orden en que se muestran: por modo y, dentro de cada uno, de más fácil a más difícil. */
 export const ACHIEVEMENTS: readonly AchievementDef[] = [
-  { id: 'first', hat: 'beanie', target: 1 },
-  { id: 'streak3', hat: 'earmuffs', target: 3 },
-  { id: 'firstWin', hat: 'party', target: 1 },
-  { id: 'clean5', hat: 'viking', target: 5 },
-  { id: 'streak7', hat: 'cap', target: 7 },
-  { id: 'perfect', hat: 'tophat', target: 1 },
-  { id: 'streak14', hat: 'ushanka', target: 14 },
-  { id: 'veteran', hat: 'santa', target: 30 },
-  { id: 'streak30', hat: 'wizard', target: 30 },
-  { id: 'weekChampion', hat: 'crown', target: 1 },
+  { id: 'first', mode: 'daily', hat: 'beanie', target: 1 },
+  { id: 'streak3', mode: 'daily', hat: 'earmuffs', target: 3 },
+  { id: 'firstWin', mode: 'daily', hat: 'party', target: 1 },
+  { id: 'clean5', mode: 'daily', hat: 'viking', target: 5 },
+  { id: 'streak7', mode: 'daily', hat: 'cap', target: 7 },
+  { id: 'perfect', mode: 'daily', hat: 'tophat', target: 1 },
+  { id: 'streak14', mode: 'daily', hat: 'ushanka', target: 14 },
+  { id: 'veteran', mode: 'daily', hat: 'santa', target: 30 },
+  { id: 'streak30', mode: 'daily', hat: 'wizard', target: 30 },
+  { id: 'weekChampion', mode: 'daily', hat: 'crown', target: 1 },
+  { id: 'duelWin', mode: 'duels', hat: 'headband', target: 1 },
+  { id: 'duelWin10', mode: 'duels', hat: 'knight', target: 10 },
+  { id: 'timeAttack10', mode: 'timeAttack', hat: 'propeller', target: 10 },
+  { id: 'timeAttackPerfect5', mode: 'timeAttack', hat: 'racing', target: 5 },
+  { id: 'weeklyPar', mode: 'weekly', hat: 'beret', target: 1 },
+  { id: 'explorer10', mode: 'community', hat: 'explorer', target: 10 },
+  { id: 'creator5', mode: 'community', hat: 'hardhat', target: 5 },
+  { id: 'creatorStar', mode: 'community', hat: 'laurel', target: 1 },
 ];
+
+/** Los modos en el orden de ACHIEVEMENTS. */
+export const ACHIEVEMENT_MODES: readonly AchievementMode[] = [...new Set(ACHIEVEMENTS.map((a) => a.mode))];
 
 export interface FinishedRun {
   readonly day: string;
@@ -58,8 +84,38 @@ export interface AchievementInput {
   readonly wonDays: number;
   /** Semanas completas que ganó en alguna liga. */
   readonly weekTitles: number;
+  /** Los demás modos. */
+  readonly modes: ModeStats;
   readonly today: string;
 }
+
+/** Lo que cuenta para los logros de los demás modos (ver backend/src/routes/achievements.ts). */
+export interface ModeStats {
+  /** Duelos ganados jugando los dos (ver duelWins). */
+  readonly duelWins: number;
+  /** Más tableros resueltos en una sola contrarreloj. */
+  readonly timeAttackBoards: number;
+  /** Más tableros en el óptimo en una sola contrarreloj. */
+  readonly timeAttackPerfect: number;
+  /** Retos semanales resueltos en el óptimo. */
+  readonly weeklyPars: number;
+  /** Niveles de otros jugadores completados. */
+  readonly communityLevels: number;
+  /** Jugadores (sin contar al autor) que completaron su nivel más jugado. */
+  readonly bestLevelPlayers: number;
+  /** Niveles suyos con al menos 3 valoraciones de otros y media de 4 ★ o más. */
+  readonly starLevels: number;
+}
+
+export const NO_MODE_STATS: ModeStats = {
+  duelWins: 0,
+  timeAttackBoards: 0,
+  timeAttackPerfect: 0,
+  weeklyPars: 0,
+  communityLevels: 0,
+  bestLevelPlayers: 0,
+  starLevels: 0,
+};
 
 export interface AchievementProgress {
   readonly id: AchievementId;
@@ -84,6 +140,14 @@ export function computeAchievements(input: AchievementInput): AchievementProgres
     firstWin: input.wonDays,
     veteran: input.runs.length,
     weekChampion: input.weekTitles,
+    duelWin: input.modes.duelWins,
+    duelWin10: input.modes.duelWins,
+    timeAttack10: input.modes.timeAttackBoards,
+    timeAttackPerfect5: input.modes.timeAttackPerfect,
+    weeklyPar: input.modes.weeklyPars,
+    explorer10: input.modes.communityLevels,
+    creator5: input.modes.bestLevelPlayers,
+    creatorStar: input.modes.starLevels,
   };
   return ACHIEVEMENTS.map(({ id, target }) => ({
     id,
@@ -129,4 +193,21 @@ export function weekTitles(runs: readonly LeagueRun[], playerId: string, today: 
     if (mine >= Math.max(...byPlayer.values())) titles++;
   }
   return titles;
+}
+
+/** Un duelo terminado visto por un jugador: su resultado y el del rival (null si no lo terminó). */
+export interface FinishedDuel {
+  readonly mine: DuelResult | null;
+  readonly theirs: DuelResult | null;
+}
+
+/**
+ * Duelos ganados con el mismo criterio que el resultado del duelo, pero solo
+ * jugando los dos: ganar porque el rival no se presentó no cuenta.
+ */
+export function duelWins(duels: readonly FinishedDuel[]): number {
+  return duels.filter((d) => {
+    const { winner, by } = duelVerdict(d.mine, d.theirs);
+    return winner === 'a' && by !== 'noShow';
+  }).length;
 }

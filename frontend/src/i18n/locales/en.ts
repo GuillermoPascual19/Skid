@@ -746,6 +746,38 @@ export const messages: Messages = {
       name: 'Weekly champion',
       description: 'Win a whole week in your league.',
     },
+    duelWin: {
+      name: 'Duelist',
+      description: 'Win a duel against a rival who also played it.',
+    },
+    duelWin10: {
+      name: 'Ice knight',
+      description: 'Win 10 duels.',
+    },
+    timeAttack10: {
+      name: 'Full throttle',
+      description: 'Solve 10 boards in a single time attack.',
+    },
+    timeAttackPerfect5: {
+      name: 'Perfect driver',
+      description: 'Clear 5 boards in the optimal number of moves in a single time attack.',
+    },
+    weeklyPar: {
+      name: 'Weekly artist',
+      description: 'Solve the weekly challenge in the optimal number of moves.',
+    },
+    explorer10: {
+      name: 'Explorer',
+      description: 'Complete 10 levels made by other players.',
+    },
+    creator5: {
+      name: 'Builder',
+      description: 'Have 5 players complete one of your levels.',
+    },
+    creatorStar: {
+      name: 'Masterpiece',
+      description: 'Get ★4 or more on one of your levels, with at least 3 ratings.',
+    },
   },
   hats: {
     beanie: 'Wool beanie',
@@ -758,6 +790,14 @@ export const messages: Messages = {
     ushanka: 'Ushanka',
     wizard: 'Wizard hat',
     crown: 'Crown',
+    headband: 'Duelist headband',
+    knight: 'Knight helmet',
+    propeller: 'Propeller cap',
+    racing: 'Racing cap',
+    beret: 'Beret',
+    explorer: 'Pith helmet',
+    hardhat: 'Hard hat',
+    laurel: 'Laurel wreath',
     scarf: 'Scarf',
     hearts: 'Heart headband',
     clover: 'Shamrock hat',
@@ -787,6 +827,13 @@ export const messages: Messages = {
     seeHats: 'See my hats',
     newOne: 'New achievement!',
     newOneText: '{description} You unlocked: {hat}.',
+    mode: {
+      daily: 'Daily challenge',
+      duels: 'Duels',
+      timeAttack: 'Time attack',
+      weekly: 'Weekly challenge',
+      community: 'Community levels',
+    },
   },
   seasonHats: {
     title: 'Season hats',

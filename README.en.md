@@ -20,8 +20,8 @@ friends, and levels made by the players.
 - **Live duels**: challenge a friend (or anyone, with a link) and play the same brand-new board at
   the same time.
 - **Leagues**: daily and weekly rankings with your friends, and monthly seasons whose champion
-  wins that month's hat; emoji reactions to your friends' challenges; achievements unlock more
-  hats.
+  wins that month's hat; emoji reactions to your friends' challenges; achievements in the daily
+  challenge, duels, time attack, weekly challenge and community levels unlock more hats.
 - **Player levels**: level editor, publishing (you must beat your level first), ratings, per-level
   ranking, sharing and reporting.
 - A "How to play" guide, dark mode, synthesized music and sound effects, and Google sign-in to play

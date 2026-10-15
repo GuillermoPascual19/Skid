@@ -16,6 +16,14 @@ export type HatId =
   | 'ushanka'
   | 'wizard'
   | 'crown'
+  | 'headband'
+  | 'knight'
+  | 'propeller'
+  | 'racing'
+  | 'beret'
+  | 'explorer'
+  | 'hardhat'
+  | 'laurel'
   // De temporada: uno por mes (ver common/logic/leagues/seasons.ts).
   | 'scarf'
   | 'hearts'
@@ -42,6 +50,14 @@ export const HAT_IDS: readonly HatId[] = [
   'ushanka',
   'wizard',
   'crown',
+  'headband',
+  'knight',
+  'propeller',
+  'racing',
+  'beret',
+  'explorer',
+  'hardhat',
+  'laurel',
   'scarf',
   'hearts',
   'clover',
@@ -113,6 +129,51 @@ const HATS: Record<HatId, string> = {
     <circle cx="50" cy="-1" r="3" fill="#ffc93c" stroke="#e48f0c" stroke-width="1.5"/>
     <circle cx="70" cy="4" r="3" fill="#ffc93c" stroke="#e48f0c" stroke-width="1.5"/>
     <circle cx="40" cy="20" r="2.6" fill="#e5484d"/><circle cx="50" cy="19" r="3" fill="#2b8fd6"/><circle cx="60" cy="20" r="2.6" fill="#2bb673"/>`,
+  // De los logros de los demás modos.
+  headband: `
+    <path d="M80 31 Q90 26 96 33 Q89 34 84 38 Z" fill="#e5484d"/>
+    <path d="M79 35 Q87 40 89 50 Q83 46 78 41 Z" fill="#c93a40"/>
+    <path d="M22 31 Q50 21 78 31 L78 40 Q50 30 22 40 Z" fill="#e5484d"/>
+    <path d="M22.5 35.5 Q50 25.5 77.5 35.5" stroke="#f6f7f9" stroke-width="2.2" fill="none"/>`,
+  knight: `
+    <path d="M50 8 Q45 -10 58 -19 Q56 -9 63 -5 Q56 -1 55 8 Z" fill="#e5484d"/>
+    <path d="M24 33 C24 1 76 1 76 33 Z" fill="#9aa7b6"/>
+    <path d="M35 13 Q42 8 50 8" stroke="#d7dee6" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+    <rect x="22" y="27" width="56" height="8" rx="4" fill="#ffc93c"/>
+    <rect x="47" y="31" width="6" height="13" rx="3" fill="#7a8796"/>
+    <circle cx="31" cy="31" r="1.6" fill="#e48f0c"/><circle cx="69" cy="31" r="1.6" fill="#e48f0c"/>`,
+  propeller: `
+    <path d="M26 31 C26 18 37 14.5 50 14.5 L50 31 Z" fill="#2b8fd6"/>
+    <path d="M74 31 C74 18 63 14.5 50 14.5 L50 31 Z" fill="#e5484d"/>
+    <ellipse cx="50" cy="31" rx="26" ry="4.5" fill="#2bb673"/>
+    <path d="M50 15 L50 2" stroke="#5b6b8c" stroke-width="2.5"/>
+    <path d="M50 1 Q38 -7 29 -2 Q38 4 50 1 Z" fill="#ffc93c"/>
+    <path d="M50 1 Q62 9 71 4 Q62 -2 50 1 Z" fill="#ffc93c"/>
+    <circle cx="50" cy="1" r="2.8" fill="#e48f0c"/>`,
+  racing: `
+    <path d="M26 28 C26 6 74 6 74 28 Z" fill="#e5484d"/>
+    ${checkers(29, 16.5, 7, 2, 6, 3.6)}
+    <path d="M36 11 Q42 8.5 48 8.5" stroke="#fff" stroke-width="2" opacity=".5" fill="none" stroke-linecap="round"/>
+    <ellipse cx="50" cy="28" rx="28" ry="5" fill="#22252b"/>`,
+  beret: `
+    <ellipse cx="46" cy="20" rx="31" ry="11" fill="#3b4a8c" transform="rotate(-8 46 20)"/>
+    <path d="M27 28 Q50 34 73 25" stroke="#2a3670" stroke-width="4" fill="none" stroke-linecap="round"/>
+    <path d="M44 10 L45 4" stroke="#2a3670" stroke-width="3" stroke-linecap="round"/>
+    <path d="M30 17 Q38 11 48 11" stroke="#5b6bb0" stroke-width="2" fill="none" stroke-linecap="round"/>`,
+  explorer: `
+    <ellipse cx="50" cy="27" rx="37" ry="6.5" fill="#b8a27a"/>
+    <path d="M28 26 C28 2 72 2 72 26 Z" fill="#d9c49a"/>
+    <path d="M28.6 19 L71.4 19 L72 25 L28 25 Z" fill="#8a5a3b"/>
+    <path d="M50 8 L50 19" stroke="#c4ad82" stroke-width="2"/>
+    <circle cx="50" cy="8" r="2.6" fill="#c4ad82"/>`,
+  hardhat: `
+    <path d="M27 28 C27 4 73 4 73 28 Z" fill="#ffc93c"/>
+    <rect x="45.5" y="10" width="9" height="18" rx="3" fill="#f2b51f"/>
+    <path d="M19 28 Q50 21 81 28 L81 33 Q50 26 19 33 Z" fill="#e48f0c"/>
+    <path d="M33 17 Q36 12 42 11" stroke="#fff" stroke-width="2" opacity=".6" fill="none" stroke-linecap="round"/>`,
+  laurel: `
+    ${laurel()}
+    <path d="M50 3 L52.35 8.76 L58.56 9.22 L53.8 13.24 L55.29 19.28 L50 16 L44.71 19.28 L46.2 13.24 L41.44 9.22 L47.65 8.76 Z" fill="#ffc93c" stroke="#e48f0c" stroke-width="1.5" stroke-linejoin="round"/>`,
   // De temporada, de enero a diciembre. La bufanda va al cuello (bajo el pico).
   scarf: `
     <path d="M19 57 Q50 66 81 57 L81 66 Q50 75 19 66 Z" fill="#e5484d"/>
@@ -185,6 +246,35 @@ const HATS: Record<HatId, string> = {
     <path d="M50 15 L50 3" stroke="#c9ccd1" stroke-width="2.5"/>
     <path d="M50 -22 L53.53 -12.85 L63.32 -12.33 L55.71 -6.15 L58.23 3.33 L50 -2 L41.77 3.33 L44.29 -6.15 L36.68 -12.33 L46.47 -12.85 Z" fill="#ffc93c" stroke="#e48f0c" stroke-width="1.8" stroke-linejoin="round"/>`,
 };
+
+/** Cuadros de bandera de meta: `cols` × `rows` a partir de (x, y), alternando blanco y negro. */
+function checkers(x: number, y: number, cols: number, rows: number, w: number, hgt: number): string {
+  let out = '';
+  for (let r = 0; r < rows; r++) {
+    for (let c = 0; c < cols; c++) {
+      out += `<rect x="${(x + c * w).toFixed(2)}" y="${(y + r * hgt).toFixed(2)}" width="${w}" height="${hgt}" fill="${(r + c) % 2 ? '#f6f7f9' : '#22252b'}"/>`;
+    }
+  }
+  return out;
+}
+
+/** Corona de laurel: dos ramas de hojas que suben por los lados de la cabeza. */
+function laurel(): string {
+  let out = '<path d="M23 36 A28 28 0 0 1 77 36" fill="none" stroke="#1f8a55" stroke-width="2"/>';
+  for (const side of [-1, 1]) {
+    for (let i = 0; i < 6; i++) {
+      const deg = 270 + side * (20 + i * 13);
+      const rad = (deg * Math.PI) / 180;
+      const x = (50 + 28 * Math.cos(rad)).toFixed(1);
+      const y = (40 + 28 * Math.sin(rad)).toFixed(1);
+      const along = deg - side * 90; // Hacia arriba por la rama.
+      for (const tilt of [-30, 30]) {
+        out += `<ellipse cx="${x}" cy="${y}" rx="5" ry="2.3" fill="${tilt * side < 0 ? '#2bb673' : '#7ee0a8'}" transform="rotate(${along + tilt} ${x} ${y}) translate(3 0)"/>`;
+      }
+    }
+  }
+  return out;
+}
 
 /** Flor de cinco pétalos para la corona de flores. */
 function flower(x: number, y: number, color: string): string {

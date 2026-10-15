@@ -745,6 +745,38 @@ export const messages = {
       name: 'Campeón semanal',
       description: 'Gana una semana completa en tu liga.',
     },
+    duelWin: {
+      name: 'Duelista',
+      description: 'Gana un duelo contra un rival que también lo jugó.',
+    },
+    duelWin10: {
+      name: 'Caballero del hielo',
+      description: 'Gana 10 duelos.',
+    },
+    timeAttack10: {
+      name: 'A toda hélice',
+      description: 'Resuelve 10 tableros en una sola contrarreloj.',
+    },
+    timeAttackPerfect5: {
+      name: 'Piloto perfecto',
+      description: 'Haz 5 tableros en el óptimo en una sola contrarreloj.',
+    },
+    weeklyPar: {
+      name: 'Artista semanal',
+      description: 'Resuelve el reto semanal en el óptimo.',
+    },
+    explorer10: {
+      name: 'Explorador',
+      description: 'Completa 10 niveles de otros jugadores.',
+    },
+    creator5: {
+      name: 'Constructor',
+      description: 'Que 5 jugadores completen uno de tus niveles.',
+    },
+    creatorStar: {
+      name: 'Obra maestra',
+      description: 'Consigue ★4 o más en uno de tus niveles, con al menos 3 valoraciones.',
+    },
   },
   hats: {
     beanie: 'Gorro de lana',
@@ -757,6 +789,14 @@ export const messages = {
     ushanka: 'Gorro polar',
     wizard: 'Gorro de mago',
     crown: 'Corona',
+    headband: 'Cinta de duelista',
+    knight: 'Yelmo de caballero',
+    propeller: 'Gorra de hélice',
+    racing: 'Gorra de carreras',
+    beret: 'Boina',
+    explorer: 'Salacot',
+    hardhat: 'Casco de obra',
+    laurel: 'Corona de laurel',
     scarf: 'Bufanda',
     hearts: 'Diadema de corazones',
     clover: 'Sombrero de trébol',
@@ -786,6 +826,13 @@ export const messages = {
     seeHats: 'Ver mis gorros',
     newOne: '¡Logro nuevo!',
     newOneText: '{description} Has desbloqueado: {hat}.',
+    mode: {
+      daily: 'Reto diario',
+      duels: 'Duelos',
+      timeAttack: 'Contrarreloj',
+      weekly: 'Reto semanal',
+      community: 'Niveles de la comunidad',
+    },
   },
   seasonHats: {
     title: 'Gorros de temporada',

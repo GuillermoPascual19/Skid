@@ -746,6 +746,38 @@ export const messages: Messages = {
       name: 'Чемпион недели',
       description: 'Выиграй целую неделю в своей лиге.',
     },
+    duelWin: {
+      name: 'Дуэлянт',
+      description: 'Выиграй дуэль у соперника, который тоже её сыграл.',
+    },
+    duelWin10: {
+      name: 'Ледяной рыцарь',
+      description: 'Выиграй 10 дуэлей.',
+    },
+    timeAttack10: {
+      name: 'На всех парах',
+      description: 'Реши 10 полей за один заезд на время.',
+    },
+    timeAttackPerfect5: {
+      name: 'Идеальный пилот',
+      description: 'Пройди 5 полей за оптимальное число ходов за один заезд на время.',
+    },
+    weeklyPar: {
+      name: 'Художник недели',
+      description: 'Реши недельное испытание за оптимальное число ходов.',
+    },
+    explorer10: {
+      name: 'Исследователь',
+      description: 'Пройди 10 уровней других игроков.',
+    },
+    creator5: {
+      name: 'Строитель',
+      description: 'Пусть 5 игроков пройдут один из твоих уровней.',
+    },
+    creatorStar: {
+      name: 'Шедевр',
+      description: 'Получи ★4 или выше за один из своих уровней, минимум с 3 оценками.',
+    },
   },
   hats: {
     beanie: 'Вязаная шапка',
@@ -758,6 +790,14 @@ export const messages: Messages = {
     ushanka: 'Ушанка',
     wizard: 'Шляпа волшебника',
     crown: 'Корона',
+    headband: 'Повязка дуэлянта',
+    knight: 'Рыцарский шлем',
+    propeller: 'Кепка с пропеллером',
+    racing: 'Гоночная кепка',
+    beret: 'Берет',
+    explorer: 'Пробковый шлем',
+    hardhat: 'Строительная каска',
+    laurel: 'Лавровый венок',
     scarf: 'Шарф',
     hearts: 'Ободок с сердечками',
     clover: 'Шляпа с клевером',
@@ -787,6 +827,13 @@ export const messages: Messages = {
     seeHats: 'Мои шапки',
     newOne: 'Новое достижение!',
     newOneText: '{description} Открыто: {hat}.',
+    mode: {
+      daily: 'Ежедневное испытание',
+      duels: 'Дуэли',
+      timeAttack: 'На время',
+      weekly: 'Недельное испытание',
+      community: 'Уровни сообщества',
+    },
   },
   seasonHats: {
     title: 'Сезонные шапки',
