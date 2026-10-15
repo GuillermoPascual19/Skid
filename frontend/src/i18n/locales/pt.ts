@@ -684,6 +684,26 @@ export const messages: Messages = {
         label: 'Gelo frágil',
         help: 'Parte-se na primeira vez que passam por cima e depois é um buraco. No máximo 6 por nível.',
       },
+      mirror: {
+        label: 'Espelho',
+        help: 'Desvia o pinguim 90°. Toca num espelho para mudar a diagonal.',
+      },
+      oneway: {
+        label: 'Sentido único',
+        help: 'Só se atravessa na direção da seta. Toca num para o rodar.',
+      },
+      switch: {
+        label: 'Interruptor',
+        help: 'Ao passar por cima, todas as portas mudam.',
+      },
+      door: {
+        label: 'Porta',
+        help: 'Fechada é uma parede; aberta, gelo. Toca numa para escolher como começa.',
+      },
+      block: {
+        label: 'Bloco',
+        help: 'Desliza quando se bate nele, só por gelo normal. No máximo 3 por nível.',
+      },
     },
     maxPieces: 'No máximo {n} peças',
     maxPortals: 'No máximo {n} pares de teletransportes',
@@ -909,6 +929,22 @@ export const messages: Messages = {
     crack: {
       name: 'Gelo frágil',
       description: 'Aguenta uma só passagem: ao passares por cima parte-se e fica um buraco. Se voltares a passar, cais na água.',
+    },
+    mirror: {
+      name: 'Espelhos',
+      description: 'Placas de gelo na diagonal: o pinguim ressalta a 90° e continua a deslizar. Para onde sai depende de onde vem.',
+    },
+    oneway: {
+      name: 'Passagens de sentido único',
+      description: 'Só se atravessam na direção da seta. De qualquer outro lado são uma parede.',
+    },
+    switch: {
+      name: 'Interruptor e portas',
+      description: 'Cada vez que passas pelo interruptor, todas as portas mudam: as abertas fecham-se e as fechadas abrem-se.',
+    },
+    block: {
+      name: 'Blocos de gelo',
+      description: 'Se bateres num, desliza até ao próximo obstáculo e tu ficas onde estavas. Usa-os como travão… e cuidado para não te fechares.',
     },
   },
   free: {

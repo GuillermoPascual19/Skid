@@ -3,8 +3,8 @@
 // navegador a cada cambio.
 
 import { penguinSvg } from '../../../../common/art/hats';
-import { elementSvg } from '../../../../common/art/elements';
-import { BoardError, MAX_CRACKS, PORTAL_CHARS } from '../../../../common/logic/engine/board';
+import { doorSvg, elementSvg } from '../../../../common/art/elements';
+import { BoardError, MAX_BLOCKS, MAX_CRACKS, PORTAL_CHARS } from '../../../../common/logic/engine/board';
 import { checkCustomLevel, CUSTOM_LIMITS, encodeRows } from '../../../../common/logic/community/community';
 import { ELEMENTS, unlockedElements, type ElementId } from '../../../../common/logic/engine/elements';
 import { cellArt } from './board-art';
@@ -16,7 +16,7 @@ import { type EditorDraft, loadEditorDraft, saveEditorDraft } from './storage';
 import { startingProgress } from '../free-play/storage';
 import { t, te } from '../../i18n/i18n';
 
-type Tool = 'wall' | 'ice' | 'start' | 'piece' | 'snow' | 'arrow' | 'portal' | 'hole' | 'crack';
+type Tool = 'wall' | 'ice' | 'start' | 'piece' | 'snow' | 'arrow' | 'portal' | 'hole' | 'crack' | 'mirror' | 'oneway' | 'switch' | 'door' | 'block';
 
 interface ToolDef {
   readonly id: Tool;
@@ -37,9 +37,16 @@ const TOOLS: readonly ToolDef[] = [
   { id: 'portal', element: 'portal' },
   { id: 'hole', element: 'hole', paint: true },
   { id: 'crack', element: 'crack', paint: true },
+  { id: 'mirror', element: 'mirror' },
+  { id: 'oneway', element: 'oneway' },
+  { id: 'switch', element: 'switch' },
+  { id: 'door', element: 'switch' },
+  { id: 'block', element: 'block' },
 ];
 
 const ARROW_TURN: Record<string, string> = { '>': 'v', v: '<', '<': '^', '^': '>' };
+/** Pasos de un sentido: tocar uno lo gira (como las corrientes). */
+const ONEWAY_TURN: Record<string, string> = { R: 'D', D: 'L', L: 'U', U: 'R' };
 const DEFAULT_ROWS = ['@......', '.......', '...#...', '.......', '.#...#.', '.......', '......1'];
 
 /** Por qué no vale el tablero, en el idioma del jugador (los mismos mensajes que da el servidor). */
@@ -93,6 +100,23 @@ export function editorScreen(): Screen {
       case 'crack':
         if (ch !== 'x' && countOf((c) => c === 'x') >= MAX_CRACKS) return toast(te('board_manyCracks', { max: MAX_CRACKS }));
         next = 'x';
+        break;
+      case 'mirror':
+        next = ch === 'm' ? 'n' : 'm';
+        break;
+      case 'oneway':
+        next = ONEWAY_TURN[ch] ?? 'R';
+        break;
+      case 'switch':
+        next = 'S';
+        break;
+      case 'door':
+        next = ch === 'G' ? 'g' : 'G';
+        break;
+      case 'block':
+        if (ch === 'K') next = '.';
+        else if (countOf((c) => c === 'K') >= MAX_BLOCKS) return toast(te('board_manyBlocks', { max: MAX_BLOCKS }));
+        else next = 'K';
         break;
       case 'start':
         grid = grid.map((row) => row.map((c) => (c === '@' ? '.' : c)));
@@ -177,7 +201,8 @@ export function editorScreen(): Screen {
     if (id === 'ice') return h('span', { class: 'tool-swatch ice' });
     if (id === 'start') return svg(penguinSvg());
     if (id === 'piece') return h('span', { class: 'tool-piece' }, '1');
-    return svg(elementSvg(id === 'arrow' ? 'arrow' : (id as ElementId)));
+    if (id === 'door') return svg(doorSvg(false));
+    return svg(elementSvg(id as ElementId));
   }
 
   function renderPalette() {

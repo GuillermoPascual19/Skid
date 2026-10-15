@@ -107,6 +107,7 @@ export const errors: ErrorMessages = {
   board_missingPiece: 'Piece {piece} is missing: they must go from 1 to {count}',
   board_portalPair: 'A teleporter appears {count} times: they must come in pairs',
   board_manyCracks: 'Too much fragile ice: {max} tiles at most',
+  board_manyBlocks: 'Too many blocks: {max} at most',
   board_invalid: 'Invalid board',
   board_size: 'The board must be between {min}×{min} and {maxWidth}×{maxHeight}',
   board_loops: 'Some currents form an endless loop',

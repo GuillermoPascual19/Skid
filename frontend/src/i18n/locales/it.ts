@@ -684,6 +684,26 @@ export const messages: Messages = {
         label: 'Ghiaccio fragile',
         help: 'Si rompe la prima volta che ci passano sopra e poi diventa un buco. Al massimo 6 per livello.',
       },
+      mirror: {
+        label: 'Specchio',
+        help: 'Devia il pinguino di 90°. Tocca uno specchio per cambiarne la diagonale.',
+      },
+      oneway: {
+        label: 'Senso unico',
+        help: 'Si attraversa solo nella direzione della freccia. Toccalo per ruotarlo.',
+      },
+      switch: {
+        label: 'Interruttore',
+        help: 'Passandoci sopra, tutte le porte cambiano.',
+      },
+      door: {
+        label: 'Porta',
+        help: 'Chiusa è un muro; aperta, ghiaccio. Toccala per scegliere come inizia.',
+      },
+      block: {
+        label: 'Blocco',
+        help: 'Scivola quando lo urti, solo sul ghiaccio normale. Al massimo 3 per livello.',
+      },
     },
     maxPieces: 'Al massimo {n} pezzi',
     maxPortals: 'Al massimo {n} coppie di teletrasporti',
@@ -909,6 +929,22 @@ export const messages: Messages = {
     crack: {
       name: 'Ghiaccio fragile',
       description: 'Regge un solo passaggio: quando ci scivoli sopra si rompe e diventa un buco. Se ci ripassi, cadi in acqua.',
+    },
+    mirror: {
+      name: 'Specchi',
+      description: 'Lastre di ghiaccio in diagonale: il pinguino rimbalza di 90° e continua a scivolare. Dove esce dipende da dove arriva.',
+    },
+    oneway: {
+      name: 'Passaggi a senso unico',
+      description: 'Si attraversano solo nella direzione della freccia. Da qualsiasi altro lato sono un muro.',
+    },
+    switch: {
+      name: 'Interruttore e porte',
+      description: 'Ogni volta che passi sull\'interruttore, tutte le porte cambiano: quelle aperte si chiudono e quelle chiuse si aprono.',
+    },
+    block: {
+      name: 'Blocchi di ghiaccio',
+      description: 'Se ne urti uno, scivola fino al prossimo ostacolo e tu resti dove sei. Usali come fermo… e attento a non chiuderti dentro.',
     },
   },
   free: {

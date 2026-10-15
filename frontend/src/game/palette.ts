@@ -34,6 +34,19 @@ const DAY = {
   iceEdge: 0xe6f6fd,
   crackIce: 0xd3f0fb,
   crackLine: 0x5aa9d6,
+  mirror: 0xe6f6fd,
+  mirrorEdge: 0x5aa9d6,
+  oneway: 0xff9f1c,
+  onewayEdge: 0xe48f0c,
+  post: 0x8a5a3b,
+  switchBase: 0x5b6b8c,
+  switchTop: 0xff6b70,
+  switchSide: 0xe5484d,
+  door: 0x5b6b8c,
+  doorBar: 0xc4dcef,
+  block: 0xbfe6fb,
+  blockSide: 0x7cc4f5,
+  blockEdge: 0x5aa9d6,
 };
 
 /** De noche (tema oscuro) cambian el hielo, la nieve y las piezas; el pingüino y el agua no. */
@@ -51,6 +64,9 @@ const NIGHT: Partial<typeof DAY> = {
   iceEdge: 0x3a6d90,
   crackIce: 0x4a7fa3,
   crackLine: 0xa9d8f2,
+  mirror: 0x9fd0ee,
+  block: 0x8cc3e6,
+  blockSide: 0x5a9ccc,
 };
 
 /** Colores en uso: los de día, o los de noche tras usePalette(true). */

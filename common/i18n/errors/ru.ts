@@ -108,6 +108,7 @@ export const errors: ErrorMessages = {
   board_missingPiece: 'Нет фишки {piece}: они должны идти от 1 до {count}',
   board_portalPair: 'Телепорт встречается {count} раз: они должны быть парами',
   board_manyCracks: 'Слишком много хрупкого льда: не больше {max} клеток',
+  board_manyBlocks: 'Слишком много блоков: не больше {max}',
   board_invalid: 'Неверное поле',
   board_size: 'Поле должно быть от {min}×{min} до {maxWidth}×{maxHeight}',
   board_loops: 'Течения образуют бесконечную петлю',

@@ -107,6 +107,7 @@ export const errors: ErrorMessages = {
   board_missingPiece: 'Falta a peça {piece}: devem ir de 1 a {count}',
   board_portalPair: 'Um teletransporte aparece {count} vezes: têm de ir aos pares',
   board_manyCracks: 'Demasiado gelo frágil: no máximo {max} casas',
+  board_manyBlocks: 'Demasiados blocos: no máximo {max}',
   board_invalid: 'Tabuleiro inválido',
   board_size: 'O tabuleiro deve medir entre {min}×{min} e {maxWidth}×{maxHeight}',
   board_loops: 'Há correntes que formam um ciclo sem fim',
