@@ -39,6 +39,9 @@ export const messages: Messages = {
     copyText: 'Copy message',
     more: 'More options',
     linkCopied: 'Link copied',
+    image: 'Image',
+    imageSaved: 'Image saved',
+    imageFailed: 'Couldn\'t create the image',
   },
   sound: {
     sfxOff: 'Turn sound effects off',

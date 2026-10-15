@@ -4,10 +4,10 @@
 
 import { dailyLevel, dayKey, decodeRun, replayRun } from '../../../../common/logic/daily/daily';
 import * as online from '../../shared/api';
-import { formatDay, formatTime, h, openModal, share, toast } from '../../shared/dom';
+import { formatDay, formatTime, h, openModal, share, toast, type ShareImage } from '../../shared/dom';
 import { movesBig, movesLabel } from '../../shared/result';
 import { celebrate } from '../../shared/celebrate';
-import { ensureName } from '../profile/profile';
+import { currentMe, ensureName } from '../profile/profile';
 import { openGuide } from '../guide/guide';
 import { go } from '../../shared/router';
 import { type ServerRun, getDaily, startDaily } from './api';
@@ -109,6 +109,17 @@ function showIntro(day: string): void {
       start.disabled = false;
     }
   });
+}
+
+/** El resultado del reto como imagen (la tarjeta de share-card.ts, con el gorro del jugador). */
+function resultImage(day: string, r: DailyResult): ShareImage {
+  return {
+    name: `skid-${day}.png`,
+    make: async () => {
+      const [{ dailyCard }, hat] = await Promise.all([import('./share-card'), currentMe().then((me) => me.hat).catch(() => null)]);
+      return dailyCard(day, r, hat);
+    },
+  };
 }
 
 export function shareText(day: string, r: DailyResult): string {
@@ -235,7 +246,7 @@ export function showDailyResult(day: string, r: DailyResult, opts: { error?: str
       h(
         'div',
         { class: 'row' },
-        h('button', { class: 'btn', onclick: () => share(shareText(day, r)) }, t('common.share')),
+        h('button', { class: 'btn', onclick: () => share(shareText(day, r), resultImage(day, r)) }, t('common.share')),
         h('button', { class: 'btn secondary', onclick: () => go({ name: 'ranking' }) }, t('nav.ranking')),
       ),
       h(
@@ -263,7 +274,7 @@ function showPointsResult(day: string, r: DailyResult, opts: { error?: string; r
       h(
         'div',
         { class: 'row' },
-        h('button', { class: 'btn', onclick: () => share(shareText(day, r)) }, t('common.share')),
+        h('button', { class: 'btn', onclick: () => share(shareText(day, r), resultImage(day, r)) }, t('common.share')),
         h('button', { class: 'btn secondary', onclick: () => go({ name: 'ranking' }) }, t('nav.ranking')),
       ),
       h('button', { class: 'btn ghost block', onclick: () => go({ name: 'solution', day }) }, `👀 ${t('daily.solution.see')}`),
