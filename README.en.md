@@ -252,6 +252,10 @@ anything from outside) and builds the game to `dist/`.
 - Privacy (GDPR/LSSI): no cookies. Fonts are served from here (not from Google Fonts) and Google's
   script only loads when the player taps "Continue with Google". Analytics, if enabled, are Cloudflare
   Web Analytics, cookieless. Legal pages in `frontend/public/legal/` (Spanish).
+- Error reports: players' JS errors (with no account data) are sent to `POST /api/errors` and end up
+  in the Worker logs: Cloudflare → Workers → skid → Logs, filtering by `event = clientError`
+  (`frontend/src/shared/errors.ts`, `backend/src/routes/errors.ts`). At most 5 per page load and 10
+  per minute from the same IP.
 
 ## Languages
 

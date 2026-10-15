@@ -15,6 +15,7 @@ import { refreshPush, registerServiceWorker } from './features/notifications/not
 import { watchForUpdates } from './shared/update';
 import { updateDescription } from './shared/meta';
 import { startAnalytics } from './shared/analytics';
+import { installErrorReporting } from './shared/errors';
 import { timeAttackScreen } from './features/timeattack/timeattack-screen';
 import { duelPlayScreen } from './features/duels/duel-play';
 import { getDuelGhost } from './features/duels/api';
@@ -94,6 +95,9 @@ setRoutes({
   custom: (route) => customLevelScreen({ level: route.level }),
   customTest: (route) => customLevelScreen({ testRows: route.rows }),
 });
+
+// Lo primero: así también se avisa de los errores al arrancar.
+installErrorReporting();
 
 applyTheme();
 await initI18n(); // Antes de pintar nada: todos los textos salen del idioma elegido.

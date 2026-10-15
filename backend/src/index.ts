@@ -38,6 +38,7 @@ import { leagueSeason, seasonHats, seasonTitles, settleSeasons } from './routes/
 import { newReactions, react } from './routes/reactions';
 import { deleteSubscription, pushKey, saveSubscription, streakReminders, testPush } from './routes/push';
 import { playerStats } from './routes/stats';
+import { logClientError } from './routes/errors';
 import { authenticate, createSession, deleteAccount, googleLogin, logoutEverywhere, sealLegacyEmails } from './session';
 import { unseal } from './seal';
 import { nameKey, nameProblem, NAME_MAX, NAME_MIN } from '../../common/logic/players/names';
@@ -75,6 +76,7 @@ async function handleApi(req: Request, url: URL, env: Env): Promise<Response> {
   let m: RegExpMatchArray | null;
 
   if (route === 'POST /session') return json(await createSession(req, env));
+  if (route === 'POST /errors') return logClientError(req, env);
   if (route === 'GET /config') return json({ googleClientId: env.GOOGLE_CLIENT_ID || null, analyticsToken: env.CF_ANALYTICS_TOKEN || null });
 
   const session = await authenticate(req, env);
