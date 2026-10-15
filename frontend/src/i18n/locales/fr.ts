@@ -241,6 +241,10 @@ export const messages: Messages = {
     title: 'Langue',
     change: 'Langue : {language}. Touche pour la changer',
   },
+  meta: {
+    title: 'Skid · Puzzle de glisse sur la glace',
+    description: 'Fais glisser le pingouin sur la glace et ramasse les pièces dans l\'ordre. Défi du jour, duels en direct, contre-la-montre et ligues entre amis.',
+  },
   update: {
     available: 'Une nouvelle version est disponible',
     reload: 'Mettre à jour',

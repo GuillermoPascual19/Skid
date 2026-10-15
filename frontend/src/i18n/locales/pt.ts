@@ -241,6 +241,10 @@ export const messages: Messages = {
     title: 'Idioma',
     change: 'Idioma: {language}. Toca para mudar',
   },
+  meta: {
+    title: 'Skid · Puzzle de deslizar no gelo',
+    description: 'Desliza o pinguim pelo gelo e apanha as peças por ordem. Desafio diário, duelos em direto, contrarrelógio e ligas com os teus amigos.',
+  },
   update: {
     available: 'Há uma versão nova',
     reload: 'Atualizar',

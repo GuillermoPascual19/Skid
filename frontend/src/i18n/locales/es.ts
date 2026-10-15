@@ -240,6 +240,10 @@ export const messages = {
     title: 'Idioma',
     change: 'Idioma: {language}. Pulsa para cambiarlo',
   },
+  meta: {
+    title: 'Skid · Puzzle de deslizamiento sobre hielo',
+    description: 'Desliza el pingüino por el hielo y recoge las piezas en orden. Reto diario, duelos en directo, contrarreloj y ligas con tus amigos.',
+  },
   update: {
     available: 'Hay una versión nueva',
     reload: 'Actualizar',

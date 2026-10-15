@@ -241,6 +241,10 @@ export const messages: Messages = {
     title: 'Lingua',
     change: 'Lingua: {language}. Tocca per cambiare',
   },
+  meta: {
+    title: 'Skid · Puzzle di scivolate sul ghiaccio',
+    description: 'Fai scivolare il pinguino sul ghiaccio e raccogli i pezzi in ordine. Sfida giornaliera, duelli dal vivo, a tempo e leghe con i tuoi amici.',
+  },
   update: {
     available: 'È disponibile una nuova versione',
     reload: 'Aggiorna',

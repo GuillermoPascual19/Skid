@@ -241,6 +241,10 @@ export const messages: Messages = {
     title: 'Sprache',
     change: 'Sprache: {language}. Tippen zum Ändern',
   },
+  meta: {
+    title: 'Skid · Rutsch-Puzzle auf dem Eis',
+    description: 'Lass den Pinguin übers Eis gleiten und sammle die Teile der Reihe nach. Tagesherausforderung, Live-Duelle, Zeitrennen und Ligen mit deinen Freunden.',
+  },
   update: {
     available: 'Eine neue Version ist da',
     reload: 'Aktualisieren',

@@ -1,0 +1,6 @@
+# Skid: el juego y los textos legales se pueden indexar; la API no.
+User-agent: *
+Allow: /
+Disallow: /api/
+
+Sitemap: https://skid.gpm-854.workers.dev/sitemap.xml
