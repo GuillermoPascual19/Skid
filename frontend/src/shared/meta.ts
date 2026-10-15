@@ -25,6 +25,7 @@ const TITLES: Record<Route['name'], TextKey | null> = {
   custom: 'home.community.title',
   customTest: 'levels.play.testTitle',
   admin: null,
+  friends: 'nav.friends',
 };
 
 /** Al cambiar de pantalla. */

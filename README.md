@@ -20,6 +20,8 @@ y niveles creados por los jugadores.
   la semana, con ranking entre amigos.
 - **Duelos en directo**: retas a un amigo (o a quien quieras con un enlace) y jugáis a la vez el
   mismo tablero nuevo.
+- **Amigos**: añadir a alguien por su nombre (con solicitud) o con tu enlace de amigo, sin necesidad
+  de liga; ves su reto del día, su perfil y su partida, y le retas a un duelo.
 - **Ligas**: ranking del día y de la semana con tus amigos, y temporadas mensuales cuyo campeón se
   lleva el gorro de ese mes; reacciones con emojis a los retos de tus amigos; logros del reto
   diario, duelos, contrarreloj, reto semanal y niveles de la comunidad que desbloquean más gorros.
@@ -126,7 +128,8 @@ common/                    lo que usan los dos; sin APIs del navegador ni import
     players/               reglas de los nombres
   i18n/                    idiomas, mensajes de error y textos de las notificaciones
   art/                     dibujos SVG (pingüino, gorros, elementos)
-tests/                     backend/ y common/, con el mismo árbol que el código
+tests/                     backend/ y common/, con el mismo árbol que el código; worker/ prueba las
+                           rutas con su SQL real sobre una SQLite en memoria (node:sqlite) con las migraciones
 .github/workflows/         despliegue automático
 wrangler.jsonc             configuración del Worker: D1, límites de peticiones, assets
 vite.config.ts             Vite y Vitest

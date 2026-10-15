@@ -1,6 +1,7 @@
 // Reto semanal: consultar, empezar, enviar intentos (el servidor los reproduce)
 // y el ranking con tus amigos (quienes comparten alguna liga contigo).
 
+import { CIRCLE } from './friends';
 import { isHatId } from '../../../common/art/hats';
 import { parseBoard } from '../../../common/logic/engine/board';
 import { decodeRows, encodeRows } from '../../../common/logic/community/community';
@@ -61,10 +62,10 @@ interface RankingRow {
   pos: number;
 }
 
-/** Tus amigos (de todas tus ligas) y tú, con su mejor intento de la semana, ordenados. */
+/** Tus amigos (directos y de todas tus ligas) y tú, con su mejor intento de la semana, ordenados. */
 const FRIENDS_RANKED = `
   WITH friends AS (
-    SELECT b.player_id FROM league_members a JOIN league_members b ON b.league_id = a.league_id WHERE a.player_id = ?1
+    ${CIRCLE}
     UNION SELECT ?1
   )
   SELECT r.player_id, p.name, p.hat, r.best_moves, RANK() OVER (ORDER BY r.best_moves, r.best_at) AS pos

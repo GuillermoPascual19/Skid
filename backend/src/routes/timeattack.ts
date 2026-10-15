@@ -2,6 +2,7 @@
 // reproduce y suma sus puntos), saltar tableros y el ranking de la semana con tus
 // amigos (quienes comparten alguna liga contigo).
 
+import { CIRCLE } from './friends';
 import { isHatId } from '../../../common/art/hats';
 import { parseBoard } from '../../../common/logic/engine/board';
 import { decodeRows, encodeRows } from '../../../common/logic/community/community';
@@ -75,10 +76,10 @@ function runResponse(run: RunRow) {
   };
 }
 
-/** Tus amigos y tú, con su mejor partida de la semana, ordenados (más puntos; a igualdad, más tableros). */
+/** Tus amigos (directos y de tus ligas) y tú, con su mejor partida de la semana, ordenados (más puntos; a igualdad, más tableros). */
 const FRIENDS_RANKED = `
   WITH friends AS (
-    SELECT b.player_id FROM league_members a JOIN league_members b ON b.league_id = a.league_id WHERE a.player_id = ?1
+    ${CIRCLE}
     UNION SELECT ?1
   ),
   best AS (

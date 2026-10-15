@@ -20,6 +20,8 @@ friends, and levels made by the players.
   with a ranking among friends.
 - **Live duels**: challenge a friend (or anyone, with a link) and play the same brand-new board at
   the same time.
+- **Friends**: add someone by name (with a request) or with your friend link, no league needed; see
+  their daily challenge, profile and game, and challenge them to a duel.
 - **Leagues**: daily and weekly rankings with your friends, and monthly seasons whose champion
   wins that month's hat; emoji reactions to your friends' challenges; achievements in the daily
   challenge, duels, time attack, weekly challenge and community levels unlock more hats.
@@ -126,7 +128,8 @@ common/                    used by both; no browser APIs and no imports from out
     players/               player name rules
   i18n/                    languages, error messages and notification texts
   art/                     SVG drawings (penguin, hats, elements)
-tests/                     backend/ and common/, mirroring the code tree
+tests/                     backend/ and common/, mirroring the code tree; worker/ tests the routes with
+                           their real SQL on an in-memory SQLite (node:sqlite) with the migrations
 .github/workflows/         automatic deployment
 wrangler.jsonc             Worker config: D1, rate limits, assets
 vite.config.ts             Vite and Vitest

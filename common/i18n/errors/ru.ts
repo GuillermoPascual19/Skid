@@ -48,9 +48,17 @@ export const errors: ErrorMessages = {
 
   playerNotFound: 'Такого игрока нет',
 
+  tooManyFriends: 'Не больше {n} друзей',
+
+  cantFriendYourself: 'Нельзя добавить самого себя',
+
+  alreadyFriends: 'Вы уже друзья',
+
+  requestNotFound: 'Этой заявки больше нет',
+
   adminOnly: 'Только для администраторов',
-  onlyLeagueProfiles: 'Можно смотреть профили только игроков из твоих лиг',
-  onlyLeagueGames: 'Можно смотреть партии только игроков из твоих лиг',
+  onlyLeagueProfiles: 'Можно смотреть профили только друзей и игроков из твоих лиг',
+  onlyLeagueGames: 'Можно смотреть игры только друзей и игроков из твоих лиг',
   leagueNameLength: 'Название лиги должно быть от {min} до {max} символов',
   leagueNotFound: 'Лиги с таким кодом нет',
   notLeagueMember: 'Ты не состоишь в этой лиге',
@@ -75,7 +83,7 @@ export const errors: ErrorMessages = {
   duelUnavailable: 'Эта дуэль больше недоступна',
   invalidDifficulty: 'Неверная сложность',
   invalidRival: 'Неверный соперник',
-  onlyLeagueRivals: 'По имени можно вызвать только игроков из твоих лиг',
+  onlyLeagueRivals: 'Вызывать по имени можно только друзей и игроков из твоих лиг',
   maxDuels: 'У тебя уже идёт {n} дуэлей. Дождись, пока они закончатся.',
   ownDuel: 'Нельзя принять свою же дуэль',
   duelHasRival: 'У этой дуэли уже есть соперник',

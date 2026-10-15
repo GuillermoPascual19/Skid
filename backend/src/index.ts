@@ -39,6 +39,7 @@ import { newReactions, react } from './routes/reactions';
 import { deleteSubscription, pushKey, saveSubscription, streakReminders, testPush } from './routes/push';
 import { playerStats } from './routes/stats';
 import { logClientError } from './routes/errors';
+import { acceptFriend, addByLink, dropRequest, friendLink, friendsOverview, removeFriend, requestFriend } from './routes/friends';
 import { adminClearReports, adminDeleteLevel, adminLevels, adminPlayers, adminResetName, adminSummary, isAdmin } from './routes/admin';
 import { authenticate, createSession, deleteAccount, googleLogin, logoutEverywhere, sealLegacyEmails } from './session';
 import { unseal } from './seal';
@@ -71,6 +72,12 @@ export default {
     ctx.waitUntil(sealLegacyEmails(env).then((n) => n && console.log(`emails cifrados: ${n}`)));
   },
 } satisfies ExportedHandler<Env>;
+
+/** Solicitudes y enlaces de amigo: el mismo límite que unirse a ligas (evita ir probando nombres). */
+async function friendLimit(env: Env, playerId: string): Promise<void> {
+  const { success } = await env.JOIN_RATE_LIMITER.limit({ key: `friends:${playerId}` });
+  if (!success) throw new HttpError(429, 'tooManyRequests');
+}
 
 async function handleApi(req: Request, url: URL, env: Env): Promise<Response> {
   const route = `${req.method} ${url.pathname.replace(/^\/api/, '')}`;
@@ -249,6 +256,22 @@ async function handleApi(req: Request, url: URL, env: Env): Promise<Response> {
     return json(await createCustomLevel(env, playerId, await body(req)));
   }
   if ((m = route.match(/^GET \/levels\/([\w-]+)$/))) return json(await getCustomLevel(env, playerId, m[1]));
+  // Amigos directos. Solicitudes y enlaces, con el mismo límite que unirse a ligas.
+  if (route === 'GET /friends/overview') return json(await friendsOverview(env, playerId));
+  if (route === 'POST /friends/requests') {
+    await friendLimit(env, playerId);
+    const { name } = await body<{ name?: unknown }>(req);
+    return json(await requestFriend(env, playerId, name));
+  }
+  if ((m = route.match(/^POST \/friends\/link\/([\w-]+)$/))) {
+    await friendLimit(env, playerId);
+    return json(await addByLink(env, playerId, m[1]));
+  }
+  if ((m = route.match(/^GET \/friends\/link\/([\w-]+)$/))) return json(await friendLink(env, playerId, m[1]));
+  if ((m = route.match(/^POST \/friends\/requests\/([\w-]+)\/accept$/))) return json(await acceptFriend(env, playerId, m[1]));
+  if ((m = route.match(/^DELETE \/friends\/requests\/([\w-]+)$/))) return json(await dropRequest(env, playerId, m[1]));
+  if ((m = route.match(/^DELETE \/friends\/([\w-]+)$/))) return json(await removeFriend(env, playerId, m[1]));
+
   // Panel de administración (routes/admin.ts comprueba que lo seas).
   if (route === 'GET /admin/summary') return json(await adminSummary(env, playerId));
   if (route === 'GET /admin/levels') {

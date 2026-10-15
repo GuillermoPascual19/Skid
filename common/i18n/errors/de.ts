@@ -48,9 +48,17 @@ export const errors: ErrorMessages = {
 
   playerNotFound: 'Diesen Spieler gibt es nicht',
 
+  tooManyFriends: 'Höchstens {n} Freunde',
+
+  cantFriendYourself: 'Du kannst dich nicht selbst hinzufügen',
+
+  alreadyFriends: 'Ihr seid schon Freunde',
+
+  requestNotFound: 'Diese Anfrage gibt es nicht mehr',
+
   adminOnly: 'Nur für Administratoren',
-  onlyLeagueProfiles: 'Du kannst nur die Profile von Spielern aus deinen Ligen sehen',
-  onlyLeagueGames: 'Du kannst nur die Partien von Spielern aus deinen Ligen sehen',
+  onlyLeagueProfiles: 'Du kannst nur die Profile deiner Freunde und der Spieler deiner Ligen sehen',
+  onlyLeagueGames: 'Du kannst nur die Partien deiner Freunde und der Spieler deiner Ligen sehen',
   leagueNameLength: 'Der Name der Liga muss zwischen {min} und {max} Zeichen lang sein',
   leagueNotFound: 'Es gibt keine Liga mit diesem Code',
   notLeagueMember: 'Du bist nicht in dieser Liga',
@@ -75,7 +83,7 @@ export const errors: ErrorMessages = {
   duelUnavailable: 'Dieses Duell ist nicht mehr verfügbar',
   invalidDifficulty: 'Ungültiger Schwierigkeitsgrad',
   invalidRival: 'Ungültiger Gegner',
-  onlyLeagueRivals: 'Per Name kannst du nur Spieler aus deinen Ligen herausfordern',
+  onlyLeagueRivals: 'Du kannst nur deine Freunde und Spieler deiner Ligen per Name herausfordern',
   maxDuels: 'Du hast schon {n} laufende Duelle. Warte, bis sie vorbei sind.',
   ownDuel: 'Du kannst dein eigenes Duell nicht annehmen',
   duelHasRival: 'Dieses Duell hat schon einen Gegner',

@@ -15,5 +15,7 @@
     "noEmit": true,
     "types": ["vite/client"]
   },
-  "include": ["frontend/src", "common", "tests", "vite.config.ts"]
+  "include": ["frontend/src", "common", "tests", "vite.config.ts"],
+  // Los tests del Worker usan los tipos de Cloudflare: se comprueban con backend/tsconfig.json.
+  "exclude": ["tests/worker"]
 }

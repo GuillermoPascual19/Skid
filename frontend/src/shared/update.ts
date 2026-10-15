@@ -10,7 +10,7 @@ import { t } from '../i18n/i18n';
 /** Cada cuánto se mira mientras la app está abierta y a la vista. */
 const CHECK_EVERY_MS = 10 * 60 * 1000;
 /** Pantallas sin nada a medias: aquí se puede recargar sin preguntar. */
-const SAFE: readonly Route['name'][] = ['home', 'ranking', 'stats', 'achievements', 'player', 'duels', 'community', 'admin'];
+const SAFE: readonly Route['name'][] = ['home', 'ranking', 'stats', 'achievements', 'player', 'duels', 'community', 'admin', 'friends'];
 
 /** La versión de la web, si es otra que la de este juego (null si es la misma o no se sabe). */
 let newVersion: string | null = null;

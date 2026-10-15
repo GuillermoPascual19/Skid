@@ -1,6 +1,7 @@
 // Reto diario: empezar, consultar, terminar y mejorar (el servidor reproduce la partida para
 // verificarla), y ver el mejor intento de un amigo como fantasma.
 
+import { areFriends } from './friends';
 import { isHatId } from '../../../common/art/hats';
 import { dailyLevel, dayKey, decodeRun, encodeRun, minPlayTimeMs, replayRun } from '../../../common/logic/daily/daily';
 import { streaks } from '../../../common/logic/daily/streaks';
@@ -167,18 +168,12 @@ interface GhostRow {
 
 /**
  * El mejor intento de un amigo y el tuyo en el reto de `day`, para verlos a la
- * vez. Solo de alguien con quien compartas liga y, si es el reto de hoy, cuando
+ * vez. Solo de un amigo (directo o de alguna liga) y, si es el reto de hoy, cuando
  * ya lo hayas terminado (para no destripar la solución).
  */
 export async function ghostRuns(env: Env, playerId: string, day: string, friendId: string) {
   if (friendId === playerId) throw new HttpError(400, 'pickAnotherPlayer');
-  const shared = await env.DB.prepare(
-    `SELECT 1 FROM league_members a JOIN league_members b ON b.league_id = a.league_id AND b.player_id = ?2
-     WHERE a.player_id = ?1 LIMIT 1`,
-  )
-    .bind(playerId, friendId)
-    .first();
-  if (!shared) throw new HttpError(403, 'onlyLeagueGames');
+  if (!(await areFriends(env, playerId, friendId))) throw new HttpError(403, 'onlyLeagueGames');
 
   const { results } = await env.DB.prepare(
     `SELECT r.player_id, p.name, p.hat, r.log, r.time_ms, r.over_par, r.score

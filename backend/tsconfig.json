@@ -4,5 +4,7 @@
     "lib": ["ES2022"],
     "types": ["@cloudflare/workers-types"]
   },
-  "include": ["./src/**/*.ts", "../common/**/*.ts"]
+  "include": ["./src/**/*.ts", "../common/**/*.ts", "../tests/worker/**/*.ts"],
+  // La raíz los excluye (no tiene los tipos de Cloudflare); aquí sí se comprueban.
+  "exclude": []
 }
