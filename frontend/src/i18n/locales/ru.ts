@@ -39,6 +39,9 @@ export const messages: Messages = {
     copyText: 'Копировать сообщение',
     more: 'Другие варианты',
     linkCopied: 'Ссылка скопирована',
+    image: 'Картинка',
+    imageSaved: 'Картинка сохранена',
+    imageFailed: 'Не удалось создать картинку',
   },
   sound: {
     sfxOff: 'Выключить звуковые эффекты',

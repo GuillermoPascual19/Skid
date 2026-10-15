@@ -94,8 +94,19 @@ async function copyText(value: string): Promise<boolean> {
   }
 }
 
-/** Hoja para compartir: WhatsApp, Telegram, copiar el enlace o el mensaje y, si lo hay, el menú del sistema. */
-export function share(text: string): void {
+/** Imagen que se puede compartir junto al mensaje (se crea al abrir la hoja). */
+export interface ShareImage {
+  readonly make: () => Promise<Blob>;
+  /** Nombre del archivo, con su extensión. */
+  readonly name: string;
+}
+
+/**
+ * Hoja para compartir: WhatsApp, Telegram, copiar el enlace o el mensaje y, si
+ * lo hay, el menú del sistema. Con `image`, además una vista previa y la opción
+ * de compartirla como foto (o descargarla donde no se pueda compartir un archivo).
+ */
+export function share(text: string, image?: ShareImage): void {
   // El enlace va en la última línea del mensaje (si la hay).
   const lines = text.split('\n');
   const url = /^https?:\/\//.test(lines.at(-1) ?? '') ? lines.at(-1)! : null;
@@ -116,13 +127,44 @@ export function share(text: string): void {
   const action = (icon: string, label: string, onclick: () => void) =>
     h('button', { class: 'share-option', onclick }, h('span', { class: 'share-icon', 'aria-hidden': 'true' }, icon), label);
 
+  // La imagen se empieza a dibujar al abrir la hoja: así ya está al pulsar.
+  const picture = image?.make();
+  const preview = image ? h('img', { class: 'share-image', alt: '', hidden: true }) : null;
+  let previewUrl: string | null = null;
+  picture
+    ?.then((blob) => {
+      previewUrl = URL.createObjectURL(blob);
+      preview!.src = previewUrl;
+      preview!.hidden = false;
+    })
+    .catch(() => {});
+  const shareImage = async () => {
+    modal.close();
+    try {
+      const file = new File([await picture!], image!.name, { type: 'image/png' });
+      if (navigator.canShare?.({ files: [file] })) {
+        await navigator.share({ files: [file], text }).catch(() => {});
+        return;
+      }
+      // Sin compartir archivos (p. ej. en el ordenador): se descarga.
+      const url = URL.createObjectURL(file);
+      h('a', { href: url, download: image!.name }).click();
+      setTimeout(() => URL.revokeObjectURL(url), 10_000);
+      toast(t('share.imageSaved'));
+    } catch {
+      toast(t('share.imageFailed'));
+    }
+  };
+
   const modal = openModal(
     [
       h('h2', null, t('common.share')),
+      preview,
       h('p', { class: 'share-preview' }, text),
       h(
         'div',
         { class: 'share-options' },
+        image ? action('🖼️', t('share.image'), () => void shareImage()) : null,
         app('whatsapp', 'WhatsApp', `https://wa.me/?text=${encodeURIComponent(text)}`),
         url ? app('telegram', 'Telegram', `https://t.me/share/url?url=${encodeURIComponent(url)}&text=${encodeURIComponent(message)}`) : null,
         url ? action('🔗', t('share.copyLink'), () => void copy(url, t('share.linkCopied'))) : null,
@@ -137,7 +179,7 @@ export function share(text: string): void {
       ),
       h('button', { class: 'link-btn', onclick: () => modal.close() }, t('common.close')),
     ],
-    { dismissable: true },
+    { dismissable: true, onClose: () => previewUrl && setTimeout(() => URL.revokeObjectURL(previewUrl!), 10_000) },
   );
 }
 
