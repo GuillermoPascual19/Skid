@@ -746,6 +746,38 @@ export const messages: Messages = {
       name: 'Campeão da semana',
       description: 'Ganha uma semana inteira na tua liga.',
     },
+    duelWin: {
+      name: 'Duelista',
+      description: 'Ganha um duelo contra um adversário que também o jogou.',
+    },
+    duelWin10: {
+      name: 'Cavaleiro do gelo',
+      description: 'Ganha 10 duelos.',
+    },
+    timeAttack10: {
+      name: 'A todo o gás',
+      description: 'Resolve 10 tabuleiros num só contrarrelógio.',
+    },
+    timeAttackPerfect5: {
+      name: 'Piloto perfeito',
+      description: 'Faz 5 tabuleiros no ótimo num só contrarrelógio.',
+    },
+    weeklyPar: {
+      name: 'Artista semanal',
+      description: 'Resolve o desafio semanal no ótimo.',
+    },
+    explorer10: {
+      name: 'Explorador',
+      description: 'Completa 10 níveis de outros jogadores.',
+    },
+    creator5: {
+      name: 'Construtor',
+      description: 'Consegue que 5 jogadores completem um dos teus níveis.',
+    },
+    creatorStar: {
+      name: 'Obra-prima',
+      description: 'Consegue ★4 ou mais num dos teus níveis, com pelo menos 3 avaliações.',
+    },
   },
   hats: {
     beanie: 'Gorro de lã',
@@ -758,6 +790,14 @@ export const messages: Messages = {
     ushanka: 'Gorro polar',
     wizard: 'Chapéu de mago',
     crown: 'Coroa',
+    headband: 'Fita de duelista',
+    knight: 'Elmo de cavaleiro',
+    propeller: 'Boné de hélice',
+    racing: 'Boné de corrida',
+    beret: 'Boina',
+    explorer: 'Capacete de explorador',
+    hardhat: 'Capacete de obra',
+    laurel: 'Coroa de louros',
     scarf: 'Cachecol',
     hearts: 'Bandolete de corações',
     clover: 'Chapéu de trevo',
@@ -787,6 +827,13 @@ export const messages: Messages = {
     seeHats: 'Ver os meus chapéus',
     newOne: 'Nova conquista!',
     newOneText: '{description} Desbloqueaste: {hat}.',
+    mode: {
+      daily: 'Desafio diário',
+      duels: 'Duelos',
+      timeAttack: 'Contrarrelógio',
+      weekly: 'Desafio semanal',
+      community: 'Níveis da comunidade',
+    },
   },
   seasonHats: {
     title: 'Chapéus de temporada',

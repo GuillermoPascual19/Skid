@@ -746,6 +746,38 @@ export const messages: Messages = {
       name: 'Wochenmeister',
       description: 'Gewinn eine ganze Woche in deiner Liga.',
     },
+    duelWin: {
+      name: 'Duellant',
+      description: 'Gewinne ein Duell gegen einen Gegner, der es auch gespielt hat.',
+    },
+    duelWin10: {
+      name: 'Eisritter',
+      description: 'Gewinne 10 Duelle.',
+    },
+    timeAttack10: {
+      name: 'Volle Fahrt',
+      description: 'Löse 10 Bretter in einem einzigen Zeitrennen.',
+    },
+    timeAttackPerfect5: {
+      name: 'Perfekter Pilot',
+      description: 'Schaffe 5 Bretter mit der optimalen Zugzahl in einem einzigen Zeitrennen.',
+    },
+    weeklyPar: {
+      name: 'Wochenkünstler',
+      description: 'Löse die Wochen-Herausforderung mit der optimalen Zugzahl.',
+    },
+    explorer10: {
+      name: 'Entdecker',
+      description: 'Schließe 10 Level anderer Spieler ab.',
+    },
+    creator5: {
+      name: 'Baumeister',
+      description: 'Lass 5 Spieler eines deiner Level abschließen.',
+    },
+    creatorStar: {
+      name: 'Meisterwerk',
+      description: 'Erreiche ★4 oder mehr bei einem deiner Level, mit mindestens 3 Bewertungen.',
+    },
   },
   hats: {
     beanie: 'Wollmütze',
@@ -758,6 +790,14 @@ export const messages: Messages = {
     ushanka: 'Uschanka',
     wizard: 'Zauberhut',
     crown: 'Krone',
+    headband: 'Duell-Stirnband',
+    knight: 'Ritterhelm',
+    propeller: 'Propellermütze',
+    racing: 'Rennkappe',
+    beret: 'Baskenmütze',
+    explorer: 'Tropenhelm',
+    hardhat: 'Bauhelm',
+    laurel: 'Lorbeerkranz',
     scarf: 'Schal',
     hearts: 'Herz-Haarreif',
     clover: 'Kleeblatthut',
@@ -787,6 +827,13 @@ export const messages: Messages = {
     seeHats: 'Meine Hüte ansehen',
     newOne: 'Neuer Erfolg!',
     newOneText: '{description} Freigeschaltet: {hat}.',
+    mode: {
+      daily: 'Tägliche Herausforderung',
+      duels: 'Duelle',
+      timeAttack: 'Zeitrennen',
+      weekly: 'Wochen-Herausforderung',
+      community: 'Community-Level',
+    },
   },
   seasonHats: {
     title: 'Saisonhüte',

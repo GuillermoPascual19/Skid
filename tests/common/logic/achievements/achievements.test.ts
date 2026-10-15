@@ -1,10 +1,19 @@
 import { describe, expect, it } from 'vitest';
-import { ACHIEVEMENTS, computeAchievements, unlockedHats, weekTitles, type FinishedRun } from '../../../../common/logic/achievements/achievements';
+import {
+  ACHIEVEMENTS,
+  computeAchievements,
+  duelWins,
+  NO_MODE_STATS,
+  unlockedHats,
+  weekTitles,
+  type FinishedRun,
+  type ModeStats,
+} from '../../../../common/logic/achievements/achievements';
 
 const today = '2026-10-09'; // Viernes.
 const run = (day: string, score = 800, retries = 0, hints = 0, overPar: number | null = null): FinishedRun => ({ day, score, retries, hints, overPar });
-const progress = (runs: FinishedRun[], wonDays = 0, titles = 0) =>
-  Object.fromEntries(computeAchievements({ runs, wonDays, weekTitles: titles, today }).map((p) => [p.id, p]));
+const progress = (runs: FinishedRun[], wonDays = 0, titles = 0, modes: Partial<ModeStats> = {}) =>
+  Object.fromEntries(computeAchievements({ runs, wonDays, weekTitles: titles, modes: { ...NO_MODE_STATS, ...modes }, today }).map((p) => [p.id, p]));
 
 describe('computeAchievements', () => {
   it('sin partidas no hay nada desbloqueado', () => {
@@ -51,8 +60,37 @@ describe('computeAchievements', () => {
 
   it('cada logro da un gorro distinto', () => {
     expect(new Set(ACHIEVEMENTS.map((a) => a.hat)).size).toBe(ACHIEVEMENTS.length);
-    const hats = unlockedHats(computeAchievements({ runs: [run('2026-10-08', 1000)], wonDays: 0, weekTitles: 0, today }));
+    const hats = unlockedHats(computeAchievements({ runs: [run('2026-10-08', 1000)], wonDays: 0, weekTitles: 0, modes: NO_MODE_STATS, today }));
     expect([...hats].sort()).toEqual(['beanie', 'tophat']);
+  });
+});
+
+describe('logros de los demás modos', () => {
+  it('cada uno avanza con su contador', () => {
+    const p = progress([], 0, 0, { duelWins: 3, timeAttackBoards: 10, timeAttackPerfect: 2, weeklyPars: 1, communityLevels: 4, bestLevelPlayers: 5, starLevels: 0 });
+    expect(p.duelWin.unlocked).toBe(true);
+    expect(p.duelWin10).toMatchObject({ unlocked: false, current: 3, target: 10 });
+    expect(p.timeAttack10.unlocked).toBe(true);
+    expect(p.timeAttackPerfect5).toMatchObject({ unlocked: false, current: 2 });
+    expect(p.weeklyPar.unlocked).toBe(true);
+    expect(p.explorer10).toMatchObject({ unlocked: false, current: 4 });
+    expect(p.creator5.unlocked).toBe(true);
+    expect(p.creatorStar.unlocked).toBe(false);
+  });
+
+  it('todos los logros tienen modo y salen agrupados por modo', () => {
+    const modes = ACHIEVEMENTS.map((a) => a.mode);
+    expect(modes.filter((m, i) => i > 0 && m !== modes[i - 1]).length).toBe(new Set(modes).size - 1);
+  });
+});
+
+describe('duelWins', () => {
+  const r = (moves: number, timeMs = 1000) => ({ moves, timeMs });
+  it('cuenta las victorias por movimientos o por tiempo', () => {
+    expect(duelWins([{ mine: r(5), theirs: r(6) }, { mine: r(5, 900), theirs: r(5, 1000) }])).toBe(2);
+  });
+  it('no cuenta derrotas, empates ni victorias porque el rival no jugó', () => {
+    expect(duelWins([{ mine: r(6), theirs: r(5) }, { mine: r(5), theirs: r(5) }, { mine: r(5), theirs: null }, { mine: null, theirs: null }])).toBe(0);
   });
 });
 

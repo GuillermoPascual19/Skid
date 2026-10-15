@@ -746,6 +746,38 @@ export const messages: Messages = {
       name: 'Champion de la semaine',
       description: 'Gagne une semaine entière dans ta ligue.',
     },
+    duelWin: {
+      name: 'Duelliste',
+      description: 'Gagne un duel contre un adversaire qui l\'a aussi joué.',
+    },
+    duelWin10: {
+      name: 'Chevalier de glace',
+      description: 'Gagne 10 duels.',
+    },
+    timeAttack10: {
+      name: 'À fond les gaz',
+      description: 'Résous 10 plateaux en un seul contre-la-montre.',
+    },
+    timeAttackPerfect5: {
+      name: 'Pilote parfait',
+      description: 'Fais 5 plateaux en un nombre optimal de coups en un seul contre-la-montre.',
+    },
+    weeklyPar: {
+      name: 'Artiste de la semaine',
+      description: 'Résous le défi de la semaine en un nombre optimal de coups.',
+    },
+    explorer10: {
+      name: 'Explorateur',
+      description: 'Termine 10 niveaux créés par d\'autres joueurs.',
+    },
+    creator5: {
+      name: 'Bâtisseur',
+      description: 'Fais terminer l\'un de tes niveaux par 5 joueurs.',
+    },
+    creatorStar: {
+      name: 'Chef-d\'œuvre',
+      description: 'Obtiens ★4 ou plus sur l\'un de tes niveaux, avec au moins 3 notes.',
+    },
   },
   hats: {
     beanie: 'Bonnet en laine',
@@ -758,6 +790,14 @@ export const messages: Messages = {
     ushanka: 'Chapka',
     wizard: 'Chapeau de magicien',
     crown: 'Couronne',
+    headband: 'Bandeau de duelliste',
+    knight: 'Heaume de chevalier',
+    propeller: 'Casquette à hélice',
+    racing: 'Casquette de course',
+    beret: 'Béret',
+    explorer: 'Casque colonial',
+    hardhat: 'Casque de chantier',
+    laurel: 'Couronne de laurier',
     scarf: 'Écharpe',
     hearts: 'Serre-tête cœurs',
     clover: 'Chapeau trèfle',
@@ -787,6 +827,13 @@ export const messages: Messages = {
     seeHats: 'Voir mes chapeaux',
     newOne: 'Nouveau succès !',
     newOneText: '{description} Tu as débloqué : {hat}.',
+    mode: {
+      daily: 'Défi du jour',
+      duels: 'Duels',
+      timeAttack: 'Contre-la-montre',
+      weekly: 'Défi de la semaine',
+      community: 'Niveaux de la communauté',
+    },
   },
   seasonHats: {
     title: 'Chapeaux de saison',

@@ -20,8 +20,8 @@ y niveles creados por los jugadores.
 - **Duelos en directo**: retas a un amigo (o a quien quieras con un enlace) y jugáis a la vez el
   mismo tablero nuevo.
 - **Ligas**: ranking del día y de la semana con tus amigos, y temporadas mensuales cuyo campeón se
-  lleva el gorro de ese mes; reacciones con emojis a los retos de tus amigos; logros que
-  desbloquean más gorros.
+  lleva el gorro de ese mes; reacciones con emojis a los retos de tus amigos; logros del reto
+  diario, duelos, contrarreloj, reto semanal y niveles de la comunidad que desbloquean más gorros.
 - **Niveles de jugadores**: editor, publicar (hay que superarlo antes), valorar, ranking por nivel,
   compartir y denunciar.
 - Guía «Cómo se juega», modo oscuro, música y efectos sintetizados, y login con Google para jugar en
