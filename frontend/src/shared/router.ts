@@ -6,6 +6,7 @@ import type { DailyRecord } from '../features/daily/storage';
 import type { WeeklyInfo } from '../features/weekly/api';
 import type { Duel } from '../features/duels/api';
 import type { TimeAttackStart } from '../features/timeattack/api';
+import { updateTitle } from './meta';
 
 export interface Screen {
   readonly el: HTMLElement;
@@ -58,6 +59,7 @@ export function go(route: Route): void {
   document.getElementById('app')!.replaceChildren(screen.el);
   current = screen;
   currentName = route.name;
+  updateTitle(route.name);
   window.scrollTo(0, 0);
   screen.mount?.();
 }

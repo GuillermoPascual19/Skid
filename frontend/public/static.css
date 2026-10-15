@@ -1,0 +1,147 @@
+/* Páginas sueltas fuera del juego (404 y textos legales): mismos colores que Skid, claro y oscuro. */
+:root {
+  --bg-top: #cfeeff;
+  --bg-bottom: #f4fbff;
+  --card: #ffffff;
+  --ink: #15324f;
+  --ink-soft: #4a6680;
+  --accent: #1c6aa5;
+  --line: #dbe9f4;
+  --btn: #ff7a45;
+  --btn-press: #d85a2a;
+  color-scheme: light;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg-top: #0e1d2e;
+    --bg-bottom: #142a40;
+    --card: #1b3350;
+    --ink: #e6f1fb;
+    --ink-soft: #a9c2d8;
+    --accent: #7cc8f7;
+    --line: #2a4766;
+    color-scheme: dark;
+  }
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  font-family: 'Baloo 2', 'Nunito', 'Trebuchet MS', system-ui, sans-serif;
+  color: var(--ink);
+  background: linear-gradient(var(--bg-top), var(--bg-bottom)) fixed;
+  line-height: 1.55;
+}
+
+main {
+  max-width: 760px;
+  margin: 0 auto;
+  padding: 24px 16px 48px;
+}
+
+.card {
+  background: var(--card);
+  border-radius: 22px;
+  padding: 24px 20px;
+  box-shadow: 0 10px 30px rgba(21, 50, 79, 0.14);
+}
+
+h1 {
+  font-size: 30px;
+  line-height: 1.15;
+  margin: 0 0 8px;
+}
+
+h2 {
+  font-size: 21px;
+  margin: 28px 0 6px;
+}
+
+p,
+li {
+  color: var(--ink-soft);
+}
+
+a {
+  color: var(--accent);
+  font-weight: 700;
+}
+
+.muted {
+  font-size: 14px;
+}
+
+.pending {
+  background: #fff3c4;
+  color: #6b4e00;
+  border-radius: 6px;
+  padding: 0 4px;
+  font-weight: 700;
+}
+
+.btn {
+  display: inline-block;
+  margin-top: 12px;
+  padding: 12px 22px;
+  border: 0;
+  border-radius: 16px;
+  background: var(--btn);
+  box-shadow: 0 5px 0 var(--btn-press);
+  color: #fff;
+  font: inherit;
+  font-weight: 800;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.back {
+  display: inline-block;
+  margin-bottom: 16px;
+}
+
+.center {
+  text-align: center;
+}
+
+.penguin {
+  width: 96px;
+  height: 96px;
+}
+
+nav.legal {
+  margin-top: 24px;
+  font-size: 14px;
+  text-align: center;
+}
+
+nav.legal a {
+  margin: 0 8px;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 15px;
+}
+
+th,
+td {
+  text-align: left;
+  vertical-align: top;
+  padding: 8px 6px;
+  border-bottom: 1px solid var(--line);
+  color: var(--ink-soft);
+}
+
+th {
+  color: var(--ink);
+}
+
+.table-wrap {
+  overflow-x: auto;
+}

@@ -241,6 +241,16 @@ export const messages: Messages = {
     title: 'Язык',
     change: 'Язык: {language}. Нажми, чтобы сменить',
   },
+  footer: {
+    privacy: 'Конфиденциальность',
+    terms: 'Условия',
+    legal: 'Правовая информация',
+    contact: 'Контакты',
+  },
+  meta: {
+    title: 'Skid · Головоломка на льду',
+    description: 'Скользи пингвином по льду и собирай фишки по порядку. Испытание дня, дуэли в реальном времени, игра на время и лиги с друзьями.',
+  },
   update: {
     available: 'Доступна новая версия',
     reload: 'Обновить',
@@ -824,6 +834,7 @@ export const messages: Messages = {
     },
   },
   google: {
+    continue: 'Продолжить с Google',
     noResponse: 'Google не ответил',
     loadFailed: 'Не удалось загрузить вход через Google',
   },

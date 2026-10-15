@@ -481,6 +481,30 @@ p {
   min-height: 44px;
 }
 
+/* Botón propio «Continuar con Google» (el de Google se carga al pulsarlo). Con su aspecto: blanco y borde gris. */
+.google-own {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  min-height: 44px;
+  min-width: 220px;
+  padding: 0 20px;
+  border: 1px solid #dadce0;
+  border-radius: 999px;
+  background: #fff;
+  color: #3c4043;
+  font: inherit;
+  font-weight: 700;
+  font-size: 15px;
+  cursor: pointer;
+}
+
+.google-own:disabled {
+  opacity: 0.6;
+  cursor: progress;
+}
+
 .divider {
   display: flex;
   align-items: center;
@@ -1262,7 +1286,8 @@ p {
 
 .cal-grid {
   display: grid;
-  grid-template-columns: repeat(7, 1fr);
+  /* minmax(0, …): las columnas pueden encogerse en móviles estrechos (con 1fr no bajan de su contenido). */
+  grid-template-columns: repeat(7, minmax(0, 1fr));
   gap: 4px;
 }
 
@@ -3609,4 +3634,19 @@ input.switch:focus-visible {
     opacity: 0;
     transform: translate(-50%, 12px);
   }
+}
+
+/* Pie de la portada: textos legales y contacto. */
+.site-footer {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 4px 16px;
+  padding: 8px 0 4px;
+  font-size: 13px;
+}
+
+.site-footer a {
+  color: var(--ink-faint);
+  font-weight: 600;
 }

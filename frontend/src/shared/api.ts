@@ -80,17 +80,32 @@ export async function api<T>(method: string, path: string, body?: unknown): Prom
 
 // ---------------------------------------------------------- Login con Google
 
-let configPromise: Promise<{ googleClientId: string | null }> | null = null;
+interface PublicConfig {
+  googleClientId: string | null;
+  /** Token (público) de Cloudflare Web Analytics; null si no se usan analíticas. */
+  analyticsToken: string | null;
+}
 
-/** ID de cliente de Google para el botón de login (null si no está configurado). */
-export async function googleClientId(): Promise<string | null> {
-  configPromise ??= request<{ googleClientId: string | null }>('GET', '/config')
+let configPromise: Promise<PublicConfig> | null = null;
+
+function config(): Promise<PublicConfig> {
+  configPromise ??= request<PublicConfig>('GET', '/config')
     .then(({ data }) => data)
     .catch((err) => {
       configPromise = null;
       throw err;
     });
-  return (await configPromise).googleClientId;
+  return configPromise;
+}
+
+/** ID de cliente de Google para el botón de login (null si no está configurado). */
+export async function googleClientId(): Promise<string | null> {
+  return (await config()).googleClientId;
+}
+
+/** Token de las analíticas (null si no están activadas). */
+export async function analyticsToken(): Promise<string | null> {
+  return (await config()).analyticsToken ?? null;
 }
 
 export interface GoogleLogin {

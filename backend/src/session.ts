@@ -2,6 +2,7 @@
 // sesiones por jugador), cerrar sesión en todos los dispositivos y borrar la cuenta.
 
 import { dayKey } from '../../common/logic/daily/daily';
+import { isSealed, seal } from './seal';
 import { GOOGLE_CERTS_URL, googleKeyProvider, InvalidTokenError, verifyGoogleIdToken } from './google';
 import { type Env, HttpError, type Session } from './http';
 
@@ -120,17 +121,19 @@ export async function googleLogin(env: Env, session: Session, credential: unknow
     throw err;
   }
   const email = claims.email_verified === false ? null : (claims.email ?? null);
+  // En la base de datos va cifrado; sin clave, no se guarda (nunca en claro).
+  const storedEmail = email && env.EMAIL_KEY ? await seal(env.EMAIL_KEY, email) : null;
 
   const linked = await env.DB.prepare('SELECT id, name FROM players WHERE google_sub = ?')
     .bind(claims.sub)
     .first<{ id: string; name: string | null }>();
 
   if (linked?.id === session.playerId) {
-    await env.DB.prepare('UPDATE players SET email = ? WHERE id = ?').bind(email, linked.id).run();
+    await env.DB.prepare('UPDATE players SET email = ? WHERE id = ?').bind(storedEmail, linked.id).run();
     return { token: null, switched: false, name: linked.name, email };
   }
 
-  if (linked) return switchDevice(env, session, linked.id, linked.name, email);
+  if (linked) return switchDevice(env, session, linked.id, linked.name, email, storedEmail);
 
   const current = await env.DB.prepare('SELECT name, google_sub FROM players WHERE id = ?')
     .bind(session.playerId)
@@ -141,7 +144,7 @@ export async function googleLogin(env: Env, session: Session, credential: unknow
     const token = randomToken();
     const tokenHash = await sha256(token);
     await env.DB.batch([
-      env.DB.prepare('INSERT INTO players (id, token_hash, google_sub, email) VALUES (?, ?, ?, ?)').bind(id, tokenHash, claims.sub, email),
+      env.DB.prepare('INSERT INTO players (id, token_hash, google_sub, email) VALUES (?, ?, ?, ?)').bind(id, tokenHash, claims.sub, storedEmail),
       env.DB.prepare('INSERT INTO sessions (token_hash, player_id, last_used_at) VALUES (?, ?, ?)').bind(tokenHash, id, Date.now()),
       env.DB.prepare('DELETE FROM sessions WHERE token_hash = ?').bind(session.tokenHash),
     ]);
@@ -150,7 +153,7 @@ export async function googleLogin(env: Env, session: Session, credential: unknow
 
   // Primera vez con esta cuenta: se vincula al jugador actual.
   await env.DB.prepare('UPDATE players SET google_sub = ?, email = ? WHERE id = ? AND google_sub IS NULL')
-    .bind(claims.sub, email, session.playerId)
+    .bind(claims.sub, storedEmail, session.playerId)
     .run();
   return { token: null, switched: false, name: current?.name ?? null, email };
 }
@@ -162,13 +165,14 @@ async function switchDevice(
   playerId: string,
   name: string | null,
   email: string | null,
+  storedEmail: string | null,
 ): Promise<GoogleLoginResult> {
   const token = randomToken();
   const tokenHash = await sha256(token);
   await env.DB.batch([
     env.DB.prepare('INSERT INTO sessions (token_hash, player_id, last_used_at) VALUES (?, ?, ?)').bind(tokenHash, playerId, Date.now()),
     env.DB.prepare('DELETE FROM sessions WHERE token_hash = ?').bind(session.tokenHash),
-    env.DB.prepare('UPDATE players SET email = ? WHERE id = ?').bind(email, playerId),
+    env.DB.prepare('UPDATE players SET email = ? WHERE id = ?').bind(storedEmail, playerId),
   ]);
   return { token, switched: true, name, email };
 }
@@ -201,4 +205,22 @@ export async function deleteAccount(env: Env, session: Session): Promise<{ ok: t
     env.DB.prepare('DELETE FROM leagues WHERE NOT EXISTS (SELECT 1 FROM league_members m WHERE m.league_id = leagues.id)'),
   ]);
   return { ok: true };
+}
+
+/**
+ * Cifra los emails que se guardaron en claro antes de cifrarlos (tarea programada
+ * diaria, por tandas). Sin clave no hace nada.
+ */
+export async function sealLegacyEmails(env: Env): Promise<number> {
+  if (!env.EMAIL_KEY) return 0;
+  const { results } = await env.DB.prepare("SELECT id, email FROM players WHERE email IS NOT NULL AND email NOT LIKE 'enc1:%' LIMIT 500")
+    .all<{ id: string; email: string }>();
+  const pending = results.filter((r) => !isSealed(r.email));
+  if (pending.length === 0) return 0;
+  const key = env.EMAIL_KEY;
+  const statements = await Promise.all(
+    pending.map(async (r) => env.DB.prepare('UPDATE players SET email = ? WHERE id = ? AND email = ?').bind(await seal(key, r.email), r.id, r.email)),
+  );
+  await env.DB.batch(statements);
+  return pending.length;
 }

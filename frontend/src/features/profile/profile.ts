@@ -1,6 +1,6 @@
 // Nombre del jugador en el ranking online y cuenta de Google vinculada.
 
-import { h, openModal } from '../../shared/dom';
+import { h, openModal, toast } from '../../shared/dom';
 import { renderGoogleButton } from './google';
 import { type Me, getMe, setName } from './api';
 import { NAME_MAX, NAME_MIN, nameProblem } from '../../../../common/logic/players/names';
@@ -50,8 +50,13 @@ export function askName(initial = ''): Promise<string | null> {
       placeholder: t('name.placeholder'),
       autocomplete: 'nickname',
       'aria-label': t('name.placeholder'),
+      'aria-describedby': 'name-error',
+      oninput: () => {
+        error.hidden = true;
+        input.removeAttribute('aria-invalid');
+      },
     });
-    const error = h('p', { class: 'error', hidden: true });
+    const error = h('p', { class: 'error field-error', id: 'name-error', role: 'alert', hidden: true });
     const save = h('button', { class: 'btn block big', type: 'submit' }, t('name.save'));
 
     const form = h(
@@ -67,6 +72,7 @@ export function askName(initial = ''): Promise<string | null> {
           if (problem) {
             error.textContent = te(problem === 'length' ? 'nameLength' : 'nameChars', { min: NAME_MIN, max: NAME_MAX });
             error.hidden = false;
+            input.setAttribute('aria-invalid', 'true');
             return;
           }
           save.disabled = true;
@@ -114,6 +120,16 @@ export function askName(initial = ''): Promise<string | null> {
   });
 }
 
+/**
+ * El nombre del jugador o, si aún no tiene, se le pide. Si no se puede saber (sin
+ * conexión, demasiadas peticiones…) se avisa y se devuelve null: quien llama no
+ * sigue, y el jugador sabe por qué no ha pasado nada.
+ */
 export async function ensureName(): Promise<string | null> {
-  return (await currentName()) ?? askName();
+  try {
+    return (await currentName()) ?? (await askName());
+  } catch (err) {
+    toast((err as Error).message);
+    return null;
+  }
 }

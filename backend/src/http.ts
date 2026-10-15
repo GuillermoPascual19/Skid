@@ -17,6 +17,10 @@ export interface Env {
   /** Claves VAPID de las notificaciones (la pública en wrangler.jsonc, la privada como secreto). Sin ellas, no hay notificaciones. */
   VAPID_PUBLIC_KEY?: string;
   VAPID_PRIVATE_KEY?: string;
+  /** Token de Cloudflare Web Analytics (público: va en la página). Vacío, sin analíticas. */
+  CF_ANALYTICS_TOKEN?: string;
+  /** Clave (32 bytes, base64url) con la que se cifra el email en la base de datos (secreto). Sin ella no se guarda. */
+  EMAIL_KEY?: string;
   /** Deja una tarea corriendo después de responder (ctx.waitUntil de la petición). */
   waitUntil?(task: Promise<unknown>): void;
 }

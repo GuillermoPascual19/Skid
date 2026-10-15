@@ -13,6 +13,8 @@ import { difficultyLabel } from './features/duels/duels';
 import { duelRoomScreen } from './features/duels/duel-room';
 import { refreshPush, registerServiceWorker } from './features/notifications/notifications';
 import { watchForUpdates } from './shared/update';
+import { updateDescription } from './shared/meta';
+import { startAnalytics } from './shared/analytics';
 import { timeAttackScreen } from './features/timeattack/timeattack-screen';
 import { duelPlayScreen } from './features/duels/duel-play';
 import { getDuelGhost } from './features/duels/api';
@@ -95,6 +97,7 @@ setRoutes({
 
 applyTheme();
 await initI18n(); // Antes de pintar nada: todos los textos salen del idioma elegido.
+updateDescription();
 snow();
 installAudio();
 await waitForFonts();
@@ -119,3 +122,6 @@ void refreshPush();
 
 // Si se despliega una versión nueva mientras la app está abierta, se recarga (o se avisa).
 watchForUpdates();
+
+// Analíticas sin cookies, si están configuradas.
+void startAnalytics();

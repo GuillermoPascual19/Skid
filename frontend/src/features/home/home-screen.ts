@@ -338,6 +338,15 @@ export function homeScreen(): Screen {
         )
       : null,
     online.onlineEnabled ? account : null,
+    // Textos legales (páginas sueltas en /legal; el contacto, en el aviso legal).
+    h(
+      'footer',
+      { class: 'site-footer' },
+      h('a', { href: '/legal/privacidad.html' }, t('footer.privacy')),
+      h('a', { href: '/legal/terminos.html' }, t('footer.terms')),
+      h('a', { href: '/legal/aviso-legal.html' }, t('footer.legal')),
+      h('a', { href: '/legal/aviso-legal.html#contacto' }, t('footer.contact')),
+    ),
   );
 
   return {
