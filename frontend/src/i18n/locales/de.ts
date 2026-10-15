@@ -680,6 +680,10 @@ export const messages: Messages = {
         label: 'Loch',
         help: 'Wer hineinfällt, kommt zurück zum Start (mit den Teilen, die er hatte).',
       },
+      crack: {
+        label: 'Brüchiges Eis',
+        help: 'Bricht beim ersten Darüberrutschen und wird dann zu einem Loch. Höchstens 6 pro Level.',
+      },
     },
     maxPieces: 'Höchstens {n} Teile',
     maxPortals: 'Höchstens {n} Teleporter-Paare',
@@ -901,6 +905,10 @@ export const messages: Messages = {
     hole: {
       name: 'Löcher',
       description: 'Wenn du ins Wasser fällst, geht es zurück zum Start, aber du behältst die Teile, die du hast.',
+    },
+    crack: {
+      name: 'Brüchiges Eis',
+      description: 'Es hält nur einmal: Rutschst du darüber, bricht es und wird zu einem Loch. Kommst du wieder vorbei, fällst du ins Wasser.',
     },
   },
   free: {

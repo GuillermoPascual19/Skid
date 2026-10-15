@@ -26,6 +26,7 @@ export function boardThumb(rows: readonly string[]): string {
       else if (/^[1-9]$/.test(ch)) parts.push(`<circle cx="${cx}" cy="${cy}" r=".34" fill="${ch === '1' ? '#ffc93c' : 'var(--coin)'}" stroke="var(--coin-rim)" stroke-width=".06"/>`);
       else if (ch === '*') parts.push(`<circle cx="${cx}" cy="${cy}" r=".36" fill="#fff"/>`);
       else if (ch === 'O') parts.push(`<ellipse cx="${cx}" cy="${cy}" rx=".34" ry=".28" fill="#1d5f8a"/>`);
+      else if (ch === 'x') parts.push(`<path d="M${cx - 0.3} ${cy - 0.25} L${cx} ${cy} L${cx + 0.3} ${cy - 0.15} M${cx} ${cy} L${cx - 0.1} ${cy + 0.32} M${cx} ${cy} L${cx + 0.25} ${cy + 0.25}" stroke="#5aa9d6" stroke-width=".09" stroke-linecap="round" fill="none"/>`);
       else if (ch in ARROW_ANGLE) parts.push(`<path d="M-.25 -.3 L.25 0 L-.25 .3 Z" fill="#1f86c2" transform="translate(${cx} ${cy}) rotate(${ARROW_ANGLE[ch]})"/>`);
       else {
         const pair = PORTAL_CHARS.indexOf(ch as (typeof PORTAL_CHARS)[number]);
@@ -40,6 +41,7 @@ export function boardThumb(rows: readonly string[]): string {
 export function cellArt(ch: string): string {
   if (ch === '*') return elementSvg('snow');
   if (ch === 'O') return elementSvg('hole');
+  if (ch === 'x') return elementSvg('crack');
   if (ch in ARROW_ANGLE) return elementSvg('arrow').replace('<svg ', `<svg style="transform: rotate(${ARROW_ANGLE[ch]}deg)" `);
   const pair = PORTAL_CHARS.indexOf(ch as (typeof PORTAL_CHARS)[number]);
   if (pair >= 0) return elementSvg('portal').replaceAll('#a78bfa', PORTAL_COLORS[pair]);

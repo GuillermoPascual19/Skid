@@ -12,12 +12,12 @@ describe('applyMove', () => {
 
   it('se para antes de una pieza que no toca', () => {
     const board = parseBoard(['@..2.1']);
-    expect(applyMove(board, initialState(board), 'right')).toEqual({ player: { x: 2, y: 0 }, collected: 0 });
+    expect(applyMove(board, initialState(board), 'right')).toEqual({ player: { x: 2, y: 0 }, collected: 0, broken: 0 });
   });
 
   it('recoge la que toca y sigue, también la siguiente en la misma línea', () => {
     const board = parseBoard(['@.1.2..#3']);
-    expect(applyMove(board, initialState(board), 'right')).toEqual({ player: { x: 6, y: 0 }, collected: 2 });
+    expect(applyMove(board, initialState(board), 'right')).toEqual({ player: { x: 6, y: 0 }, collected: 2, broken: 0 });
   });
 
   it('devuelve null si no se desplaza y no muta el estado', () => {
@@ -25,7 +25,7 @@ describe('applyMove', () => {
     const state = initialState(board);
     expect(applyMove(board, state, 'left')).toBeNull();
     applyMove(board, state, 'right');
-    expect(state).toEqual({ player: { x: 1, y: 0 }, collected: 0 });
+    expect(state).toEqual({ player: { x: 1, y: 0 }, collected: 0, broken: 0 });
   });
 
   it('isComplete al recoger la última', () => {
@@ -72,6 +72,6 @@ describe('countDeadEnds', () => {
 
   it('solve puede partir de cualquier estado', () => {
     const board = parseBoard(['#####', '#@.1#', '#.###', '#.###', '#####']);
-    expect(solve(board, { player: { x: 1, y: 3 }, collected: 0 })).toEqual(['up', 'right']);
+    expect(solve(board, { player: { x: 1, y: 3 }, collected: 0, broken: 0 })).toEqual(['up', 'right']);
   });
 });

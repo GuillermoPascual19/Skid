@@ -23,31 +23,31 @@ describe('parseBoard con elementos', () => {
 
 describe('reglas de los elementos', () => {
   it('la nieve para al pingüino encima', () => {
-    expect(move(['@..*..1'], 'right')).toEqual({ player: { x: 3, y: 0 }, collected: 0 });
+    expect(move(['@..*..1'], 'right')).toEqual({ player: { x: 3, y: 0 }, collected: 0, broken: 0 });
   });
 
   it('la flecha lo gira y sigue deslizando', () => {
     // Entra en la flecha hacia la derecha y sale hacia abajo hasta el muro.
-    expect(move(['@.v.1', '.....', '.....'], 'right')).toEqual({ player: { x: 2, y: 2 }, collected: 0 });
+    expect(move(['@.v.1', '.....', '.....'], 'right')).toEqual({ player: { x: 2, y: 2 }, collected: 0, broken: 0 });
   });
 
   it('una flecha contra un muro lo deja parado encima', () => {
-    expect(move(['@.^.1'], 'right')).toEqual({ player: { x: 2, y: 0 }, collected: 0 });
+    expect(move(['@.^.1'], 'right')).toEqual({ player: { x: 2, y: 0 }, collected: 0, broken: 0 });
   });
 
   it('el teletransporte lo saca por la pareja en la misma dirección', () => {
     const board = parseBoard(['@.a..', '#####', '..a.1']);
     const trace = traceMove(board, initialState(board), 'right')!;
-    expect(trace.state).toEqual({ player: { x: 4, y: 2 }, collected: 1 });
+    expect(trace.state).toEqual({ player: { x: 4, y: 2 }, collected: 1, broken: 0 });
     expect(trace.steps.map((s) => s.kind)).toEqual(['slide', 'slide', 'teleport', 'slide', 'slide']);
   });
 
   it('el agujero lo devuelve a la salida y conserva las piezas', () => {
-    expect(move(['@.1.O.2'], 'right')).toEqual({ player: { x: 0, y: 0 }, collected: 1 });
+    expect(move(['@.1.O.2'], 'right')).toEqual({ player: { x: 0, y: 0 }, collected: 1, broken: 0 });
   });
 
   it('caer al agua desde la salida sí cuenta como movimiento', () => {
-    expect(move(['@O..1'], 'right')).toEqual({ player: { x: 0, y: 0 }, collected: 0 });
+    expect(move(['@O..1'], 'right')).toEqual({ player: { x: 0, y: 0 }, collected: 0, broken: 0 });
   });
 
   it('un bucle de corrientes se detecta y no se queda colgado', () => {
@@ -66,18 +66,59 @@ describe('reglas de los elementos', () => {
   });
 });
 
+describe('hielo frágil', () => {
+  it('la primera vez se rompe y el pingüino sigue deslizando', () => {
+    const board = parseBoard(['@.x..', '....1']);
+    const trace = traceMove(board, initialState(board), 'right')!;
+    expect(trace.state).toEqual({ player: { x: 4, y: 0 }, collected: 0, broken: 1 });
+    expect(trace.steps.map((s) => s.breaks)).toEqual([false, true, false, false]);
+  });
+
+  it('roto es un agujero: al volver a pasar cae y vuelve a la salida', () => {
+    const board = parseBoard(['@.x..', '....1']);
+    const after = applyMove(board, initialState(board), 'right')!;
+    expect(applyMove(board, after, 'left')).toEqual({ player: { x: 0, y: 0 }, collected: 0, broken: 1 });
+  });
+
+  it('pararse encima también lo rompe', () => {
+    const board = parseBoard(['@.x#', '...1']);
+    const stopped = applyMove(board, initialState(board), 'right')!;
+    expect(stopped).toEqual({ player: { x: 2, y: 0 }, collected: 0, broken: 1 });
+    const back = applyMove(board, stopped, 'left')!;
+    expect(applyMove(board, back, 'right')).toEqual({ player: { x: 0, y: 0 }, collected: 0, broken: 1 });
+  });
+
+  it('cada casilla lleva su bit', () => {
+    const board = parseBoard(['@x.x.1']);
+    expect(board.cracks).toEqual([{ x: 1, y: 0 }, { x: 3, y: 0 }]);
+    expect(applyMove(board, initialState(board), 'right')).toEqual({ player: { x: 5, y: 0 }, collected: 1, broken: 3 });
+  });
+
+  it('el solver tiene en cuenta lo que ya está roto', () => {
+    const board = parseBoard(['@x1']);
+    expect(solve(board)).toEqual(['right']);
+    expect(solve(board, { ...initialState(board), broken: 1 })).toBeNull();
+  });
+
+  it('como mucho MAX_CRACKS por tablero', () => {
+    expect(() => parseBoard(['@xxxxxx1'])).not.toThrow();
+    expect(() => parseBoard(['@xxxxxxx1'])).toThrow('manyCracks');
+  });
+});
+
 describe('desbloqueo', () => {
   it('cada elemento sale a partir de su nivel', () => {
-    expect(ELEMENTS.map((e) => e.level)).toEqual([15, 30, 45, 60]);
+    expect(ELEMENTS.map((e) => e.level)).toEqual([15, 30, 45, 60, 75]);
     expect(unlockedElements(14)).toEqual([]);
     expect(unlockedElements(15)).toEqual(['snow']);
     expect(unlockedElements(59)).toEqual(['snow', 'arrow', 'portal']);
     expect(unlockedElements(60)).toEqual(['snow', 'arrow', 'portal', 'hole']);
+    expect(unlockedElements(75)).toEqual(['snow', 'arrow', 'portal', 'hole', 'crack']);
   });
 });
 
 describe('generador con elementos', () => {
-  const levels = [15, 16, 30, 31, 45, 46, 60, 61, 80, 120];
+  const levels = [15, 16, 30, 31, 45, 46, 60, 61, 75, 76, 80, 120];
   const seeds = [1, 2, 3];
   // Generar es lo más lento de los tests; con la máquina ocupada (o en CI) puede pasar de 5 s.
   const SLOW = 30_000;
@@ -86,7 +127,7 @@ describe('generador con elementos', () => {
     it(`nivel ${level}: resoluble, sin callejones ni bucles, y usa los elementos`, () => {
       for (const seed of seeds) {
         const { board, solution, rows } = generateLevel(level, seed);
-        expect(rows.join('')).not.toMatch(/[^#.@1-9*^v<>a-eO]/);
+        expect(rows.join('')).not.toMatch(/[^#.@1-9*^v<>a-eOx]/);
         expect(countDeadEnds(board)).toBe(0);
         expect(hasLoops(board)).toBe(false);
         expect(solve(board)?.length).toBe(solution.length);

@@ -680,6 +680,10 @@ export const messages: Messages = {
         label: 'Trou',
         help: 'Celui qui tombe dedans retourne au départ (avec les pièces qu\'il avait).',
       },
+      crack: {
+        label: 'Glace fragile',
+        help: 'Se brise au premier passage puis devient un trou. 6 au maximum par niveau.',
+      },
     },
     maxPieces: '{n} pièces maximum',
     maxPortals: '{n} paires de téléporteurs maximum',
@@ -901,6 +905,10 @@ export const messages: Messages = {
     hole: {
       name: 'Trous',
       description: 'Si tu tombes à l\'eau, tu reviens au départ, mais tu gardes les pièces que tu as.',
+    },
+    crack: {
+      name: 'Glace fragile',
+      description: 'Elle ne tient qu\'un passage : quand tu glisses dessus, elle se brise et laisse un trou. Si tu repasses, tu tombes à l\'eau.',
     },
   },
   free: {

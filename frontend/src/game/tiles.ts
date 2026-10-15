@@ -1,5 +1,5 @@
 // Dibujo del tablero: hielo, bloques de nieve y los elementos especiales
-// (nieve blanda, agujeros, corrientes y teletransportes).
+// (nieve blanda, agujeros, corrientes, teletransportes y hielo frágil).
 
 import Phaser from 'phaser';
 import type { Board, Direction, Pos } from '../../../common/logic/engine/board';
@@ -90,6 +90,45 @@ function drawSnow(g: Phaser.GameObjects.Graphics, cx: number, cy: number): void 
   g.fillCircle(cx, cy - TILE * 0.06, TILE * 0.27);
   g.fillStyle(C.snowSpeck, 1);
   g.fillCircle(cx - TILE * 0.08, cy - TILE * 0.12, TILE * 0.04).fillCircle(cx + TILE * 0.14, cy + TILE * 0.02, TILE * 0.03);
+}
+
+/** Hielo frágil: placa agrietada encima y, debajo, el agujero en que se convierte al romperse. */
+export interface CrackView {
+  readonly intact: Phaser.GameObjects.Graphics;
+  readonly hole: Phaser.GameObjects.Graphics;
+}
+
+export function createCrack(scene: Phaser.Scene, layer: Phaser.GameObjects.Container, pos: Pos): CrackView {
+  const { x, y } = tileCenter(pos.x, pos.y);
+  const hole = scene.add.graphics({ x, y });
+  drawHole(hole, 0, 0);
+  const intact = scene.add.graphics({ x, y });
+  const half = TILE * 0.4;
+  intact.fillStyle(C.crackIce, 1).fillRoundedRect(-half, -half, half * 2, half * 2, TILE * 0.1);
+  intact.lineStyle(TILE * 0.03, C.crackLine, 0.6).strokeRoundedRect(-half, -half, half * 2, half * 2, TILE * 0.1);
+  intact.lineStyle(TILE * 0.045, C.crackLine, 1);
+  // Grietas que salen del centro, con alguna rama.
+  const rays: [number, number][] = [
+    [-0.2, -0.3],
+    [0.3, -0.18],
+    [0.22, 0.32],
+    [-0.3, 0.18],
+    [-0.04, 0.36],
+  ];
+  for (const [rx, ry] of rays) intact.lineBetween(0, 0, rx * TILE, ry * TILE);
+  intact.lineStyle(TILE * 0.03, C.crackLine, 1);
+  intact.lineBetween(-0.12 * TILE, -0.19 * TILE, -0.22 * TILE, -0.12 * TILE);
+  intact.lineBetween(0.17 * TILE, -0.1 * TILE, 0.2 * TILE, 0.02 * TILE);
+  intact.lineBetween(-0.18 * TILE, 0.11 * TILE, -0.15 * TILE, 0.23 * TILE);
+  intact.fillStyle(C.crackLine, 1).fillCircle(0, 0, TILE * 0.05);
+  layer.add([hole, intact]);
+  return { intact, hole };
+}
+
+/** Pone el hielo frágil entero o roto, sin animar (al colocar un estado). */
+export function setCrackBroken(view: CrackView, broken: boolean): void {
+  view.intact.setVisible(!broken).setAlpha(1).setScale(1).setAngle(0);
+  view.hole.setVisible(broken).setAlpha(1).setScale(1);
 }
 
 /** Agujero de agua con el borde de hielo roto. */

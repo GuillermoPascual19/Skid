@@ -106,6 +106,7 @@ export const errors: ErrorMessages = {
   board_noPieces: 'Es fehlt mindestens ein Teil',
   board_missingPiece: 'Teil {piece} fehlt: Sie müssen von 1 bis {count} gehen',
   board_portalPair: 'Ein Teleporter kommt {count}-mal vor: Sie müssen paarweise sein',
+  board_manyCracks: 'Zu viel brüchiges Eis: höchstens {max} Felder',
   board_invalid: 'Ungültiges Spielfeld',
   board_size: 'Das Spielfeld muss zwischen {min}×{min} und {maxWidth}×{maxHeight} groß sein',
   board_loops: 'Einige Strömungen bilden eine Endlosschleife',

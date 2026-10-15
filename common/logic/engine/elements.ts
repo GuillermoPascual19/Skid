@@ -5,7 +5,7 @@
 import { initialState, type Board, type Cell, type Direction } from './board.ts';
 import { traceMove } from './move.ts';
 
-export type ElementId = 'snow' | 'arrow' | 'portal' | 'hole';
+export type ElementId = 'snow' | 'arrow' | 'portal' | 'hole' | 'crack';
 
 /** El nombre y la descripción de cada elemento están en los diccionarios del juego (elements.<id>). */
 export interface ElementDef {
@@ -20,6 +20,7 @@ export const ELEMENTS: readonly ElementDef[] = [
   { id: 'arrow', level: 30 },
   { id: 'portal', level: 45 },
   { id: 'hole', level: 60 },
+  { id: 'crack', level: 75 },
 ];
 
 /** Elementos que pueden salir en el nivel `level`. */
@@ -29,7 +30,7 @@ export function unlockedElements(level: number): ElementId[] {
 
 /** Elemento al que pertenece una casilla (null si es hielo o muro). */
 export function elementOf(cell: Cell): ElementId | null {
-  if (cell === 'snow' || cell === 'portal' || cell === 'hole') return cell;
+  if (cell === 'snow' || cell === 'portal' || cell === 'hole' || cell === 'crack') return cell;
   if (cell.startsWith('arrow-')) return 'arrow';
   return null;
 }

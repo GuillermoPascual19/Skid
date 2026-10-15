@@ -680,6 +680,10 @@ export const messages: Messages = {
         label: 'Buco',
         help: 'Chi ci cade torna alla partenza (con i pezzi che ha).',
       },
+      crack: {
+        label: 'Ghiaccio fragile',
+        help: 'Si rompe la prima volta che ci passano sopra e poi diventa un buco. Al massimo 6 per livello.',
+      },
     },
     maxPieces: 'Al massimo {n} pezzi',
     maxPortals: 'Al massimo {n} coppie di teletrasporti',
@@ -901,6 +905,10 @@ export const messages: Messages = {
     hole: {
       name: 'Buchi',
       description: 'Se cadi in acqua torni alla partenza, ma tieni i pezzi che hai.',
+    },
+    crack: {
+      name: 'Ghiaccio fragile',
+      description: 'Regge un solo passaggio: quando ci scivoli sopra si rompe e diventa un buco. Se ci ripassi, cadi in acqua.',
     },
   },
   free: {

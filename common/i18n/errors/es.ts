@@ -118,6 +118,7 @@ export const errors = {
   board_noPieces: 'Falta al menos una pieza',
   board_missingPiece: 'Falta la pieza {piece}: deben ir de 1 a {count}',
   board_portalPair: 'Un teletransporte aparece {count} veces: tienen que ir por parejas',
+  board_manyCracks: 'Demasiado hielo frágil: como mucho {max} casillas',
   board_invalid: 'Tablero no válido',
   board_size: 'El tablero debe medir entre {min}×{min} y {maxWidth}×{maxHeight}',
   board_loops: 'Hay corrientes que forman un bucle sin fin',

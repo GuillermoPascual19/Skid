@@ -680,6 +680,10 @@ export const messages: Messages = {
         label: 'Hole',
         help: 'Whoever falls in goes back to the start (keeping the pieces they had).',
       },
+      crack: {
+        label: 'Fragile ice',
+        help: 'Breaks the first time someone slides over it and then becomes a hole. Up to 6 per level.',
+      },
     },
     maxPieces: 'At most {n} pieces',
     maxPortals: 'At most {n} pairs of teleporters',
@@ -901,6 +905,10 @@ export const messages: Messages = {
     hole: {
       name: 'Holes',
       description: 'If you fall into the water you go back to the start, but you keep the pieces you had.',
+    },
+    crack: {
+      name: 'Fragile ice',
+      description: 'It holds for one pass only: slide over it and it breaks into a hole. Cross it again and you fall in the water.',
     },
   },
   free: {

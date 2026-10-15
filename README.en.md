@@ -11,7 +11,7 @@ friends, and levels made by the players.
 ## What's inside
 
 - **Free play**: generated levels that get harder and harder, with stars based on your moves and
-  elements that unlock along the way (snow, currents, teleporters and holes).
+  elements that unlock along the way (snow, currents, teleporters, holes and fragile ice).
 - **Daily challenge**: the same board for everyone; whoever does it in the fewest moves wins. With
   streaks, streak freezes, the solution once you finish, and a friend's ghost.
 - **Weekly challenge**: a big, hard board from Monday to Sunday, with a ranking among friends.

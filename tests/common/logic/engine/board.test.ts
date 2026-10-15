@@ -41,7 +41,7 @@ describe('parseBoard', () => {
     ['sin piezas', ['#@.#']],
     ['pieza repetida', ['@11']],
     ['hueco en la numeración', ['@13']],
-    ['carácter desconocido', ['@1x']],
+    ['carácter desconocido', ['@1z']],
   ])('rechaza tableros con %s', (_, rows) => {
     expect(() => parseBoard(rows)).toThrow();
   });

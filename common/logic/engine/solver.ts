@@ -109,9 +109,9 @@ export function hasLoops(board: Board): boolean {
   return false;
 }
 
-/** Dos estados son el mismo si el jugador está en la misma casilla y lleva las mismas piezas. */
+/** Dos estados son el mismo si el jugador está en la misma casilla, lleva las mismas piezas y está roto el mismo hielo. */
 function stateKey(state: GameState): string {
-  return `${state.player.x},${state.player.y},${state.collected}`;
+  return `${state.player.x},${state.player.y},${state.collected},${state.broken}`;
 }
 
 /** Reconstruye las direcciones siguiendo los padres desde el nodo final hasta el inicial. */
