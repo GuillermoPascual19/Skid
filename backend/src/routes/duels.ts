@@ -3,6 +3,7 @@
 // servidor reproduce el intento) y ver quién gana. Hasta que terminan los dos no se ve el resultado
 // del rival.
 
+import { CIRCLE, areFriends } from './friends';
 import { isHatId } from '../../../common/art/hats';
 import { parseBoard } from '../../../common/logic/engine/board';
 import { decodeRows, encodeRows } from '../../../common/logic/community/community';
@@ -82,24 +83,13 @@ function notifyDuel(env: Env, to: string, from: string, duelId: string, kind: 'd
   );
 }
 
-/** ¿Comparten alguna liga? Solo a los amigos de tus ligas se les reta por nombre. */
-async function sharesLeague(env: Env, a: string, b: string): Promise<boolean> {
-  return !!(await env.DB.prepare(
-    `SELECT 1 FROM league_members x JOIN league_members y ON y.league_id = x.league_id AND y.player_id = ?2
-     WHERE x.player_id = ?1 LIMIT 1`,
-  )
-    .bind(a, b)
-    .first());
-}
-
-/** Amigos para retar: quienes comparten alguna liga contigo. */
+/** Amigos para retar: tus amigos directos y quienes comparten alguna liga contigo. */
 export async function listFriends(env: Env, playerId: string) {
   const { results } = await env.DB.prepare(
-    `SELECT DISTINCT p.id, p.name, p.hat
-     FROM league_members a
-     JOIN league_members b ON b.league_id = a.league_id AND b.player_id <> a.player_id
-     JOIN players p ON p.id = b.player_id
-     WHERE a.player_id = ?1 AND p.name IS NOT NULL
+    `SELECT p.id, p.name, p.hat
+     FROM (${CIRCLE}) c
+     JOIN players p ON p.id = c.player_id
+     WHERE p.name IS NOT NULL
      ORDER BY p.name`,
   )
     .bind(playerId)
@@ -204,14 +194,14 @@ async function myDuel(env: Env, playerId: string, id: string): Promise<DuelRow> 
   return duel;
 }
 
-/** Reta a un amigo de tus ligas (`opponentId`) o crea un duelo abierto para compartir por enlace (null). */
+/** Reta a un amigo (`opponentId`, directo o de tus ligas) o crea un duelo abierto para compartir por enlace (null). */
 export async function createDuel(env: Env, playerId: string, input: { difficulty?: unknown; opponentId?: unknown }) {
   await requireName(env, playerId);
   if (!isDuelDifficulty(input.difficulty)) throw new HttpError(400, 'invalidDifficulty');
   const opponentId = input.opponentId ?? null;
   if (opponentId !== null) {
     if (typeof opponentId !== 'string' || opponentId === playerId) throw new HttpError(400, 'invalidRival');
-    if (!(await sharesLeague(env, playerId, opponentId))) throw new HttpError(403, 'onlyLeagueRivals');
+    if (!(await areFriends(env, playerId, opponentId))) throw new HttpError(403, 'onlyLeagueRivals');
   }
   const now = Date.now();
   const active = await env.DB.prepare(

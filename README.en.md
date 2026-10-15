@@ -20,6 +20,8 @@ friends, and levels made by the players.
   with a ranking among friends.
 - **Live duels**: challenge a friend (or anyone, with a link) and play the same brand-new board at
   the same time.
+- **Friends**: add someone by name (with a request) or with your friend link, no league needed; see
+  their daily challenge, profile and game, and challenge them to a duel.
 - **Leagues**: daily and weekly rankings with your friends, and monthly seasons whose champion
   wins that month's hat; emoji reactions to your friends' challenges; achievements in the daily
   challenge, duels, time attack, weekly challenge and community levels unlock more hats.

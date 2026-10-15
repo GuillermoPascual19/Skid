@@ -28,6 +28,7 @@ import { statsScreen } from './features/daily/stats-screen';
 import { achievementsScreen } from './features/achievements/achievements-screen';
 import { playerScreen } from './features/profile/player-screen';
 import { adminScreen } from './features/admin/admin-screen';
+import { friendsScreen } from './features/friends/friends-screen';
 import { go, setRoutes } from './shared/router';
 import { applyTheme } from './shared/theme';
 import { initI18n, t } from './i18n/i18n';
@@ -96,6 +97,7 @@ setRoutes({
   custom: (route) => customLevelScreen({ level: route.level }),
   customTest: (route) => customLevelScreen({ testRows: route.rows }),
   admin: () => adminScreen(),
+  friends: (route) => friendsScreen(route.add),
 });
 
 // Lo primero: así también se avisa de los errores al arrancar.
@@ -112,10 +114,15 @@ const params = new URLSearchParams(location.search);
 const join = params.get('join');
 const sharedLevel = params.get('nivel');
 const duelLink = params.get('duelo');
+const friendLink = params.get('amigo');
 if (duelLink) {
   // A la sala del duelo, que deja el enlace puesto mientras se está en ella: si
   // el móvil recarga la página (al volver de WhatsApp), se vuelve a la sala.
   go({ name: 'duelRoom', id: duelLink });
+} else if (friendLink) {
+  // Enlace de amigo: se pregunta si añadirlo, y al recargar ya no se vuelve a preguntar.
+  history.replaceState(null, '', location.pathname);
+  go({ name: 'friends', add: friendLink });
 } else if (sharedLevel) {
   // El enlace solo abre el nivel una vez: al recargar se vuelve a la portada.
   history.replaceState(null, '', location.pathname);

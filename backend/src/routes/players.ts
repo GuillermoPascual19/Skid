@@ -1,5 +1,6 @@
 // Jugadores: nombre obligatorio para algunas acciones y perfil público con el cara a cara.
 
+import { areFriends } from './friends';
 import { isHatId } from '../../../common/art/hats';
 import { type Env, HttpError } from '../http';
 import { playerAchievements } from './achievements';
@@ -13,8 +14,8 @@ export async function requireName(env: Env, playerId: string): Promise<void> {
 
 /**
  * Perfil público de un jugador: estadísticas, gorros conseguidos y el cara a
- * cara con quien lo mira. Solo se puede ver el propio o el de alguien que
- * comparta liga contigo.
+ * cara con quien lo mira. Solo se puede ver el propio o el de un amigo
+ * (directo o de alguna liga).
  */
 export async function playerProfile(env: Env, viewerId: string, targetId: string) {
   const isMe = viewerId === targetId;
@@ -26,7 +27,7 @@ export async function playerProfile(env: Env, viewerId: string, targetId: string
   )
     .bind(viewerId, targetId)
     .all<{ name: string }>();
-  if (!isMe && shared.length === 0) throw new HttpError(403, 'onlyLeagueProfiles');
+  if (!isMe && shared.length === 0 && !(await areFriends(env, viewerId, targetId))) throw new HttpError(403, 'onlyLeagueProfiles');
 
   const player = await env.DB.prepare('SELECT name, hat FROM players WHERE id = ?')
     .bind(targetId)

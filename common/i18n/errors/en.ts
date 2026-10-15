@@ -48,9 +48,17 @@ export const errors: ErrorMessages = {
 
   playerNotFound: "That player doesn't exist",
 
+  tooManyFriends: '{n} friends at most',
+
+  cantFriendYourself: 'You can\'t add yourself',
+
+  alreadyFriends: 'You\'re already friends',
+
+  requestNotFound: 'That request no longer exists',
+
   adminOnly: 'Admins only',
-  onlyLeagueProfiles: 'You can only see the profiles of players in your leagues',
-  onlyLeagueGames: 'You can only see the games of players in your leagues',
+  onlyLeagueProfiles: 'You can only see the profiles of your friends and of players in your leagues',
+  onlyLeagueGames: 'You can only see the games of your friends and of players in your leagues',
   leagueNameLength: 'The league name must be between {min} and {max} characters long',
   leagueNotFound: "There's no league with that code",
   notLeagueMember: "You're not in that league",
@@ -75,7 +83,7 @@ export const errors: ErrorMessages = {
   duelUnavailable: 'This duel is no longer available',
   invalidDifficulty: 'Invalid difficulty',
   invalidRival: 'Invalid opponent',
-  onlyLeagueRivals: 'You can only challenge players from your leagues by name',
+  onlyLeagueRivals: 'You can only challenge your friends and players from your leagues by name',
   maxDuels: 'You already have {n} duels in progress. Wait for them to finish.',
   ownDuel: "You can't accept your own duel",
   duelHasRival: 'This duel already has an opponent',

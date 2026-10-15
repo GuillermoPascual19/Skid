@@ -3699,3 +3699,97 @@ input.switch:focus-visible {
   border-radius: 16px;
   box-shadow: 0 6px 18px rgba(0, 0, 0, 0.25);
 }
+
+/* Amigos directos */
+.friends-body {
+  display: grid;
+  gap: 12px;
+}
+
+.friend-add {
+  display: flex;
+  gap: 8px;
+  margin: 10px 0;
+}
+
+.friend-add .field {
+  flex: 1;
+  min-width: 0;
+}
+
+.friend-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 0;
+  border-top: 1px solid var(--card-border);
+}
+
+.friend-row:first-of-type {
+  border-top: 0;
+}
+
+.friend-row > strong,
+.friend-row > span:not(.avatar) {
+  flex: 1;
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.friend-open {
+  appearance: none;
+  border: 0;
+  background: none;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex: 1;
+  min-width: 0;
+  padding: 0;
+  cursor: pointer;
+}
+
+.friend-name {
+  display: grid;
+  min-width: 0;
+}
+
+.friend-name strong {
+  overflow-wrap: anywhere;
+}
+
+.friend-today {
+  font-size: 13px;
+}
+
+.friend-today.done {
+  color: var(--good, #2bb673);
+  font-weight: 700;
+}
+
+.nav-tile {
+  position: relative;
+}
+
+.nav-tile .badge {
+  position: absolute;
+  top: 4px;
+  right: 6px;
+  min-width: 20px;
+  height: 20px;
+  padding: 0 6px;
+  border-radius: 10px;
+  background: var(--bad, #e5484d);
+  color: #fff;
+  font-size: 12px;
+  font-weight: 800;
+  line-height: 20px;
+}
+
+.friend-link-penguin {
+  width: 88px;
+  margin: 0 auto 4px;
+}

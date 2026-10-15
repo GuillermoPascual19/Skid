@@ -6,6 +6,7 @@ import { celebrate } from '../../shared/celebrate';
 import { adoptServerResult, canImprove, improveDaily, openDaily, shareText, showDailyResult, today } from '../daily/daily';
 import { movesBig } from '../../shared/result';
 import { penguinSvg } from '../../../../common/art/hats';
+import { getFriendsOverview } from '../friends/api';
 import { celebrateNewAchievements } from '../achievements/achievements-screen';
 import { audioToggles } from '../../audio/audio-controls';
 import { themeButton } from '../../shared/theme';
@@ -110,6 +111,13 @@ export function homeScreen(): Screen {
       const me = await currentMe();
       renderAccount(me);
       wearHat(me.hat);
+      void getFriendsOverview()
+        .then(({ incoming }) => {
+          friendsBadge.textContent = String(incoming.length);
+          friendsBadge.hidden = incoming.length === 0;
+          friendsTile?.setAttribute('aria-label', incoming.length ? `${t('nav.friends')} · ${t('friends.requests', { n: incoming.length })}` : t('nav.friends'));
+        })
+        .catch(() => {});
       // Solo para administradores (el panel va en español: no lo ven los jugadores).
       if (me.admin && !disposed) navTiles.append(navTile('🛡️', 'Admin', () => go({ name: 'admin' })));
       // Primero la victoria de ayer y después los logros nuevos, nunca dos a la vez.
@@ -294,6 +302,10 @@ export function homeScreen(): Screen {
       : null;
   const audio = audioToggles();
   audio.el.prepend(languageButton(), themeButton(), ...(online.onlineEnabled ? [notificationsButton()] : []));
+  // Amigos, con las solicitudes pendientes (se miran al sincronizar con el servidor).
+  const friendsBadge = h('span', { class: 'badge', hidden: true });
+  const friendsTile = online.onlineEnabled ? navTile('👥', t('nav.friends'), () => go({ name: 'friends' })) : null;
+  friendsTile?.append(friendsBadge);
   const navTiles = h(
     'nav',
     { class: 'nav-tiles' },
@@ -301,6 +313,7 @@ export function homeScreen(): Screen {
     navTile('❓', t('nav.rules'), () => openGuide()),
     online.onlineEnabled ? navTile('📊', t('nav.stats'), () => go({ name: 'stats' })) : null,
     online.onlineEnabled ? navTile('🎩', t('nav.achievements'), () => go({ name: 'achievements' })) : null,
+    friendsTile,
   );
   const el = h(
     'div',
