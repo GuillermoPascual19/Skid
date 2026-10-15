@@ -684,6 +684,26 @@ export const messages: Messages = {
         label: 'Fragile ice',
         help: 'Breaks the first time someone slides over it and then becomes a hole. Up to 6 per level.',
       },
+      mirror: {
+        label: 'Mirror',
+        help: 'Turns the penguin 90°. Tap a mirror to flip its diagonal.',
+      },
+      oneway: {
+        label: 'One-way',
+        help: 'Can only be crossed in the direction of the arrow. Tap one to turn it.',
+      },
+      switch: {
+        label: 'Switch',
+        help: 'Passing over it changes all the doors.',
+      },
+      door: {
+        label: 'Door',
+        help: 'Closed it is a wall; open, ice. Tap one to choose how it starts.',
+      },
+      block: {
+        label: 'Block',
+        help: 'Slides when bumped, over plain ice only. Up to 3 per level.',
+      },
     },
     maxPieces: 'At most {n} pieces',
     maxPortals: 'At most {n} pairs of teleporters',
@@ -909,6 +929,22 @@ export const messages: Messages = {
     crack: {
       name: 'Fragile ice',
       description: 'It holds for one pass only: slide over it and it breaks into a hole. Cross it again and you fall in the water.',
+    },
+    mirror: {
+      name: 'Mirrors',
+      description: 'Diagonal ice plates: the penguin bounces off at 90° and keeps sliding. Where it goes depends on where it comes from.',
+    },
+    oneway: {
+      name: 'One-way gates',
+      description: 'You can only cross them in the direction of the arrow. From any other side they are a wall.',
+    },
+    switch: {
+      name: 'Switch and doors',
+      description: 'Every time you pass over the switch, all the doors change: open ones close and closed ones open.',
+    },
+    block: {
+      name: 'Ice blocks',
+      description: 'Bump into one and it slides to the next obstacle while you stay put. Use them as stoppers… and careful not to trap yourself.',
     },
   },
   free: {

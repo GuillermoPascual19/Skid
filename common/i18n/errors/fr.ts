@@ -109,6 +109,7 @@ export const errors: ErrorMessages = {
   board_missingPiece: 'Il manque la pièce {piece} : elles doivent aller de 1 à {count}',
   board_portalPair: 'Un téléporteur apparaît {count} fois : ils vont par paires',
   board_manyCracks: 'Trop de glace fragile : {max} cases au maximum',
+  board_manyBlocks: 'Trop de blocs : {max} au maximum',
   board_invalid: 'Plateau non valide',
   board_size: 'Le plateau doit mesurer entre {min}×{min} et {maxWidth}×{maxHeight}',
   board_loops: 'Des courants forment une boucle sans fin',

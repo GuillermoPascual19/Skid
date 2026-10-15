@@ -3,7 +3,7 @@
 
 import { BoardError, parseBoard, type Board, type Direction } from '../engine/board.ts';
 import { decodeRun, replayRun } from '../daily/daily.ts';
-import { elementOf, type ElementId } from '../engine/elements.ts';
+import { elementsIn, type ElementId } from '../engine/elements.ts';
 import { hasLoops, solve } from '../engine/solver.ts';
 
 export const CUSTOM_LIMITS = {
@@ -48,14 +48,7 @@ export function checkCustomLevel(rows: unknown): CheckedLevel {
   if (!solution) throw new BoardError('unsolvable');
   if (solution.length < 2) throw new BoardError('tooEasy');
 
-  const elements = new Set<ElementId>();
-  for (const row of board.cells) {
-    for (const cell of row) {
-      const element = elementOf(cell);
-      if (element) elements.add(element);
-    }
-  }
-  return { board, solution, elements: [...elements] };
+  return { board, solution, elements: [...elementsIn(board)] };
 }
 
 /**

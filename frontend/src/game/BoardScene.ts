@@ -3,14 +3,14 @@
 // casillas está en tiles.ts y los efectos de partículas en effects.ts.
 
 import Phaser from 'phaser';
-import { DIRECTION_DELTA, crackIndex, nextPiece, type Board, type Direction, type GameState, type Piece, type Pos } from '../../../common/logic/engine/board';
+import { DIRECTION_DELTA, crackIndex, doorOpen, nextPiece, samePos, type Board, type Cell, type Direction, type GameState, type Piece, type Pos } from '../../../common/logic/engine/board';
 import { slideDurationMs } from '../../../common/logic/daily/daily';
 import { traceMove, type MoveTrace } from '../../../common/logic/engine/move';
 import { HAT_BOX, hatSvg, type HatId } from '../../../common/art/hats';
 import { sfx } from '../audio/sound';
 import { puff, sparkle, splash } from './effects';
 import { C, FONT, TILE, tileCenter } from './palette';
-import { createCrack, drawBoard, setCrackBroken, type CrackView } from './tiles';
+import { createBlock, createCrack, createDoor, drawBoard, setCrackBroken, setDoorOpen, type CrackView, type DoorView } from './tiles';
 
 /** Tramo recto del recorrido de un deslizamiento, de una casilla a la siguiente. */
 interface Segment {
@@ -24,26 +24,45 @@ interface Segment {
   readonly teleport: Pos | null;
   /** Al llegar rompe el hielo frágil de la casilla. */
   readonly breaks: boolean;
+  /** Al llegar pasa por un interruptor: las puertas cambian. */
+  readonly toggles: boolean;
 }
 
-/** Tramos rectos de un movimiento ya calculado, y dónde reaparece si cae al agua. */
-function segmentsOf(before: GameState, trace: MoveTrace, dir: Direction): { segments: Segment[]; fall: Pos | null } {
+/** Bloque empujado al final de un movimiento. */
+interface Push {
+  readonly from: Pos;
+  readonly to: Pos;
+}
+
+/** Tramos rectos de un movimiento ya calculado, dónde reaparece si cae al agua y qué bloque empuja. */
+function segmentsOf(before: GameState, trace: MoveTrace, dir: Direction): { segments: Segment[]; fall: Pos | null; push: Push | null } {
   const segments: Segment[] = [];
   let at = before.player;
   let moving = dir;
   let fall: Pos | null = null;
+  let push: Push | null = null;
   for (const step of trace.steps) {
     if (step.kind === 'slide') {
-      segments.push({ from: at, to: step.pos, collects: step.collects, turn: step.dir !== moving ? step.dir : null, teleport: null, breaks: step.breaks });
+      segments.push({
+        from: at,
+        to: step.pos,
+        collects: step.collects,
+        turn: step.dir !== moving ? step.dir : null,
+        teleport: null,
+        breaks: step.breaks,
+        toggles: step.toggles,
+      });
       moving = step.dir;
     } else if (step.kind === 'teleport') {
       segments[segments.length - 1] = { ...segments[segments.length - 1], teleport: step.pos };
+    } else if (step.kind === 'push') {
+      push = step.push;
     } else {
       fall = step.pos;
     }
     at = step.pos;
   }
-  return { segments, fall };
+  return { segments, fall, push };
 }
 
 const KEY_TO_DIR: Record<string, Direction> = {
@@ -88,6 +107,10 @@ export class BoardScene extends Phaser.Scene {
   private pieceViews = new Map<number, PieceView>();
   /** Hielo frágil, en el orden de board.cracks. */
   private crackViews: CrackView[] = [];
+  /** Puertas, con cómo empiezan (para saber si están abiertas con cada estado de los interruptores). */
+  private doorViews: { cell: Cell; view: DoorView }[] = [];
+  /** Bloques empujables, en el orden de GameState.blocks. */
+  private blockViews: Phaser.GameObjects.Container[] = [];
   private penguin!: Phaser.GameObjects.Container;
   private face!: Phaser.GameObjects.Container;
   private pulse: Phaser.Tweens.Tween | null = null;
@@ -128,6 +151,13 @@ export class BoardScene extends Phaser.Scene {
     this.ghost = null;
     drawBoard(this, this.layer, board);
     this.crackViews = board.cracks.map((pos) => createCrack(this, this.layer, pos));
+    this.doorViews = [];
+    board.cells.forEach((row, y) =>
+      row.forEach((cell, x) => {
+        if (cell === 'door-open' || cell === 'door-closed') this.doorViews.push({ cell, view: createDoor(this, this.layer, { x, y }) });
+      }),
+    );
+    this.blockViews = board.blocks.map((pos) => createBlock(this, this.layer, pos));
     for (const piece of board.pieces) this.pieceViews.set(piece.order, this.createPiece(piece));
     this.createPenguin();
 
@@ -154,6 +184,15 @@ export class BoardScene extends Phaser.Scene {
     this.crackViews.forEach((view, i) => {
       this.tweens.killTweensOf([view.intact, view.hole]);
       setCrackBroken(view, (state.broken & (1 << i)) !== 0);
+    });
+    for (const { cell, view } of this.doorViews) {
+      this.tweens.killTweensOf([view.closed, view.open]);
+      setDoorOpen(view, doorOpen(cell, state.flipped));
+    }
+    this.blockViews.forEach((block, i) => {
+      this.tweens.killTweensOf(block);
+      const at = state.blocks[i];
+      if (at) block.setPosition(this.center(at.x, at.y).x, this.center(at.x, at.y).y);
     });
     const { x, y } = this.center(state.player.x, state.player.y);
     this.penguin.setPosition(x, y).setScale(1).setAngle(0);
@@ -213,11 +252,16 @@ export class BoardScene extends Phaser.Scene {
    */
   private slide(before: GameState, trace: MoveTrace, dir: Direction): void {
     const board = this.board!;
-    const { segments, fall } = segmentsOf(before, trace, dir);
-
-    const duration = slideDurationMs(segments.length);
+    const { segments, fall, push } = segmentsOf(before, trace, dir);
     this.shown = trace.state;
     this.animating = true;
+    // Al terminar, si chocó con un bloque, el bloque sale deslizando.
+    const finish = () => (push ? this.pushBlock(before, push, dir) : this.settle());
+    // Pegado al bloque: el pingüino no se mueve, solo lo empuja.
+    if (segments.length === 0) return this.nudge(dir, finish);
+
+    const duration = slideDurationMs(segments.length);
+    let flipped = before.flipped;
     puff(this, this.layer, this.penguin, this.penguin.x, this.penguin.y, dir);
     sfx.slide(duration);
 
@@ -234,6 +278,10 @@ export class BoardScene extends Phaser.Scene {
           sfx.turn();
         }
         if (seg.breaks) this.breakCrack(seg.to);
+        if (seg.toggles) {
+          flipped = !flipped;
+          this.setDoors(flipped);
+        }
         if (seg.teleport) this.teleportFx(seg.to, seg.teleport);
       }
       const i = Math.min(Math.floor(progress.v), segments.length - 1);
@@ -259,8 +307,8 @@ export class BoardScene extends Phaser.Scene {
         if (board.cells[last.to.y][last.to.x] === 'snow') {
           sfx.snow();
           puff(this, this.layer, this.penguin, this.penguin.x, this.penguin.y, facing);
-        } else sfx.land();
-        this.settle();
+        } else if (!push) sfx.land();
+        finish();
       },
     });
   }
@@ -270,6 +318,64 @@ export class BoardScene extends Phaser.Scene {
     if (seg.to.x > seg.from.x) return 'right';
     if (seg.to.x < seg.from.x) return 'left';
     return seg.to.y > seg.from.y ? 'down' : 'up';
+  }
+
+  /** Las puertas pasan a como están con `flipped`: las que se cierran suben y las que se abren se hunden. */
+  private setDoors(flipped: boolean): void {
+    sfx.toggle();
+    for (const { cell, view } of this.doorViews) {
+      const open = doorOpen(cell, flipped);
+      if (open === view.open.visible) continue;
+      this.tweens.killTweensOf([view.closed, view.open]);
+      if (open) {
+        view.open.setVisible(true).setAlpha(0);
+        this.tweens.add({ targets: view.open, alpha: 1, duration: 200 });
+        this.tweens.add({ targets: view.closed, scaleY: 0.2, alpha: 0, duration: 200, ease: 'Quad.easeIn', onComplete: () => view.closed.setVisible(false) });
+      } else {
+        view.closed.setVisible(true).setScale(1, 0.2).setAlpha(0);
+        this.tweens.add({ targets: view.closed, scaleY: 1, alpha: 1, duration: 220, ease: 'Back.easeOut' });
+        this.tweens.add({ targets: view.open, alpha: 0, duration: 150, onComplete: () => view.open.setVisible(false) });
+      }
+    }
+  }
+
+  /** Empujoncito hacia `dir` sin moverse de la casilla (empuja un bloque pegado). */
+  private nudge(dir: Direction, then: () => void): void {
+    const delta = DIRECTION_DELTA[dir];
+    const { x, y } = this.center(this.shown.player.x, this.shown.player.y);
+    this.tweens.add({
+      targets: this.penguin,
+      x: x + delta.x * TILE * 0.16,
+      y: y + delta.y * TILE * 0.16,
+      duration: 90,
+      yoyo: true,
+      ease: 'Quad.easeOut',
+      onComplete: () => {
+        this.penguin.setPosition(x, y);
+        then();
+      },
+    });
+  }
+
+  /** El bloque empujado sale deslizando hasta donde se para, y termina el movimiento. */
+  private pushBlock(before: GameState, push: Push, dir: Direction): void {
+    const block = this.blockViews[before.blocks.findIndex((b) => samePos(b, push.from))];
+    if (!block) return this.settle();
+    sfx.push();
+    this.squash(dir);
+    const to = this.center(push.to.x, push.to.y);
+    const distance = Math.abs(push.to.x - push.from.x) + Math.abs(push.to.y - push.from.y);
+    this.tweens.add({
+      targets: block,
+      x: to.x,
+      y: to.y,
+      duration: slideDurationMs(distance),
+      ease: 'Cubic.easeOut',
+      onComplete: () => {
+        sfx.land();
+        this.settle();
+      },
+    });
   }
 
   /** Destellos en la entrada y la salida de un teletransporte. */

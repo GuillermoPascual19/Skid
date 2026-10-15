@@ -142,6 +142,19 @@ export function turn(ctx: Ctx, out: AudioNode, t: number): void {
   bell(ctx, out, t, midi(91), 0.035, 0.2);
 }
 
+/** «Clac» del interruptor: golpe seco y dos campanitas (las puertas cambian). */
+export function toggle(ctx: Ctx, out: AudioNode, t: number): void {
+  thud(ctx, out, t, 0.6);
+  bell(ctx, out, t + 0.03, midi(79), 0.05, 0.18);
+  bell(ctx, out, t + 0.11, midi(86), 0.05, 0.22);
+}
+
+/** Roce del bloque de hielo al salir deslizando. */
+export function push(ctx: Ctx, out: AudioNode, t: number): void {
+  thud(ctx, out, t, 0.8);
+  noiseBurst(ctx, out, t + 0.02, 'bandpass', 1800, 1.2, 0.08, 0.3);
+}
+
 /** «Fiuuu» mágico al teletransportarse: barrido ascendente y campanita. */
 export function teleport(ctx: Ctx, out: AudioNode, t: number): void {
   const osc = ctx.createOscillator();

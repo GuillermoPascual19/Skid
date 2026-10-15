@@ -684,6 +684,26 @@ export const messages: Messages = {
         label: 'Brüchiges Eis',
         help: 'Bricht beim ersten Darüberrutschen und wird dann zu einem Loch. Höchstens 6 pro Level.',
       },
+      mirror: {
+        label: 'Spiegel',
+        help: 'Lenkt den Pinguin um 90° ab. Tippe auf einen Spiegel, um seine Diagonale zu wechseln.',
+      },
+      oneway: {
+        label: 'Einbahn',
+        help: 'Nur in Pfeilrichtung passierbar. Tippe darauf, um ihn zu drehen.',
+      },
+      switch: {
+        label: 'Schalter',
+        help: 'Wer darüber rutscht, wechselt alle Türen.',
+      },
+      door: {
+        label: 'Tür',
+        help: 'Geschlossen ist sie eine Wand, offen Eis. Tippe darauf, um festzulegen, wie sie anfängt.',
+      },
+      block: {
+        label: 'Block',
+        help: 'Rutscht beim Anstoßen weiter, nur über normales Eis. Höchstens 3 pro Level.',
+      },
     },
     maxPieces: 'Höchstens {n} Teile',
     maxPortals: 'Höchstens {n} Teleporter-Paare',
@@ -909,6 +929,22 @@ export const messages: Messages = {
     crack: {
       name: 'Brüchiges Eis',
       description: 'Es hält nur einmal: Rutschst du darüber, bricht es und wird zu einem Loch. Kommst du wieder vorbei, fällst du ins Wasser.',
+    },
+    mirror: {
+      name: 'Spiegel',
+      description: 'Diagonale Eisplatten: Der Pinguin prallt im 90°-Winkel ab und rutscht weiter. Wohin, hängt davon ab, woher er kommt.',
+    },
+    oneway: {
+      name: 'Einbahn-Tore',
+      description: 'Man kann sie nur in Pfeilrichtung durchqueren. Von jeder anderen Seite sind sie eine Wand.',
+    },
+    switch: {
+      name: 'Schalter und Türen',
+      description: 'Jedes Mal, wenn du über den Schalter rutschst, wechseln alle Türen: Offene schließen sich, geschlossene gehen auf.',
+    },
+    block: {
+      name: 'Eisblöcke',
+      description: 'Stößt du gegen einen, rutscht er bis zum nächsten Hindernis und du bleibst stehen. Nutze sie als Stopper … und sperr dich nicht ein.',
     },
   },
   free: {

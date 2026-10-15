@@ -1,5 +1,6 @@
 // Dibujo del tablero: hielo, bloques de nieve y los elementos especiales
-// (nieve blanda, agujeros, corrientes, teletransportes y hielo frágil).
+// (nieve blanda, agujeros, corrientes, teletransportes, hielo frágil, espejos,
+// pasos de un sentido, interruptores, puertas y bloques).
 
 import Phaser from 'phaser';
 import type { Board, Direction, Pos } from '../../../common/logic/engine/board';
@@ -73,6 +74,9 @@ export function drawBoard(scene: Phaser.Scene, layer: Phaser.GameObjects.Contain
       if (cell === 'snow') drawSnow(e, cx, cy);
       else if (cell === 'hole') drawHole(e, cx, cy);
       else if (cell.startsWith('arrow-')) drawArrow(e, cx, cy, cell.slice('arrow-'.length) as Direction);
+      else if (cell === 'mirror-slash' || cell === 'mirror-backslash') drawMirror(e, cx, cy, cell === 'mirror-slash');
+      else if (cell.startsWith('oneway-')) drawOneway(e, cx, cy, cell.slice('oneway-'.length) as Direction);
+      else if (cell === 'switch') drawSwitch(e, cx, cy);
     }),
   );
   board.portals.forEach((pair, i) => {
@@ -129,6 +133,100 @@ export function createCrack(scene: Phaser.Scene, layer: Phaser.GameObjects.Conta
 export function setCrackBroken(view: CrackView, broken: boolean): void {
   view.intact.setVisible(!broken).setAlpha(1).setScale(1).setAngle(0);
   view.hole.setVisible(broken).setAlpha(1).setScale(1);
+}
+
+/** Espejo: placa de hielo en diagonal (/ si `slash`, si no \). */
+function drawMirror(g: Phaser.GameObjects.Graphics, cx: number, cy: number, slash: boolean): void {
+  // De abajo a la izquierda hacia arriba a la derecha (/), o de arriba a la izquierda hacia abajo a la derecha (\).
+  const s = slash ? 1 : -1;
+  const a = TILE * 0.38;
+  const w = TILE * 0.09;
+  // Extremos de la diagonal y su perpendicular, para darle grosor.
+  const ends = [
+    [-a, s * a],
+    [a, -s * a],
+  ];
+  const [px, py] = [s * w, w];
+  const pts = [
+    [ends[0][0] - px, ends[0][1] - py],
+    [ends[1][0] - px, ends[1][1] - py],
+    [ends[1][0] + px, ends[1][1] + py],
+    [ends[0][0] + px, ends[0][1] + py],
+  ].map(([x, y]) => new Phaser.Math.Vector2(cx + x, cy + y));
+  g.fillStyle(C.iceShadow, 0.18).fillPoints(
+    pts.map((p) => new Phaser.Math.Vector2(p.x, p.y + TILE * 0.05)),
+    true,
+  );
+  g.fillStyle(C.mirror, 1).fillPoints(pts, true);
+  g.lineStyle(TILE * 0.03, C.mirrorEdge, 1).strokePoints(pts, true);
+  g.lineStyle(TILE * 0.035, 0xffffff, 0.9).lineBetween(cx - a * 0.6, cy + s * a * 0.6, cx + a * 0.6, cy - s * a * 0.6);
+}
+
+/** Paso de un sentido: postes a los lados y una flecha gruesa hacia `dir`. */
+function drawOneway(g: Phaser.GameObjects.Graphics, cx: number, cy: number, dir: Direction): void {
+  const rot = (x: number, y: number) => {
+    const [rx, ry] = { right: [x, y], down: [-y, x], left: [-x, -y], up: [y, -x] }[dir];
+    return new Phaser.Math.Vector2(cx + rx * TILE, cy + ry * TILE);
+  };
+  g.fillStyle(C.post, 1);
+  for (const side of [-1, 1]) g.fillPoints([rot(-0.36, side * 0.42), rot(0.36, side * 0.42), rot(0.36, side * 0.34), rot(-0.36, side * 0.34)], true);
+  const arrow = [rot(-0.3, -0.12), rot(0.04, -0.12), rot(0.04, -0.26), rot(0.32, 0), rot(0.04, 0.26), rot(0.04, 0.12), rot(-0.3, 0.12)];
+  g.fillStyle(C.oneway, 1).fillPoints(arrow, true);
+  g.lineStyle(TILE * 0.03, C.onewayEdge, 1).strokePoints(arrow, true);
+}
+
+/** Interruptor: botón rojo sobre una base. */
+function drawSwitch(g: Phaser.GameObjects.Graphics, cx: number, cy: number): void {
+  g.fillStyle(C.iceShadow, 0.2).fillEllipse(cx, cy + TILE * 0.2, TILE * 0.7, TILE * 0.26);
+  g.fillStyle(C.switchBase, 1).fillRoundedRect(cx - TILE * 0.32, cy - TILE * 0.02, TILE * 0.64, TILE * 0.24, TILE * 0.12);
+  g.fillStyle(C.switchSide, 1).fillEllipse(cx, cy + TILE * 0.02, TILE * 0.48, TILE * 0.24);
+  g.fillStyle(C.switchTop, 1).fillEllipse(cx, cy - TILE * 0.04, TILE * 0.48, TILE * 0.24);
+  g.fillStyle(0xffffff, 0.6).fillEllipse(cx - TILE * 0.07, cy - TILE * 0.07, TILE * 0.16, TILE * 0.07);
+}
+
+/** Puerta: la cerrada (barrotes de pie) y la abierta (rejilla en el suelo); se ve una u otra. */
+export interface DoorView {
+  readonly closed: Phaser.GameObjects.Graphics;
+  readonly open: Phaser.GameObjects.Graphics;
+}
+
+export function createDoor(scene: Phaser.Scene, layer: Phaser.GameObjects.Container, pos: Pos): DoorView {
+  const { x, y } = tileCenter(pos.x, pos.y);
+  const open = scene.add.graphics({ x, y });
+  open.fillStyle(C.doorBar, 0.9).fillRoundedRect(-TILE * 0.38, TILE * 0.18, TILE * 0.76, TILE * 0.16, TILE * 0.06);
+  open.lineStyle(TILE * 0.04, C.door, 1);
+  for (const bx of [-0.24, -0.08, 0.08, 0.24]) open.lineBetween(bx * TILE, TILE * 0.2, bx * TILE, TILE * 0.32);
+  const closed = scene.add.graphics({ x, y });
+  closed.fillStyle(C.iceShadow, 0.2).fillRect(-TILE * 0.42, TILE * 0.3, TILE * 0.84, TILE * 0.12);
+  closed.fillStyle(C.door, 1).fillRoundedRect(-TILE * 0.42, -TILE * 0.42, TILE * 0.84, TILE * 0.8, TILE * 0.08);
+  closed.fillStyle(C.doorBar, 1).fillRoundedRect(-TILE * 0.42, -TILE * 0.42, TILE * 0.84, TILE * 0.14, TILE * 0.07);
+  closed.lineStyle(TILE * 0.06, C.doorBar, 1);
+  for (const bx of [-0.24, -0.08, 0.08, 0.24]) closed.lineBetween(bx * TILE, -TILE * 0.22, bx * TILE, TILE * 0.3);
+  layer.add([open, closed]);
+  return { closed, open };
+}
+
+/** Pone la puerta abierta o cerrada, sin animar (al colocar un estado). */
+export function setDoorOpen(view: DoorView, open: boolean): void {
+  view.closed.setVisible(!open).setAlpha(1).setScale(1);
+  view.open.setVisible(open).setAlpha(1);
+}
+
+/** Bloque de hielo empujable (un contenedor que se mueve por el tablero). */
+export function createBlock(scene: Phaser.Scene, layer: Phaser.GameObjects.Container, pos: Pos): Phaser.GameObjects.Container {
+  const { x, y } = tileCenter(pos.x, pos.y);
+  const g = scene.add.graphics();
+  const h = TILE * 0.42;
+  g.fillStyle(C.iceShadow, 0.22).fillRoundedRect(-h, -h + TILE * 0.08, h * 2, h * 2, TILE * 0.12);
+  g.fillStyle(C.blockSide, 1).fillRoundedRect(-h, -h + TILE * 0.06, h * 2, h * 2, TILE * 0.12);
+  g.fillStyle(C.block, 1).fillRoundedRect(-h, -h, h * 2, h * 2 - TILE * 0.06, TILE * 0.12);
+  g.lineStyle(TILE * 0.03, C.blockEdge, 1).strokeRoundedRect(-h, -h, h * 2, h * 2 - TILE * 0.06, TILE * 0.12);
+  g.lineStyle(TILE * 0.05, 0xffffff, 0.95);
+  g.lineBetween(-h * 0.6, -h * 0.55, -h * 0.15, -h * 0.55).lineBetween(-h * 0.6, -h * 0.55, -h * 0.6, -h * 0.1);
+  g.lineStyle(TILE * 0.04, 0xffffff, 0.6).lineBetween(h * 0.25, h * 0.45, h * 0.55, h * 0.15);
+  const block = scene.add.container(x, y, [g]);
+  layer.add(block);
+  return block;
 }
 
 /** Agujero de agua con el borde de hielo roto. */

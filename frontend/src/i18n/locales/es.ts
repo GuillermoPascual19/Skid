@@ -683,6 +683,26 @@ export const messages = {
         label: 'Hielo frágil',
         help: 'Se rompe la primera vez que pasan por encima y luego es un agujero. Como mucho 6 por nivel.',
       },
+      mirror: {
+        label: 'Espejo',
+        help: 'Desvía 90° al pingüino. Toca un espejo para cambiar su diagonal.',
+      },
+      oneway: {
+        label: 'Un sentido',
+        help: 'Solo se cruza en la dirección de la flecha. Toca uno para girarlo.',
+      },
+      switch: {
+        label: 'Interruptor',
+        help: 'Al pasar por encima, todas las puertas cambian.',
+      },
+      door: {
+        label: 'Puerta',
+        help: 'Cerrada es un muro; abierta, hielo. Toca una para elegir cómo empieza.',
+      },
+      block: {
+        label: 'Bloque',
+        help: 'Se desliza al chocar con él, solo por hielo normal. Como mucho 3 por nivel.',
+      },
     },
     maxPieces: 'Como mucho {n} piezas',
     maxPortals: 'Como mucho {n} parejas de teletransportes',
@@ -908,6 +928,22 @@ export const messages = {
     crack: {
       name: 'Hielo frágil',
       description: 'Aguanta una sola pasada: al pasar por encima se rompe y queda un agujero. Si vuelves a pasar, caes al agua.',
+    },
+    mirror: {
+      name: 'Espejos',
+      description: 'Placas de hielo en diagonal: el pingüino rebota 90° y sigue deslizando. Hacia dónde sale depende de por dónde llegue.',
+    },
+    oneway: {
+      name: 'Pasos de un sentido',
+      description: 'Solo se cruzan en la dirección de la flecha. Desde cualquier otro lado son un muro.',
+    },
+    switch: {
+      name: 'Interruptor y puertas',
+      description: 'Cada vez que pasas por el interruptor, todas las puertas cambian: las abiertas se cierran y las cerradas se abren.',
+    },
+    block: {
+      name: 'Bloques de hielo',
+      description: 'Si chocas con uno, sale deslizando hasta el siguiente obstáculo y tú te quedas donde estabas. Úsalos de tope… y ojo con encerrarte.',
     },
   },
   free: {

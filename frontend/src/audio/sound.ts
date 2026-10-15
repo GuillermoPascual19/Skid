@@ -239,6 +239,8 @@ export const sfx = {
   stuck: () => play((c, o, t) => synth.stuck(c, o, t)),
   snow: () => play((c, o, t) => synth.snow(c, o, t)),
   crack: () => play((c, o, t) => synth.crack(c, o, t)),
+  toggle: () => play((c, o, t) => synth.toggle(c, o, t)),
+  push: () => play((c, o, t) => synth.push(c, o, t)),
   turn: () => play((c, o, t) => synth.turn(c, o, t)),
   teleport: () => play((c, o, t) => synth.teleport(c, o, t)),
   splash: () => play((c, o, t) => synth.splash(c, o, t)),

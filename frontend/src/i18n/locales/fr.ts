@@ -684,6 +684,26 @@ export const messages: Messages = {
         label: 'Glace fragile',
         help: 'Se brise au premier passage puis devient un trou. 6 au maximum par niveau.',
       },
+      mirror: {
+        label: 'Miroir',
+        help: 'Dévie le pingouin de 90°. Touche un miroir pour changer sa diagonale.',
+      },
+      oneway: {
+        label: 'Sens unique',
+        help: 'Ne se traverse que dans le sens de la flèche. Touche-le pour le tourner.',
+      },
+      switch: {
+        label: 'Interrupteur',
+        help: 'Passer dessus change toutes les portes.',
+      },
+      door: {
+        label: 'Porte',
+        help: 'Fermée, c\'est un mur ; ouverte, de la glace. Touche-la pour choisir son état de départ.',
+      },
+      block: {
+        label: 'Bloc',
+        help: 'Glisse quand on le heurte, seulement sur la glace normale. 3 au maximum par niveau.',
+      },
     },
     maxPieces: '{n} pièces maximum',
     maxPortals: '{n} paires de téléporteurs maximum',
@@ -909,6 +929,22 @@ export const messages: Messages = {
     crack: {
       name: 'Glace fragile',
       description: 'Elle ne tient qu\'un passage : quand tu glisses dessus, elle se brise et laisse un trou. Si tu repasses, tu tombes à l\'eau.',
+    },
+    mirror: {
+      name: 'Miroirs',
+      description: 'Des plaques de glace en diagonale : le pingouin rebondit à 90° et continue de glisser. Sa sortie dépend de son arrivée.',
+    },
+    oneway: {
+      name: 'Passages à sens unique',
+      description: 'On ne les traverse que dans le sens de la flèche. Depuis les autres côtés, c\'est un mur.',
+    },
+    switch: {
+      name: 'Interrupteur et portes',
+      description: 'Chaque fois que tu passes sur l\'interrupteur, toutes les portes changent : les ouvertes se ferment et les fermées s\'ouvrent.',
+    },
+    block: {
+      name: 'Blocs de glace',
+      description: 'Si tu en heurtes un, il glisse jusqu\'au prochain obstacle et tu restes sur place. Sers-t\'en de butée… et attention à ne pas t\'enfermer.',
     },
   },
   free: {

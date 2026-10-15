@@ -25,11 +25,37 @@ export const DIRECTION_DELTA: Readonly<Record<Direction, Pos>> = {
  *   crack   hielo frágil: la primera vez que se pasa (o se para) encima se
  *           rompe y desde entonces es un agujero. Lo roto se lleva en el
  *           estado de la partida (GameState.broken), no en el tablero.
+ *   mirror-* espejo en diagonal (slash: /, backslash: \): desvía 90° según
+ *           por dónde se llegue y sigue deslizando.
+ *   oneway-* paso de un sentido: solo se entra moviéndose hacia donde apunta;
+ *           desde las demás direcciones hace de muro.
+ *   switch  interruptor: al pasar, todas las puertas cambian (las abiertas se
+ *           cierran y al revés). Se lleva en GameState.flipped.
+ *   door-*  puerta: cerrada es un muro y abierta, hielo. «closed»/«open» es
+ *           como empieza la partida.
+ * Los bloques empujables no son casillas (se mueven): van en Board.blocks y en
+ * GameState.blocks, sobre hielo.
  */
-export type Cell = 'wall' | 'ice' | 'snow' | 'hole' | 'portal' | 'crack' | `arrow-${Direction}`;
+export type Cell =
+  | 'wall'
+  | 'ice'
+  | 'snow'
+  | 'hole'
+  | 'portal'
+  | 'crack'
+  | 'switch'
+  | 'door-closed'
+  | 'door-open'
+  | 'mirror-slash'
+  | 'mirror-backslash'
+  | `arrow-${Direction}`
+  | `oneway-${Direction}`;
 
 /** Casillas de hielo frágil como mucho por tablero (cada una duplica los estados que explora el solver). */
 export const MAX_CRACKS = 6;
+
+/** Bloques empujables como mucho por tablero (cada uno multiplica los estados que explora el solver). */
+export const MAX_BLOCKS = 3;
 
 export interface Piece {
   /** Número de la pieza, empezando en 1. Se recogen en orden ascendente. */
@@ -50,6 +76,8 @@ export interface Board {
   readonly portals: readonly (readonly [Pos, Pos])[];
   /** Casillas de hielo frágil, en orden de lectura: su índice es su bit en GameState.broken. */
   readonly cracks: readonly Pos[];
+  /** Dónde empiezan los bloques empujables (sobre hielo). */
+  readonly blocks: readonly Pos[];
 }
 
 /** Parte dinámica de una partida. */
@@ -59,10 +87,19 @@ export interface GameState {
   readonly collected: number;
   /** Hielo frágil ya roto: el bit i es board.cracks[i]. */
   readonly broken: number;
+  /** Las puertas están al revés de como empezaron (se ha pasado un número impar de veces por interruptores). */
+  readonly flipped: boolean;
+  /** Dónde están ahora los bloques empujables. */
+  readonly blocks: readonly Pos[];
 }
 
 export function initialState(board: Board): GameState {
-  return { player: board.start, collected: 0, broken: 0 };
+  return { player: board.start, collected: 0, broken: 0, flipped: false, blocks: board.blocks };
+}
+
+/** ¿Está abierta la puerta `cell` con el estado de los interruptores `flipped`? */
+export function doorOpen(cell: Cell, flipped: boolean): boolean {
+  return (cell === 'door-open') !== flipped;
 }
 
 /** Índice del hielo frágil que hay en `pos` (-1 si no hay). */
@@ -112,6 +149,7 @@ export type BoardProblem =
   | 'missingPiece'
   | 'portalPair'
   | 'manyCracks'
+  | 'manyBlocks'
   | 'invalid'
   | 'size'
   | 'loops'
@@ -139,6 +177,11 @@ export class BoardError extends Error {
  *   a-e  teletransporte: cada letra, exactamente dos veces (una pareja)
  *   O  agujero en el hielo
  *   x  hielo frágil
+ *   m n  espejo / y \ (no se usa «/», que separa las filas al guardarlas)
+ *   U D L R  paso de un sentido hacia arriba, abajo, izquierda o derecha
+ *   S  interruptor
+ *   G g  puerta que empieza cerrada (G) o abierta (g)
+ *   K  bloque empujable (sobre hielo)
  *
  * Lanza un BoardError si el tablero no es rectangular, contiene caracteres
  * desconocidos, no tiene exactamente un '@', las piezas no son 1..n sin
@@ -153,6 +196,7 @@ export function parseBoard(rows: readonly string[]): Board {
   const pieceMap = new Map<number, Pos>();
   const portalMap = new Map<string, Pos[]>();
   const cracks: Pos[] = [];
+  const blocks: Pos[] = [];
   let start: Pos | undefined;
 
   rows.forEach((row, y) => {
@@ -170,7 +214,9 @@ export function parseBoard(rows: readonly string[]): Board {
       }
       line.push('ice');
       if (ch === '.') return;
-      if (ch === '@') {
+      if (ch === 'K') {
+        blocks.push({ x, y });
+      } else if (ch === '@') {
         if (start) throw new BoardError('manyPlayers');
         start = { x, y };
       } else if (ch >= '1' && ch <= '9') {
@@ -201,8 +247,9 @@ export function parseBoard(rows: readonly string[]): Board {
   }
 
   if (cracks.length > MAX_CRACKS) throw new BoardError('manyCracks', { max: MAX_CRACKS });
+  if (blocks.length > MAX_BLOCKS) throw new BoardError('manyBlocks', { max: MAX_BLOCKS });
 
-  return { width, height: rows.length, cells, pieces, start, portals, cracks };
+  return { width, height: rows.length, cells, pieces, start, portals, cracks, blocks };
 }
 
 /** Caracteres de las casillas que no son hielo normal. */
@@ -211,6 +258,15 @@ const SPECIAL_CHARS: Readonly<Record<string, Cell>> = {
   '*': 'snow',
   O: 'hole',
   x: 'crack',
+  m: 'mirror-slash',
+  n: 'mirror-backslash',
+  U: 'oneway-up',
+  D: 'oneway-down',
+  L: 'oneway-left',
+  R: 'oneway-right',
+  S: 'switch',
+  G: 'door-closed',
+  g: 'door-open',
   '^': 'arrow-up',
   v: 'arrow-down',
   '<': 'arrow-left',

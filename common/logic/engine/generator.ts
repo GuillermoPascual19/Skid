@@ -1,7 +1,7 @@
 // Generador de niveles: crea tableros aleatorios (deterministas por semilla)
 // y se queda con uno resoluble cuyo óptimo encaja con la dificultad del nivel.
 
-import { PORTAL_CHARS, parseBoard, type Board, type Direction } from './board.ts';
+import { MAX_BLOCKS, PORTAL_CHARS, parseBoard, type Board, type Direction } from './board.ts';
 import { ELEMENTS, elementsUsed, unlockedElements, type ElementId } from './elements.ts';
 import { createRng, type Rng } from './rng.ts';
 import { countDeadEnds, hasLoops, solve } from './solver.ts';
@@ -33,7 +33,8 @@ export interface GenerateOptions {
   /**
    * Descarta tableros con callejones sin salida (posiciones desde las que ya no
    * se puede terminar). Así nunca te quedas atascado: equivocarte solo cuesta
-   * movimientos. Por defecto, sí.
+   * movimientos. Por defecto, sí. No se aplica a los tableros con bloques
+   * empujables (solo salen en el modo libre, a partir de su nivel).
    */
   readonly rejectDeadEnds?: boolean;
 }
@@ -83,7 +84,9 @@ export function generateLevel(level: number, seed: number, options: GenerateOpti
     }
     // Solo se analiza si podría servir: es lo más caro de cada intento.
     if (distance >= bestDistance) continue;
-    if (rejectDeadEnds && countDeadEnds(board) > 0) continue;
+    // Con bloques los atascos son inevitables (empujar uno a una esquina no tiene vuelta
+    // atrás): ahí se permiten y el juego avisa de que hay que reiniciar.
+    if (rejectDeadEnds && board.blocks.length === 0 && countDeadEnds(board) > 0) continue;
     if (hasLoops(board)) continue;
     if (distance === 0) return { level, rows, board, solution };
     best = { level, rows, board, solution };
@@ -168,6 +171,20 @@ function placeElements(rng: Rng, grid: string[][], elements: readonly ElementId[
         break;
       case 'crack':
         for (let i = rng.int(1, 2) + extra; i > 0; i--) put('x');
+        break;
+      case 'mirror':
+        for (let i = rng.int(1, 2) + extra; i > 0; i--) put(rng.pick(['m', 'n']));
+        break;
+      case 'oneway':
+        for (let i = rng.int(1, 2) + extra; i > 0; i--) put(rng.pick(['U', 'D', 'L', 'R']));
+        break;
+      case 'switch':
+        // Un interruptor y sus puertas (que empiezan cerradas o abiertas).
+        put('S');
+        for (let i = rng.int(1, 2) + extra; i > 0; i--) put(rng.pick(['G', 'g']));
+        break;
+      case 'block':
+        for (let i = Math.min(rng.int(1, 2) + extra, MAX_BLOCKS); i > 0; i--) put('K');
         break;
     }
   }

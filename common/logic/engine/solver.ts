@@ -87,10 +87,10 @@ export function countDeadEnds(board: Board): number {
 
 /**
  * Si desde algún estado alcanzable hay un movimiento que entra en un bucle sin
- * fin (solo pasa con corrientes que se mandan unas a otras).
+ * fin (solo pasa con corrientes o espejos que se mandan unos a otros).
  */
 export function hasLoops(board: Board): boolean {
-  if (!board.cells.some((row) => row.some((c) => c.startsWith('arrow-')))) return false;
+  if (!board.cells.some((row) => row.some((c) => c.startsWith('arrow-') || c.startsWith('mirror-')))) return false;
   const start = initialState(board);
   const seen = new Set<string>([stateKey(start)]);
   const queue: GameState[] = [start];
@@ -109,9 +109,14 @@ export function hasLoops(board: Board): boolean {
   return false;
 }
 
-/** Dos estados son el mismo si el jugador está en la misma casilla, lleva las mismas piezas y está roto el mismo hielo. */
+/**
+ * Dos estados son el mismo si el jugador está en la misma casilla, lleva las
+ * mismas piezas, está roto el mismo hielo, las puertas están igual y los
+ * bloques ocupan las mismas casillas (da igual cuál es cuál).
+ */
 function stateKey(state: GameState): string {
-  return `${state.player.x},${state.player.y},${state.collected},${state.broken}`;
+  const blocks = state.blocks.length ? `|${state.blocks.map((b) => `${b.x}.${b.y}`).sort().join(';')}` : '';
+  return `${state.player.x},${state.player.y},${state.collected},${state.broken},${state.flipped ? 1 : 0}${blocks}`;
 }
 
 /** Reconstruye las direcciones siguiendo los padres desde el nodo final hasta el inicial. */
