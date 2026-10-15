@@ -10,6 +10,7 @@ export interface Env {
   JOIN_RATE_LIMITER: RateLimit;
   /** Peticiones por jugador y minuto a toda la API (contra abusos y scripts). */
   API_RATE_LIMITER: RateLimit;
+  ERROR_RATE_LIMITER: RateLimit;
   /** ID de cliente OAuth de Google (público). Sin él, el login con Google está desactivado. */
   GOOGLE_CLIENT_ID?: string;
   /** Solo para pruebas en local: de dónde descargar las claves de firma. */

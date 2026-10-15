@@ -248,6 +248,10 @@ fuera) y compila el juego a `dist/`.
 - Privacidad (RGPD/LSSI): sin cookies. Las tipografías se sirven desde aquí (no desde Google Fonts) y
   el script de Google solo se carga al pulsar «Continuar con Google». Las analíticas, si se activan,
   son de Cloudflare Web Analytics, sin cookies. Textos legales en `frontend/public/legal/`.
+- Avisos de errores: los errores de JS de los jugadores (sin datos de su cuenta) llegan a
+  `POST /api/errors` y quedan en los logs del Worker: Cloudflare → Workers → skid → Logs, filtrando
+  por `event = clientError` (`frontend/src/shared/errors.ts`, `backend/src/routes/errors.ts`). Como
+  mucho 5 por carga de la página y 10 por minuto desde la misma IP.
 
 ## Idiomas
 
