@@ -368,8 +368,9 @@ export function homeScreen(): Screen {
   return {
     el,
     mount() {
+      // Primera vez: se aprende jugando (el tutorial), antes de nada.
+      if (guide === 'first') return go({ name: 'tutorial' });
       renderDaily();
-      if (guide === 'first') openGuide(); // Primera vez: las reglas antes de nada.
       ticker = window.setInterval(tick, 1000);
       void syncWithServer();
       void weekly?.load();

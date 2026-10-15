@@ -895,6 +895,32 @@ export const messages: Messages = {
     addButton: 'Ajouter',
     requests: 'Demandes d\'ami : {n}',
   },
+  tutorial: {
+    title: 'Comment jouer',
+    step: 'Étape {n} sur {total}',
+    slide: {
+      title: 'Glisse',
+      text: 'Déplace le pingouin vers la flèche. Sur la glace, il ne freine pas : il glisse jusqu\'à heurter quelque chose.',
+    },
+    walls: {
+      title: 'Sers-toi des murs pour tourner',
+      text: 'Tu ne t\'arrêtes qu\'en heurtant quelque chose : les murs sont tes freins. Atteins le 1.',
+    },
+    order: {
+      title: 'Dans l’ordre',
+      text: 'Ramasse les nombres dans l\'ordre : d\'abord le 1, puis le 2. Tant que ce n\'est pas son tour, un nombre est un mur.',
+    },
+    wellDone: 'Bien joué !',
+    again: 'Tu ne peux plus y arriver d\'ici : on recommence.',
+    skip: 'Passer le tutoriel',
+    practice: 'Apprendre en jouant (tutoriel)',
+    finished: {
+      title: 'Tu sais jouer !',
+      text: 'Chaque jour, un nouveau défi, le même pour tous : réussis-le en le moins de coups possible.',
+      daily: 'Jouer le défi du jour',
+      rules: 'Voir toutes les règles',
+    },
+  },
   seasonHats: {
     title: 'Chapeaux de saison',
     text: 'Chaque mois est une saison dans tes ligues : celui qui marque le plus de points remporte le chapeau du mois.',

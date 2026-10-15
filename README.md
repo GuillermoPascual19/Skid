@@ -10,6 +10,7 @@ y niveles creados por los jugadores.
 
 ## Qué tiene
 
+- **Tutorial**: la primera vez se aprende jugando, con tres tableros guiados (y desde la guía de reglas).
 - **Modo libre**: niveles generados cada vez más difíciles, con estrellas según los movimientos y
   elementos que se desbloquean (nieve, corrientes, teletransportes, agujeros, hielo frágil, espejos,
   pasos de un sentido, interruptores con puertas y bloques empujables).

@@ -10,6 +10,7 @@ friends, and levels made by the players.
 
 ## What's inside
 
+- **Tutorial**: the first time you learn by playing, with three guided boards (also from the rules guide).
 - **Free play**: generated levels that get harder and harder, with stars based on your moves and
   elements that unlock along the way (snow, currents, teleporters, holes, fragile ice, mirrors,
   one-way gates, switches with doors and pushable blocks).

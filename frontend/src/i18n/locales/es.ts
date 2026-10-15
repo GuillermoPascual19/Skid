@@ -894,6 +894,32 @@ export const messages = {
     addButton: 'Añadir',
     requests: 'Solicitudes de amistad: {n}',
   },
+  tutorial: {
+    title: 'Cómo se juega',
+    step: 'Paso {n} de {total}',
+    slide: {
+      title: 'Desliza',
+      text: 'Mueve el pingüino hacia la flecha. Sobre el hielo no frena: sigue hasta chocar con algo.',
+    },
+    walls: {
+      title: 'Usa los muros para girar',
+      text: 'Solo te paras al chocar, así que los muros son tus frenos. Llega hasta el 1.',
+    },
+    order: {
+      title: 'En orden',
+      text: 'Recoge los números en orden: primero el 1, luego el 2. Mientras no le toque, un número es un muro.',
+    },
+    wellDone: '¡Bien hecho!',
+    again: 'Por ahí ya no llegas: volvemos a empezar.',
+    skip: 'Saltar el tutorial',
+    practice: 'Aprender jugando (tutorial)',
+    finished: {
+      title: '¡Ya sabes jugar!',
+      text: 'Cada día hay un reto nuevo, el mismo para todos: hazlo en los menos movimientos posibles.',
+      daily: 'Jugar el reto de hoy',
+      rules: 'Ver todas las reglas',
+    },
+  },
   seasonHats: {
     title: 'Gorros de temporada',
     text: 'Cada mes es una temporada en tus ligas: quien más puntos sume se lleva el gorro de ese mes.',

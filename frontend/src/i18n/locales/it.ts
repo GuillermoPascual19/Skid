@@ -895,6 +895,32 @@ export const messages: Messages = {
     addButton: 'Aggiungi',
     requests: 'Richieste di amicizia: {n}',
   },
+  tutorial: {
+    title: 'Come si gioca',
+    step: 'Passo {n} di {total}',
+    slide: {
+      title: 'Scivola',
+      text: 'Muovi il pinguino verso la freccia. Sul ghiaccio non frena: va avanti finché non sbatte contro qualcosa.',
+    },
+    walls: {
+      title: 'Usa i muri per girare',
+      text: 'Ti fermi solo quando sbatti, quindi i muri sono i tuoi freni. Raggiungi l’1.',
+    },
+    order: {
+      title: 'In ordine',
+      text: 'Raccogli i numeri in ordine: prima l’1, poi il 2. Finché non è il suo turno, un numero è un muro.',
+    },
+    wellDone: 'Ben fatto!',
+    again: 'Da qui non ci arrivi più: ricominciamo.',
+    skip: 'Salta il tutorial',
+    practice: 'Impara giocando (tutorial)',
+    finished: {
+      title: 'Ora sai giocare!',
+      text: 'Ogni giorno c’è una nuova sfida, uguale per tutti: risolvila con meno mosse possibile.',
+      daily: 'Gioca la sfida di oggi',
+      rules: 'Vedi tutte le regole',
+    },
+  },
   seasonHats: {
     title: 'Cappelli di stagione',
     text: 'Ogni mese è una stagione nelle tue leghe: chi fa più punti vince il cappello di quel mese.',
