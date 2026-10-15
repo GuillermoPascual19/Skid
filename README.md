@@ -128,7 +128,8 @@ common/                    lo que usan los dos; sin APIs del navegador ni import
     players/               reglas de los nombres
   i18n/                    idiomas, mensajes de error y textos de las notificaciones
   art/                     dibujos SVG (pingüino, gorros, elementos)
-tests/                     backend/ y common/, con el mismo árbol que el código
+tests/                     backend/ y common/, con el mismo árbol que el código; worker/ prueba las
+                           rutas con su SQL real sobre una SQLite en memoria (node:sqlite) con las migraciones
 .github/workflows/         despliegue automático
 wrangler.jsonc             configuración del Worker: D1, límites de peticiones, assets
 vite.config.ts             Vite y Vitest

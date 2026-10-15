@@ -128,7 +128,8 @@ common/                    used by both; no browser APIs and no imports from out
     players/               player name rules
   i18n/                    languages, error messages and notification texts
   art/                     SVG drawings (penguin, hats, elements)
-tests/                     backend/ and common/, mirroring the code tree
+tests/                     backend/ and common/, mirroring the code tree; worker/ tests the routes with
+                           their real SQL on an in-memory SQLite (node:sqlite) with the migrations
 .github/workflows/         automatic deployment
 wrangler.jsonc             Worker config: D1, rate limits, assets
 vite.config.ts             Vite and Vitest
