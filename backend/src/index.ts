@@ -8,7 +8,7 @@
 
 import { unlockedHats } from '../../common/logic/achievements/achievements';
 import { isHatId } from '../../common/art/hats';
-import { type Env, HttpError, body, cleanText, json } from './http';
+import { type Env, HttpError, type Session, body, cleanText, json } from './http';
 import { errorMessage, requestLocale } from './i18n';
 import { playerAchievements } from './routes/achievements';
 import { finishRun, getRun, ghostRuns, startRun } from './routes/daily';
@@ -62,9 +62,7 @@ export default {
     try {
       return await handleApi(req, url, env);
     } catch (err) {
-      if (err instanceof HttpError) return json({ error: errorMessage(requestLocale(req), err.key, err.params), code: err.key }, err.status);
-      console.error(err);
-      return json({ error: errorMessage(requestLocale(req), 'internal'), code: 'internal' }, 500);
+      return errorResponse(req, err);
     }
   },
 
@@ -76,6 +74,46 @@ export default {
   },
 } satisfies ExportedHandler<Env>;
 
+/** El error de una ruta como respuesta JSON, en el idioma del jugador. */
+function errorResponse(req: Request, err: unknown): Response {
+  if (err instanceof HttpError) return json({ error: errorMessage(requestLocale(req), err.key, err.params), code: err.key }, err.status);
+  console.error(err);
+  return json({ error: errorMessage(requestLocale(req), 'internal'), code: 'internal' }, 500);
+}
+
+/** Lecturas como mucho en un lote (lo que pide la portada de una vez, con margen). */
+const MAX_BATCH = 12;
+
+/**
+ * Varias lecturas (GET) en una sola petición: /batch?p=/me&p=/stats… La sesión
+ * y el límite de peticiones se comprueban una vez; cada lectura pasa por su ruta
+ * de siempre (con sus permisos) y su resultado va aparte, con su código HTTP: si
+ * una falla, las demás llegan igual. El juego agrupa solo las lecturas que salen
+ * a la vez (frontend/src/shared/api.ts).
+ */
+async function batch(req: Request, url: URL, env: Env, session: Session) {
+  const paths = url.searchParams.getAll('p');
+  if (paths.length === 0 || paths.length > MAX_BATCH) throw new HttpError(400, 'invalidBody');
+  const entries = await Promise.all(
+    paths.map(async (path) => {
+      // Solo rutas de la API con su consulta, y nada de lotes dentro de lotes.
+      if (!/^\/[\w\-/.]*(\?[\w\-=&%.]*)?$/.test(path) || path.length > 200 || path.startsWith('/batch')) {
+        return [path, { status: 400, data: { error: errorMessage(requestLocale(req), 'invalidBody'), code: 'invalidBody' } }] as const;
+      }
+      const subUrl = new URL(`/api${path}`, url);
+      const subReq = new Request(subUrl, { method: 'GET', headers: req.headers });
+      let res: Response;
+      try {
+        res = await authedApi(subReq, subUrl, env, session);
+      } catch (err) {
+        res = errorResponse(subReq, err);
+      }
+      return [path, { status: res.status, data: await res.json() }] as const;
+    }),
+  );
+  return { results: Object.fromEntries(entries) };
+}
+
 /** Solicitudes y enlaces de amigo: el mismo límite que unirse a ligas (evita ir probando nombres). */
 async function friendLimit(env: Env, playerId: string): Promise<void> {
   const { success } = await env.JOIN_RATE_LIMITER.limit({ key: `friends:${playerId}` });
@@ -84,16 +122,23 @@ async function friendLimit(env: Env, playerId: string): Promise<void> {
 
 async function handleApi(req: Request, url: URL, env: Env): Promise<Response> {
   const route = `${req.method} ${url.pathname.replace(/^\/api/, '')}`;
-  let m: RegExpMatchArray | null;
 
   if (route === 'POST /session') return json(await createSession(req, env));
   if (route === 'POST /errors') return logClientError(req, env);
   if (route === 'GET /config') return json({ googleClientId: env.GOOGLE_CLIENT_ID || null, analyticsToken: env.CF_ANALYTICS_TOKEN || null });
 
   const session = await authenticate(req, env);
-  const { playerId } = session;
   // Límite general por jugador: de sobra para jugar, corta los scripts que machacan la API.
-  if (!(await env.API_RATE_LIMITER.limit({ key: playerId })).success) throw new HttpError(429, 'tooManyRequests');
+  if (!(await env.API_RATE_LIMITER.limit({ key: session.playerId })).success) throw new HttpError(429, 'tooManyRequests');
+  if (route === 'GET /batch') return json(await batch(req, url, env, session));
+  return authedApi(req, url, env, session);
+}
+
+/** Las rutas que necesitan sesión (ya comprobada, igual que el límite de peticiones). */
+async function authedApi(req: Request, url: URL, env: Env, session: Session): Promise<Response> {
+  const route = `${req.method} ${url.pathname.replace(/^\/api/, '')}`;
+  const { playerId } = session;
+  let m: RegExpMatchArray | null;
 
   if (route === 'POST /auth/google') {
     const { credential } = await body<{ credential?: unknown }>(req);

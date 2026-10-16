@@ -245,6 +245,9 @@ fuera) y compila el juego a `dist/`.
   siempre como texto, nunca como HTML.
 - Permisos: perfiles, partidas (fantasma) y rankings de liga solo entre quienes comparten liga. Unirse
   con un enlace pide confirmación y se puede salir de una liga.
+- Lecturas agrupadas: las que el juego hace a la vez (las de la portada al abrirla) van juntas en una
+  sola petición, `GET /api/batch?p=…` (hasta 12), con la sesión comprobada una vez y cada lectura por su
+  ruta de siempre (`frontend/src/shared/api.ts`, `backend/src/index.ts`).
 - Límites: 120 peticiones por minuto y jugador a toda la API, cuerpos de 32 KB como mucho, y límites
   propios para crear cuentas, unirse a ligas y publicar niveles (`wrangler.jsonc`).
 - Cabeceras: CSP estricta y el resto de cabeceras de seguridad en `frontend/public/_headers`; la API
