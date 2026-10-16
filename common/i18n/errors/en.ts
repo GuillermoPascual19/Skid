@@ -28,6 +28,7 @@ export const errors: ErrorMessages = {
   invalidLog: 'Invalid game log',
   logIncomplete: "The game log doesn't finish the game",
   tooFast: 'That game was too fast to have been played in the game',
+  tooManyHints: '{n} hints a day at most',
 
   invalidDay: 'Invalid day',
   invalidPeriod: 'Invalid period',

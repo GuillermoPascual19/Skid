@@ -32,6 +32,7 @@ export const errors = {
   invalidLog: 'Registro de la partida no válido',
   logIncomplete: 'El registro no completa la partida',
   tooFast: 'Partida demasiado rápida para haberse jugado en el juego',
+  tooManyHints: 'Como mucho {n} pistas al día',
 
   // Reto diario
   invalidDay: 'Día no válido',

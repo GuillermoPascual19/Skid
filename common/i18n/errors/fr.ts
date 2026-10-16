@@ -28,6 +28,7 @@ export const errors: ErrorMessages = {
   invalidLog: 'Historique de partie non valide',
   logIncomplete: "L'historique ne termine pas la partie",
   tooFast: 'Partie trop rapide pour avoir été jouée dans le jeu',
+  tooManyHints: '{n} indices par jour au maximum',
 
   invalidDay: 'Jour non valide',
   invalidPeriod: 'Période non valide',

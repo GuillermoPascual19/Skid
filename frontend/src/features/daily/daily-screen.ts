@@ -1,6 +1,7 @@
 // Partida del reto diario al estilo golf: el reloj del servidor no se para,
 // volver a empezar es gratis (cuenta el mejor intento) y cada pista suma un golpe.
 
+import { dailyHintLimit, hintsLeft } from '../../../../common/logic/hints';
 import { initialState, type GameState } from '../../../../common/logic/engine/board';
 import { dailyLevel, decodeRun, encodeRun, replayRun, type RunEvent } from '../../../../common/logic/daily/daily';
 import { applyMove, isComplete } from '../../../../common/logic/engine/move';
@@ -14,10 +15,10 @@ import { formatDay, formatTime, h, haptic, openModal } from '../../shared/dom';
 import { movesLabel } from '../../shared/result';
 import { sfx } from '../../audio/sound';
 import { go, type Screen } from '../../shared/router';
-import { loadBoard, onKey, openPauseMenu, playLayout, wearHat } from '../../play/play';
+import { loadBoard, onKey, openPauseMenu, playLayout, showNoHints, wearHat } from '../../play/play';
 import { finishDaily } from './api';
 import { type DailyRecord, type DailyResult, loadDaily, saveDaily } from './storage';
-import { t } from '../../i18n/i18n';
+import { t, tn } from '../../i18n/i18n';
 
 export function dailyScreen(record: DailyRecord): Screen {
   const { day } = record;
@@ -72,11 +73,14 @@ export function dailyScreen(record: DailyRecord): Screen {
   const elapsed = () => Date.now() - record.startedAt;
   /** Resultado del intento en curso: sus movimientos más uno por cada pista pedida. */
   const strokes = () => moves + hints;
+  /** Pistas que se pueden pedir hoy (null: reto de antes del tope). */
+  const hintLimit = dailyHintLimit(day);
   const hud = () => {
     ui.setStat('moves', strokes(), strokes() > optimal ? 'warn' : undefined);
     ui.setStat('optimal', optimal);
     ui.setStat('best', result?.overPar != null ? movesLabel(optimal + result.overPar) : '—');
-    ui.setHintCount(hints);
+    if (hintLimit === null) ui.setHintBadge(hints || null);
+    else ui.setHintBadge(hintsLeft(hints), hints >= hintLimit);
     // Terminado, se queda el tiempo del mejor intento; mientras se juega, corre el reloj.
     ui.setStat('time', formatTime(finished && result?.overPar != null ? result.timeMs : elapsed()));
   };
@@ -129,12 +133,14 @@ export function dailyScreen(record: DailyRecord): Screen {
   /** Pista: el siguiente movimiento óptimo, a cambio de un golpe. Se apunta en el registro. */
   function confirmHint() {
     if (finished || !mounted) return;
+    if (hintLimit !== null && hints >= hintLimit) return showNoHints(t('play.noHints.daily', { n: hintLimit }));
     const [next] = solve(board, state) ?? [];
     if (!next) return ui.setStuck(true); // Sin salida: la pista no sirve, sin coste.
     const modal = openModal(
       [
         h('h2', null, t('daily.play.hintTitle')),
         h('p', { class: 'lead' }, t('daily.play.hintText')),
+        hintLimit !== null ? h('p', { class: 'muted' }, t('play.hintsLeft', { hints: tn('common.hints', hintsLeft(hints)) })) : null,
         h(
           'div',
           { class: 'row' },

@@ -11,6 +11,20 @@ import { soundSettings } from '../audio/audio-controls';
 import { currentMe } from '../features/profile/profile';
 import { t } from '../i18n/i18n';
 
+// ------------------------------------------------------------------ Pistas
+
+/**
+ * Ya no quedan pistas. `text` dice cuándo habrá más. Aquí irá, cuando haya
+ * anuncios, el botón para conseguir una pista más viendo uno.
+ */
+export function showNoHints(text: string): void {
+  sfx.bump();
+  const modal = openModal(
+    [h('div', { class: 'modal-icon', 'aria-hidden': 'true' }, '💡'), h('h2', null, t('play.noHints.title')), h('p', { class: 'lead' }, text), h('button', { class: 'btn block', onclick: () => modal.close() }, t('common.close'))],
+    { dismissable: true },
+  );
+}
+
 // ------------------------------------------------------------------ Layout
 
 export interface StatDef {
@@ -28,8 +42,8 @@ export interface PlayLayout {
   setStuck(stuck: boolean): void;
   /** Deja de escuchar los ajustes de sonido (al salir de la pantalla). */
   dispose(): void;
-  /** Contador de pistas usadas sobre la bombilla (0 lo oculta). */
-  setHintCount(n: number): void;
+  /** Número sobre la bombilla (null lo oculta); `empty`: ya no quedan pistas. */
+  setHintBadge(n: number | null, empty?: boolean): void;
 }
 
 /** Distancia (px de pantalla) que tiene que recorrer el dedo para contar como gesto. */
@@ -68,6 +82,7 @@ export function playLayout(opts: {
   );
 
   const hintBadge = h('span', { class: 'badge', hidden: true });
+  const hintButton = opts.onHint ? h('button', { class: 'icon-btn hint-btn', 'aria-label': t('play.hint'), title: t('play.hint'), onclick: opts.onHint }, '💡', hintBadge) : null;
 
   const boardWrap = h('div', { class: 'board-wrap' });
   const el = h(
@@ -78,7 +93,7 @@ export function playLayout(opts: {
       { class: 'topbar' },
       h('button', { class: 'icon-btn pause-btn', 'aria-label': t('play.pause'), title: t('play.pause'), onclick: opts.onMenu }, '⏸'),
       h('div', { class: 'title' }, title, subtitle),
-      opts.onHint ? h('button', { class: 'icon-btn hint-btn', 'aria-label': t('play.hint'), title: t('play.hint'), onclick: opts.onHint }, '💡', hintBadge) : null,
+      hintButton,
       h('button', { class: 'icon-btn', 'aria-label': opts.restartLabel, title: opts.restartLabel, onclick: opts.onRestart }, '↺'),
     ),
     stats,
@@ -123,9 +138,10 @@ export function playLayout(opts: {
       if (isStuck && stuck.hidden) sfx.stuck(); // Solo al caer en el callejón, no en cada movimiento.
       stuck.hidden = !isStuck;
     },
-    setHintCount(n) {
-      hintBadge.textContent = String(n);
-      hintBadge.hidden = n === 0;
+    setHintBadge(n, empty = false) {
+      hintBadge.textContent = n === null ? '' : String(n);
+      hintBadge.hidden = n === null;
+      hintButton?.classList.toggle('empty', empty);
     },
     dispose: () => {},
   };

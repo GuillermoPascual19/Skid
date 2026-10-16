@@ -1,6 +1,7 @@
 // Reto diario: empezar, consultar, terminar y mejorar (el servidor reproduce la partida para
 // verificarla), y ver el mejor intento de un amigo como fantasma.
 
+import { dailyHintLimit } from '../../../common/logic/hints';
 import { areFriends } from './friends';
 import { isHatId } from '../../../common/art/hats';
 import { dailyLevel, dayKey, decodeRun, encodeRun, minPlayTimeMs, replayRun } from '../../../common/logic/daily/daily';
@@ -84,6 +85,8 @@ export async function finishRun(env: Env, playerId: string, day: string, log: un
     throw new HttpError(400, 'invalidLog');
   }
   if (!replay.best) throw new HttpError(400, 'logIncomplete');
+  const hintLimit = dailyHintLimit(day);
+  if (hintLimit !== null && replay.hints > hintLimit) throw new HttpError(400, 'tooManyHints', { n: hintLimit });
 
   const finishedAt = Date.now();
   const timeMs = finishedAt - run.started_at;

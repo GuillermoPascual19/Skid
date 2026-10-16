@@ -1,5 +1,6 @@
 // Modo libre: niveles generados que se van complicando, con hitos y presentación de los elementos nuevos.
 
+import { MAX_HINTS, hintsLeft } from '../../../../common/logic/hints';
 import { initialState, type Direction } from '../../../../common/logic/engine/board';
 import { elementSvg } from '../../../../common/art/elements';
 import { ELEMENTS } from '../../../../common/logic/engine/elements';
@@ -13,8 +14,8 @@ import { celebrate } from '../../shared/celebrate';
 import { h, haptic, openModal, starSvg, toast, type Modal } from '../../shared/dom';
 import { sfx } from '../../audio/sound';
 import { go, type Screen } from '../../shared/router';
-import { loadBoard, onKey, openPauseMenu, playLayout, wearHat } from '../../play/play';
-import { MILESTONES, claimElementIntro, claimMilestone, saveProgress, startingProgress } from './storage';
+import { loadBoard, onKey, openPauseMenu, playLayout, showNoHints, wearHat } from '../../play/play';
+import { MILESTONES, claimElementIntro, claimMilestone, hintsUsed, saveHintsUsed, saveProgress, startingProgress } from './storage';
 import { t, tn } from '../../i18n/i18n';
 
 export function levelsScreen(): Screen {
@@ -46,11 +47,15 @@ export function levelsScreen(): Screen {
     onHint: () => showHint(),
   });
 
-  /** Pista: el siguiente movimiento de la solución óptima desde donde esté el jugador. */
+  /** Pista: el siguiente movimiento de la solución óptima desde donde esté el jugador (como mucho MAX_HINTS por nivel). */
   function showHint() {
     if (finished || !mounted) return;
+    const used = hintsUsed(level);
+    if (used >= MAX_HINTS) return showNoHints(t('play.noHints.free', { n: MAX_HINTS }));
     const [next] = solve(board, state) ?? [];
     if (!next) return toast(t('free.stuck'));
+    saveHintsUsed(level, used + 1);
+    hud();
     mounted.scene.showHint(next);
     sfx.hint();
   }
@@ -59,6 +64,7 @@ export function levelsScreen(): Screen {
     ui.setTitle(t('common.levelN', { n: level }), t('home.free.eyebrow'));
     ui.setStat('moves', moves, moves > optimal ? 'warn' : undefined);
     ui.setStat('optimal', optimal);
+    ui.setHintBadge(hintsLeft(hintsUsed(level)), hintsUsed(level) >= MAX_HINTS);
   };
 
   const hooks: BoardHooks = {

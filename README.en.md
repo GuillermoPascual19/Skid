@@ -143,7 +143,8 @@ anything from outside) and builds the game to `dist/`.
 ## Daily challenge and scoring
 
 - The same board for everyone; it changes at midnight, Madrid time.
-- Your result is the number of moves in your best attempt, and every hint counts as one more: the
+- Your result is the number of moves in your best attempt, and every hint counts as one more (up to
+  3 hints a day; in free play, 3 per level; see `common/logic/hints.ts`): the
   fewer, the better. Restarting is free; you can keep improving all day (unless you've looked at the
   solution). With the same number of moves, the faster player wins: the clock starts when you press
   *Start* and never stops.
