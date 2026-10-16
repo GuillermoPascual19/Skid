@@ -30,7 +30,7 @@ friends, and levels made by the players.
   ranking, sharing and reporting.
 - A "How to play" guide, dark mode, synthesized music and sound effects, and Google sign-in to play
   on several devices.
-- It installs as an app and sends notifications (duels, reactions and streak reminder).
+- It installs as an app and sends notifications (duels, friends, reactions and streak reminder).
 - In seven languages: Spanish, English, German, French, Portuguese, Italian and Russian. It picks
   the browser's language and can be changed from the home screen.
 - Share on WhatsApp or Telegram, copy the link or the message, or use the system share menu.
@@ -218,14 +218,15 @@ anything from outside) and builds the game to `dist/`.
 ## Notifications
 
 - Push notifications even when the game is closed: someone challenges you to a duel, someone accepted
-  your duel, your rival is waiting in the room, someone reacted to your challenge and, in the
+  your duel, your rival is waiting in the room, someone sent you a friend request or became your
+  friend, someone reacted to your challenge and, in the
   evening, the streak reminder (for players who played yesterday but not yet today). Each device picks
   which ones it wants from the 🔔 on the home screen.
 - No libraries: the content is encrypted for the browser (RFC 8291) and signed with the server's
   VAPID key (RFC 8292), using WebCrypto (`backend/src/webpush.ts`). It only sends to the browsers' push
   services (Google, Mozilla, Apple, Microsoft), and expired subscriptions are deleted automatically.
 - To avoid spamming: duel notifications at most once every 10 minutes; reactions, one per friend per
-  day; the reminder, once a day (`push_log`).
+  day; friend notifications, one per person per hour; the reminder, once a day (`push_log`).
 - The reminder is sent by a scheduled job (`triggers.crons` in `wrangler.jsonc`, 18:00 UTC).
 - The app can be installed (`public/manifest.webmanifest`); on iPhone it has to be installed to get
   notifications. The service worker that shows them is `public/sw.js`.

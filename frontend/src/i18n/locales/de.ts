@@ -269,6 +269,7 @@ export const messages: Messages = {
     title: 'Benachrichtigungen',
     text: 'Wir benachrichtigen dich, auch wenn das Spiel geschlossen ist.',
     duels: 'Duelle: wenn dich jemand herausfordert oder dein Gegner im Raum wartet',
+    friends: 'Freunde: Freundschaftsanfragen und neue Freunde',
     reactions: 'Reaktionen auf deine Herausforderungen',
     streak: 'Serien-Erinnerung (abends, wenn du noch nicht gespielt hast)',
     enable: 'Benachrichtigungen aktivieren',

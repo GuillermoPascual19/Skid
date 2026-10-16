@@ -269,6 +269,7 @@ export const messages: Messages = {
     title: 'Notifications',
     text: 'We\'ll let you know even when the game is closed.',
     duels: 'Duels: when someone challenges you or your rival is waiting in the room',
+    friends: 'Friends: friend requests and new friends',
     reactions: 'Reactions to your challenges',
     streak: 'Streak reminder (in the evening, if you haven\'t played yet)',
     enable: 'Turn on notifications',

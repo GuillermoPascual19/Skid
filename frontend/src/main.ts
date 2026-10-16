@@ -117,10 +117,15 @@ const join = params.get('join');
 const sharedLevel = params.get('nivel');
 const duelLink = params.get('duelo');
 const friendLink = params.get('amigo');
+const friendsLink = params.has('amigos');
 if (duelLink) {
   // A la sala del duelo, que deja el enlace puesto mientras se está en ella: si
   // el móvil recarga la página (al volver de WhatsApp), se vuelve a la sala.
   go({ name: 'duelRoom', id: duelLink });
+} else if (friendsLink) {
+  // Desde un aviso de amistad: a la pantalla de amigos.
+  history.replaceState(null, '', location.pathname);
+  go({ name: 'friends' });
 } else if (friendLink) {
   // Enlace de amigo: se pregunta si añadirlo, y al recargar ya no se vuelve a preguntar.
   history.replaceState(null, '', location.pathname);
