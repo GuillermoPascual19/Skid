@@ -580,6 +580,10 @@ export const messages: Messages = {
     show: 'Réapparaître',
     shown: 'Tu réapparais dans le classement mondial',
     hiddenDone: 'Tu n’apparais plus dans le classement mondial',
+    prizeEyebrow: 'Prix du mois',
+    prizeRule: 'Les trois qui marquent le plus de points ce mois-ci au classement mondial gagnent leur laurier. C’est le seul moyen de les obtenir.',
+    noPodium: 'Personne n’est monté sur le podium : il fallait au moins 2 joueurs.',
+    previous: 'Le mois dernier',
   },
   season: {
     prize: 'Le champion remporte le chapeau du mois : {hat}.',
@@ -893,6 +897,9 @@ export const messages: Messages = {
     pumpkin: 'Citrouille',
     leaves: 'Bonnet feuillu',
     star: 'Étoile de sapin',
+    worldgold: 'Laurier mondial d’or',
+    worldsilver: 'Laurier mondial d’argent',
+    worldbronze: 'Laurier mondial de bronze',
   },
   achievementsScreen: {
     needsOnline: 'Les succès ont besoin du classement en ligne.',
@@ -981,6 +988,18 @@ export const messages: Messages = {
     title: 'Chapeaux de saison',
     text: 'Chaque mois est une saison dans tes ligues : celui qui marque le plus de points remporte le chapeau du mois.',
     locked: 'Gagne la saison en {month} dans une de tes ligues.',
+  },
+  globalHats: {
+    title: 'Chapeaux du classement mondial',
+    text: 'Chaque mois, les trois premiers du classement mondial gagnent un laurier d’or, d’argent ou de bronze.',
+    locked: 'Finis {place} du classement mondial d’un mois.',
+    won: {
+      eyebrow: 'Classement mondial · {season}',
+      title1: 'Tu es numéro 1 mondial !',
+      title2: 'Deuxième au monde !',
+      title3: 'Troisième au monde !',
+      text: '{points} points en {month}. Ton prix : {hat}, qu’on ne gagne que sur le podium du classement mondial.',
+    },
   },
   profile: {
     title: 'Profil',

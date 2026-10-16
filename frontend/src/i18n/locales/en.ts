@@ -580,6 +580,10 @@ export const messages: Messages = {
     show: 'Show me again',
     shown: 'You’re back in the global ranking',
     hiddenDone: 'You no longer appear in the global ranking',
+    prizeEyebrow: 'This month’s prize',
+    prizeRule: 'The top three in the global ranking this month win their laurel. It’s the only way to get them.',
+    noPodium: 'Nobody made the podium: at least 2 players were needed.',
+    previous: 'Last month',
   },
   season: {
     prize: 'The champion wins this month\'s hat: {hat}.',
@@ -893,6 +897,9 @@ export const messages: Messages = {
     pumpkin: 'Pumpkin',
     leaves: 'Leafy beanie',
     star: 'Tree-top star',
+    worldgold: 'Gold world laurel',
+    worldsilver: 'Silver world laurel',
+    worldbronze: 'Bronze world laurel',
   },
   achievementsScreen: {
     needsOnline: 'Achievements need the online ranking.',
@@ -981,6 +988,18 @@ export const messages: Messages = {
     title: 'Season hats',
     text: 'Every month is a season in your leagues: whoever scores the most points wins that month\'s hat.',
     locked: 'Win the {month} season in one of your leagues.',
+  },
+  globalHats: {
+    title: 'Global ranking hats',
+    text: 'Every month, the top three in the global ranking win a gold, silver or bronze laurel.',
+    locked: 'Finish {place} in the global ranking for a month.',
+    won: {
+      eyebrow: 'Global ranking · {season}',
+      title1: 'You’re number 1 in the world!',
+      title2: 'Second in the world!',
+      title3: 'Third in the world!',
+      text: '{points} points in {month}. Your prize: {hat}, which you can only get on the global ranking podium.',
+    },
   },
   profile: {
     title: 'Profile',

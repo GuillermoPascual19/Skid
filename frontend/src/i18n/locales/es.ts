@@ -579,6 +579,10 @@ export const messages = {
     show: 'Volver a aparecer',
     shown: 'Vuelves a aparecer en el ranking global',
     hiddenDone: 'Ya no apareces en el ranking global',
+    prizeEyebrow: 'Premio del mes',
+    prizeRule: 'Los tres que más puntos sumen este mes en el ranking global se llevan su laurel. Solo se consiguen así.',
+    noPodium: 'Nadie subió al podio: hacía falta que jugaran al menos 2.',
+    previous: 'El mes pasado',
   },
   season: {
     prize: 'El campeón se lleva el gorro del mes: {hat}.',
@@ -892,6 +896,9 @@ export const messages = {
     pumpkin: 'Calabaza',
     leaves: 'Gorro de hojas',
     star: 'Estrella de árbol',
+    worldgold: 'Laurel mundial de oro',
+    worldsilver: 'Laurel mundial de plata',
+    worldbronze: 'Laurel mundial de bronce',
   },
   achievementsScreen: {
     needsOnline: 'Los logros necesitan el ranking online.',
@@ -980,6 +987,18 @@ export const messages = {
     title: 'Gorros de temporada',
     text: 'Cada mes es una temporada en tus ligas: quien más puntos sume se lleva el gorro de ese mes.',
     locked: 'Gana la temporada de {month} en una de tus ligas.',
+  },
+  globalHats: {
+    title: 'Gorros del ranking global',
+    text: 'Cada mes, los tres primeros del ranking global se llevan un laurel de oro, plata o bronce.',
+    locked: 'Queda {place} en el ranking global de un mes.',
+    won: {
+      eyebrow: 'Ranking global · {season}',
+      title1: '¡Eres el n.º 1 del mundo!',
+      title2: '¡Segundo puesto mundial!',
+      title3: '¡Tercer puesto mundial!',
+      text: '{points} puntos en {month}. Tu premio: {hat}, que solo se consigue en el podio del ranking global.',
+    },
   },
   profile: {
     title: 'Perfil',

@@ -37,7 +37,7 @@ import {
   reportCustomLevel,
 } from './routes/levels';
 import { playerProfile } from './routes/players';
-import { globalRanking, setGlobalVisible } from './routes/global';
+import { globalRanking, globalTitles, setGlobalVisible, settleGlobalSeasons } from './routes/global';
 import { leagueSeason, seasonHats, seasonTitles, settleSeasons } from './routes/seasons';
 import { newReactions, react } from './routes/reactions';
 import { deleteSubscription, pushKey, saveSubscription, streakReminders, testPush } from './routes/push';
@@ -171,19 +171,25 @@ async function authedApi(req: Request, url: URL, env: Env, session: Session): Pr
   }
   if (route === 'GET /achievements') {
     // Al abrir la portada se piden los logros: así se cierran las temporadas del mes pasado.
-    await settleSeasons(env, playerId);
-    const [items, seasons, row] = await Promise.all([
+    await Promise.all([settleSeasons(env, playerId), settleGlobalSeasons(env)]);
+    const [items, seasons, global, row] = await Promise.all([
       playerAchievements(env, playerId),
       seasonTitles(env, playerId),
+      globalTitles(env, playerId),
       env.DB.prepare('SELECT hat FROM players WHERE id = ?').bind(playerId).first<{ hat: string | null }>(),
     ]);
-    return json({ hat: isHatId(row?.hat) ? row.hat : null, items, seasons });
+    return json({ hat: isHatId(row?.hat) ? row.hat : null, items, seasons, global });
   }
   if (route === 'PUT /me/hat') {
     const { hat } = await body<{ hat?: unknown }>(req);
     if (hat !== null && !isHatId(hat)) throw new HttpError(400, 'unknownHat');
-    if (hat !== null && !unlockedHats(await playerAchievements(env, playerId)).has(hat) && !(await seasonHats(env, playerId)).has(hat)) {
-      throw new HttpError(403, 'hatLocked');
+    if (hat !== null) {
+      // De un logro, de una temporada de liga o del podio del ranking global.
+      const owned =
+        unlockedHats(await playerAchievements(env, playerId)).has(hat) ||
+        (await seasonHats(env, playerId)).has(hat) ||
+        (await globalTitles(env, playerId)).some((title) => title.hat === hat);
+      if (!owned) throw new HttpError(403, 'hatLocked');
     }
     await env.DB.prepare('UPDATE players SET hat = ? WHERE id = ?').bind(hat, playerId).run();
     return json({ hat });

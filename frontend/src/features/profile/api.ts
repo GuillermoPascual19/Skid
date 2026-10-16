@@ -40,6 +40,8 @@ export interface PlayerProfile {
   achievements: AchievementProgress['id'][];
   /** Temporadas ganadas (cada una da el gorro de su mes). */
   seasons: { leagueName: string; season: string; hat: HatId }[];
+  /** Podios del ranking global. */
+  global: { season: string; position: number; hat: HatId }[];
   /** Días que jugasteis los dos (null en tu propio perfil). */
   headToHead: { played: number; myWins: number; theirWins: number; ties: number } | null;
 }

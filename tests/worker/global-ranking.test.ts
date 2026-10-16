@@ -1,9 +1,11 @@
 // Ranking global: suma de puntos del reto diario, este mes o desde siempre.
 import { afterEach, beforeEach, expect, it, vi } from 'vitest';
-import { globalRanking, setGlobalVisible, GLOBAL_RANKING_SIZE } from '../../backend/src/routes/global';
+import { globalRanking, globalTitles, setGlobalVisible, GLOBAL_RANKING_SIZE } from '../../backend/src/routes/global';
+import worker from '../../backend/src/index';
 import { addPlayer, createTestDb, type TestDb } from './d1';
 
 let t: TestDb;
+const ctx = { waitUntil: () => {}, passThroughOnException: () => {} } as unknown as ExecutionContext;
 
 function run(player: string, day: string, score: number, finished = true) {
   t.db
@@ -61,4 +63,44 @@ it('si no estás entre los mejores, tu puesto viene aparte', async () => {
   expect(r.top.some((e) => e.isMe)).toBe(false);
   expect(r.me).toMatchObject({ name: 'Ana', position: GLOBAL_RANKING_SIZE + 2, points: 500, isMe: true });
   expect(r.total).toBe(GLOBAL_RANKING_SIZE + 2);
+});
+
+it('al acabar el mes, los tres primeros se llevan su laurel (los ocultos no cuentan)', async () => {
+  addPlayer(t, 'dani', 'Dani');
+  run('dani', '2026-10-04', 1400);
+  addPlayer(t, 'eva', 'Eva');
+  run('eva', '2026-10-05', 400);
+  await setGlobalVisible(t.env, 'dani', false); // Iba 1.º, pero se ocultó.
+  // Octubre aún no ha acabado: sin podio.
+  expect((await globalRanking(t.env, 'ana', 'month')).previous).toBeNull();
+  expect(await globalTitles(t.env, 'bruno')).toEqual([]);
+
+  vi.setSystemTime(new Date('2026-11-03T12:00:00Z'));
+  const november = await globalRanking(t.env, 'ana', 'month');
+  expect(november.from).toBe('2026-11-01');
+  expect(november.previous!.season).toBe('2026-10');
+  expect(november.previous!.podium.map((p) => `${p.position}. ${p.name} ${p.points} ${p.hat}`)).toEqual([
+    '1. Bruno 1300 worldgold',
+    '2. Ana 500 worldsilver',
+    '3. Eva 400 worldbronze',
+  ]);
+  expect(november.previous!.podium[1].isMe).toBe(true);
+  expect(await globalTitles(t.env, 'ana')).toEqual([{ season: '2026-10', position: 2, points: 500, hat: 'worldsilver' }]);
+  expect(await globalTitles(t.env, 'dani')).toEqual([]);
+  // Cerrar otra vez no duplica nada.
+  await globalRanking(t.env, 'bruno', 'all');
+  expect(t.db.prepare('SELECT COUNT(*) AS n FROM global_results').get()).toEqual({ n: 3 });
+});
+
+it('el laurel ganado se puede llevar; el de otro puesto, no', async () => {
+  vi.setSystemTime(new Date('2026-11-03T12:00:00Z'));
+  const { token } = (await (await worker.fetch(new Request('http://localhost/api/session', { method: 'POST' }) as never, t.env, ctx)).json()) as { token: string };
+  const { id } = t.db.prepare('SELECT player_id AS id FROM sessions ORDER BY rowid DESC LIMIT 1').get() as { id: string };
+  t.db.prepare("UPDATE players SET name = 'Fran', name_key = 'fran' WHERE id = ?").run(id);
+  run(id, '2026-10-06', 5000);
+  const wear = (hat: string) =>
+    worker.fetch(new Request('http://localhost/api/me/hat', { method: 'PUT', headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' }, body: JSON.stringify({ hat }) }) as never, t.env, ctx);
+  await globalRanking(t.env, id, 'month');
+  expect((await wear('worldgold')).status).toBe(200);
+  expect((await wear('worldsilver')).status).toBe(403);
 });

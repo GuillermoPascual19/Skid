@@ -580,6 +580,10 @@ export const messages: Messages = {
     show: 'Voltar a aparecer',
     shown: 'Voltas a aparecer no ranking global',
     hiddenDone: 'Já não apareces no ranking global',
+    prizeEyebrow: 'Prémio do mês',
+    prizeRule: 'Os três que mais pontos somarem este mês no ranking global ganham o seu louro. Só se conseguem assim.',
+    noPodium: 'Ninguém subiu ao pódio: era preciso que jogassem pelo menos 2.',
+    previous: 'O mês passado',
   },
   season: {
     prize: 'O campeão leva o chapéu do mês: {hat}.',
@@ -893,6 +897,9 @@ export const messages: Messages = {
     pumpkin: 'Abóbora',
     leaves: 'Gorro de folhas',
     star: 'Estrela da árvore',
+    worldgold: 'Louro mundial de ouro',
+    worldsilver: 'Louro mundial de prata',
+    worldbronze: 'Louro mundial de bronze',
   },
   achievementsScreen: {
     needsOnline: 'As conquistas precisam da classificação online.',
@@ -981,6 +988,18 @@ export const messages: Messages = {
     title: 'Chapéus de temporada',
     text: 'Cada mês é uma temporada nas tuas ligas: quem somar mais pontos leva o chapéu desse mês.',
     locked: 'Ganha a temporada de {month} numa das tuas ligas.',
+  },
+  globalHats: {
+    title: 'Chapéus do ranking global',
+    text: 'Todos os meses, os três primeiros do ranking global ganham um louro de ouro, prata ou bronze.',
+    locked: 'Fica em {place} no ranking global de um mês.',
+    won: {
+      eyebrow: 'Ranking global · {season}',
+      title1: 'És o n.º 1 do mundo!',
+      title2: 'Segundo lugar mundial!',
+      title3: 'Terceiro lugar mundial!',
+      text: '{points} pontos em {month}. O teu prémio: {hat}, que só se consegue no pódio do ranking global.',
+    },
   },
   profile: {
     title: 'Perfil',

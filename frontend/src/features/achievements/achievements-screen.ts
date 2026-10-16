@@ -3,7 +3,7 @@
 
 import { penguinSvg, type HatId } from '../../../../common/art/hats';
 import { ACHIEVEMENT_MODES, ACHIEVEMENTS } from '../../../../common/logic/achievements/achievements';
-import { SEASON_HATS, seasonOf, shiftSeason } from '../../../../common/logic/leagues/seasons';
+import { GLOBAL_HATS, SEASON_HATS, seasonOf, shiftSeason } from '../../../../common/logic/leagues/seasons';
 import { today } from '../daily/daily';
 import { monthName, seasonName } from '../ranking/season';
 import * as online from '../../shared/api';
@@ -11,7 +11,7 @@ import { celebrate } from '../../shared/celebrate';
 import { h, svg, toast } from '../../shared/dom';
 import { setCachedHat } from '../profile/profile';
 import { go, type Screen } from '../../shared/router';
-import { type Achievements, type SeasonTitle, getAchievements, setHat } from './api';
+import { type Achievements, type GlobalTitle, type SeasonTitle, getAchievements, setHat } from './api';
 import { markAchievementsSeen, seenAchievements } from './storage';
 import { intlLocale, t } from '../../i18n/i18n';
 
@@ -73,7 +73,7 @@ export function achievementsScreen(): Screen {
 
   function render() {
     if (!data) return;
-    const { hat, items, seasons } = data;
+    const { hat, items, seasons, global } = data;
     const unlocked = items.filter((i) => i.unlocked).length;
     subtitle.textContent = t('achievementsScreen.unlocked', {
       n: unlocked,
@@ -183,6 +183,29 @@ export function achievementsScreen(): Screen {
           );
         }),
       ),
+      h('h2', { class: 'section-title' }, t('globalHats.title')),
+      h('p', { class: 'muted section-text' }, t('globalHats.text')),
+      h(
+        'ul',
+        { class: 'achievements' },
+        ...GLOBAL_HATS.map((globalHat, i) => {
+          const won = global.filter((g) => g.hat === globalHat);
+          return h(
+            'li',
+            { class: `card achievement ${won.length ? 'unlocked' : 'locked'}` },
+            h('div', { class: 'achievement-penguin' }, svg(penguinSvg(globalHat, { locked: won.length === 0 }))),
+            h(
+              'div',
+              { class: 'achievement-info' },
+              h('strong', null, t(`hats.${globalHat}`)),
+              won.length
+                ? h('span', { class: 'muted season-titles' }, won.map((g) => `🌍 ${seasonName(g.season)} · ${g.points.toLocaleString(intlLocale())}`).join('\n'))
+                : h('span', { class: 'muted' }, t('globalHats.locked', { place: ['🥇', '🥈', '🥉'][i] })),
+            ),
+            won.length ? wearButton(globalHat) : h('span', { class: 'lock', 'aria-label': t('achievementsScreen.locked') }, '🔒'),
+          );
+        }),
+      ),
     );
 
     function wearButton(item: HatId): HTMLElement {
@@ -208,8 +231,9 @@ export function achievementsScreen(): Screen {
  */
 export async function celebrateNewAchievements(onHat: (hat: HatId) => void): Promise<void> {
   if (!online.onlineEnabled) return;
-  const { items, seasons } = await getAchievements();
+  const { items, seasons, global } = await getAchievements();
   await celebrateSeasons(seasons, onHat);
+  await celebrateGlobal(global, onHat);
   const seen = seenAchievements();
   const fresh = ACHIEVEMENTS.filter((def) => items.find((i) => i.id === def.id)?.unlocked && !seen.has(def.id));
   if (fresh.length === 0 || document.querySelector('.overlay')) return;
@@ -281,6 +305,31 @@ async function celebrateSeasons(seasons: SeasonTitle[], onHat: (hat: HatId) => v
     await setHat(fresh[0].hat);
     setCachedHat(fresh[0].hat);
     onHat(fresh[0].hat);
+  } catch (err) {
+    toast((err as Error).message);
+  }
+}
+
+/** Celebra un podio del ranking global recién ganado (solo el del mes pasado). */
+async function celebrateGlobal(titles: GlobalTitle[], onHat: (hat: HatId) => void): Promise<void> {
+  const last = shiftSeason(seasonOf(today()), -1);
+  const title = titles.find((g) => g.season === last);
+  const key = `global:${last}`;
+  if (!title || seenAchievements().has(key) || document.querySelector('.overlay')) return;
+  markAchievementsSeen([key]);
+  const wantsIt = await celebrate({
+    icon: '🌍',
+    iconSvg: penguinSvg(title.hat),
+    eyebrow: t('globalHats.won.eyebrow', { season: seasonName(last) }),
+    title: t(`globalHats.won.title${title.position as 1 | 2 | 3}`),
+    text: t('globalHats.won.text', { points: title.points.toLocaleString(intlLocale()), hat: t(`hats.${title.hat}`), month: monthName(last) }),
+    button: t('achievementsScreen.wear'),
+  });
+  if (!wantsIt) return;
+  try {
+    await setHat(title.hat);
+    setCachedHat(title.hat);
+    onHat(title.hat);
   } catch (err) {
     toast((err as Error).message);
   }

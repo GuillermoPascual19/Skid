@@ -3,7 +3,7 @@
 
 import { penguinSvg } from '../../../../common/art/hats';
 import { ACHIEVEMENTS } from '../../../../common/logic/achievements/achievements';
-import { SEASON_HATS } from '../../../../common/logic/leagues/seasons';
+import { GLOBAL_HATS, SEASON_HATS } from '../../../../common/logic/leagues/seasons';
 import { seasonName } from '../ranking/season';
 import { h, svg } from '../../shared/dom';
 import { go, type Screen } from '../../shared/router';
@@ -55,6 +55,10 @@ export function playerScreen(id: string): Screen {
         const won = p.seasons.filter((s) => s.hat === hat);
         return won.length ? [{ hat, title: won.map((s) => `🏆 ${s.leagueName} · ${seasonName(s.season)}`).join('\n') }] : [];
       }),
+      ...GLOBAL_HATS.flatMap((hat) => {
+        const won = p.global.filter((g) => g.hat === hat);
+        return won.length ? [{ hat, title: won.map((g) => `🌍 ${seasonName(g.season)}`).join('\n') }] : [];
+      }),
     ];
     body.replaceChildren(
       h(
@@ -83,7 +87,7 @@ export function playerScreen(id: string): Screen {
       h(
         'section',
         { class: 'card' },
-        h('h2', { class: 'section-title' }, t('profile.hats', { n: hats.length, total: ACHIEVEMENTS.length + SEASON_HATS.length })),
+        h('h2', { class: 'section-title' }, t('profile.hats', { n: hats.length, total: ACHIEVEMENTS.length + SEASON_HATS.length + GLOBAL_HATS.length })),
         hats.length === 0
           ? h('p', { class: 'muted' }, t('profile.noHats'))
           : h(
