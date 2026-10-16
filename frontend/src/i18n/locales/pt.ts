@@ -265,6 +265,9 @@ export const messages: Messages = {
     available: 'Há uma versão nova',
     reload: 'Atualizar',
   },
+  offline: {
+    banner: 'Sem ligação: o modo livre continua a funcionar',
+  },
   notifications: {
     title: 'Notificações',
     text: 'Avisamos-te mesmo com o jogo fechado.',

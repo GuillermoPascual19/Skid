@@ -1,3 +1,5 @@
+import { readdirSync, readFileSync, statSync, writeFileSync } from 'node:fs';
+import { join } from 'node:path';
 import { defineConfig, type Plugin } from 'vitest/config';
 
 /** Identificador de esta compilación: va dentro del juego y en dist/version.json. */
@@ -17,6 +19,44 @@ function versionFile(): Plugin {
   };
 }
 
+/** Lo que no hace falta para jugar sin conexión (páginas sueltas, cabeceras, buscadores…). */
+const NOT_OFFLINE = /^(_headers|404\.html|sw\.js|version\.json|robots\.txt|sitemap\.xml|og-image\.jpg|legal\/|contact\.js|static\.css|fonts\/OFL-)/;
+
+/** Todos los archivos de dist/ (rutas con /, relativas a dist). */
+function distFiles(dir: string, prefix = ''): string[] {
+  return readdirSync(dir).flatMap((name) => {
+    const full = join(dir, name);
+    return statSync(full).isDirectory() ? distFiles(full, `${prefix}${name}/`) : [`${prefix}${name}`];
+  });
+}
+
+/**
+ * Escribe en dist/sw.js la versión y la lista de archivos del juego (ver el
+ * service worker): así se puede jugar sin conexión, y cada despliegue cambia
+ * sw.js, que es lo que hace que el navegador guarde la versión nueva.
+ */
+function offlineServiceWorker(): Plugin {
+  let outDir = '';
+  return {
+    name: 'skid-offline',
+    apply: 'build',
+    configResolved(config) {
+      outDir = join(config.root, config.build.outDir);
+    },
+    closeBundle() {
+      const files = distFiles(outDir)
+        .filter((f) => !NOT_OFFLINE.test(f))
+        .sort();
+      const swPath = join(outDir, 'sw.js');
+      const sw = readFileSync(swPath, 'utf8');
+      const build = "const BUILD = 'dev';";
+      const precache = 'const PRECACHE = [];';
+      if (!sw.includes(build) || !sw.includes(precache)) throw new Error('sw.js: no están las líneas de BUILD y PRECACHE');
+      writeFileSync(swPath, sw.replace(build, `const BUILD = ${JSON.stringify(BUILD_ID)};`).replace(precache, `const PRECACHE = ${JSON.stringify(files)};`));
+    },
+  };
+}
+
 // En desarrollo, /api va al Worker local (`npm run dev:api`, puerto 8787).
 const api = { '/api': 'http://localhost:8787' };
 
@@ -27,7 +67,7 @@ export default defineConfig({
   envDir: '..',
   base: './',
   define: { __BUILD_ID__: JSON.stringify(BUILD_ID) },
-  plugins: [versionFile()],
+  plugins: [versionFile(), offlineServiceWorker()],
   server: { proxy: api },
   preview: { proxy: api },
   build: {

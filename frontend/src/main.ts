@@ -13,6 +13,7 @@ import { difficultyLabel } from './features/duels/duels';
 import { duelRoomScreen } from './features/duels/duel-room';
 import { refreshPush, registerServiceWorker } from './features/notifications/notifications';
 import { watchForUpdates } from './shared/update';
+import { watchConnection } from './shared/connection';
 import { updateDescription } from './shared/meta';
 import { startAnalytics } from './shared/analytics';
 import { installErrorReporting } from './shared/errors';
@@ -142,6 +143,9 @@ void refreshPush();
 
 // Si se despliega una versión nueva mientras la app está abierta, se recarga (o se avisa).
 watchForUpdates();
+
+// Sin conexión: un aviso arriba (el modo libre sigue funcionando).
+watchConnection();
 
 // Analíticas sin cookies, si están configuradas.
 void startAnalytics();

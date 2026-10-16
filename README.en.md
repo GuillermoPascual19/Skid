@@ -31,6 +31,7 @@ friends, and levels made by the players.
 - A "How to play" guide, dark mode, synthesized music and sound effects, and Google sign-in to play
   on several devices.
 - It installs as an app and sends notifications (duels, friends, reactions and streak reminder).
+  Offline, you can keep playing free play and the tutorial.
 - In seven languages: Spanish, English, German, French, Portuguese, Italian and Russian. It picks
   the browser's language and can be changed from the home screen.
 - Share on WhatsApp or Telegram, copy the link or the message, or use the system share menu.
@@ -230,6 +231,10 @@ anything from outside) and builds the game to `dist/`.
 - The reminder is sent by a scheduled job (`triggers.crons` in `wrangler.jsonc`, 18:00 UTC).
 - The app can be installed (`public/manifest.webmanifest`); on iPhone it has to be installed to get
   notifications. The service worker that shows them is `public/sw.js`.
+- Offline: the service worker stores the game. At build time, `vite.config.ts` writes the version and
+  the list of files into `dist/sw.js`, so every deploy installs the new version and deletes the old one.
+  Pages go to the network first (always the latest when online) and files come from the cache; the API
+  is never cached.
 
 ## Security
 
