@@ -30,7 +30,7 @@ y niveles creados por los jugadores.
   compartir y denunciar.
 - Guía «Cómo se juega», modo oscuro, música y efectos sintetizados, y login con Google para jugar en
   varios dispositivos.
-- Se instala como app y avisa con notificaciones (duelos, reacciones y recordatorio de racha).
+- Se instala como app y avisa con notificaciones (duelos, amigos, reacciones y recordatorio de racha).
 - En siete idiomas: español, inglés, alemán, francés, portugués, italiano y ruso. Usa el del
   navegador y se cambia desde el inicio.
 - Compartir por WhatsApp o Telegram, copiar el enlace o el mensaje, o el menú del sistema.
@@ -217,13 +217,13 @@ fuera) y compila el juego a `dist/`.
 ## Notificaciones
 
 - Avisos push aunque el juego esté cerrado: te retan a un duelo, han aceptado tu duelo, tu rival te
-  espera en la sala, han reaccionado a tu reto y, por la tarde, el recordatorio de racha (a quien jugó
+  espera en la sala, te piden amistad o tienes un amigo nuevo, han reaccionado a tu reto y, por la tarde, el recordatorio de racha (a quien jugó
   ayer y aún no hoy). Cada dispositivo elige cuáles quiere desde el 🔔 de la portada.
 - Sin librerías: el contenido va cifrado para el navegador (RFC 8291) y firmado con la clave VAPID del
   servidor (RFC 8292), con WebCrypto (`backend/src/webpush.ts`). Solo se envía a los servicios push de
   los navegadores (Google, Mozilla, Apple, Microsoft) y las suscripciones caducadas se borran solas.
 - Para no agobiar: los avisos de un duelo, como mucho uno cada 10 minutos; las reacciones, uno por
-  amigo y día; el recordatorio, uno al día (`push_log`).
+  amigo y día; los de amistad, uno por persona y hora; el recordatorio, uno al día (`push_log`).
 - El recordatorio lo lanza una tarea programada (`triggers.crons` en `wrangler.jsonc`, 18:00 UTC).
 - La app se puede instalar (`public/manifest.webmanifest`); en iPhone hace falta instalarla para
   recibir notificaciones. El service worker que las muestra es `public/sw.js`.

@@ -269,6 +269,7 @@ export const messages: Messages = {
     title: 'Notifiche',
     text: 'Ti avvisiamo anche a gioco chiuso.',
     duels: 'Duelli: quando ti sfidano o l\'avversario ti aspetta nella sala',
+    friends: 'Amici: richieste di amicizia e nuovi amici',
     reactions: 'Reazioni alle tue sfide',
     streak: 'Promemoria della serie (la sera, se non hai ancora giocato)',
     enable: 'Attiva le notifiche',

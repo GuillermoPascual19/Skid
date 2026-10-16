@@ -10,7 +10,9 @@ import { encrypt, vapidAuthorization } from './webpush';
 export { isPushEndpoint } from './webpush';
 
 /** Qué preferencia de la suscripción decide si llega cada tipo de aviso. */
-const PREF: Record<Exclude<PushKind, 'test'>, 'duels' | 'reactions' | 'streak'> = {
+const PREF: Record<Exclude<PushKind, 'test'>, 'duels' | 'reactions' | 'streak' | 'friends'> = {
+  friendRequest: 'friends',
+  friendAccepted: 'friends',
   duelChallenge: 'duels',
   duelAccepted: 'duels',
   duelWaiting: 'duels',

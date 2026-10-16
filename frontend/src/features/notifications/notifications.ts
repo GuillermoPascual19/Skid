@@ -13,11 +13,12 @@ const PREFS_KEY = 'skid.pushPrefs.v1';
 
 export interface PushPrefs {
   duels: boolean;
+  friends: boolean;
   reactions: boolean;
   streak: boolean;
 }
 
-const DEFAULT_PREFS: PushPrefs = { duels: true, reactions: true, streak: true };
+const DEFAULT_PREFS: PushPrefs = { duels: true, friends: true, reactions: true, streak: true };
 
 /** Lo que se puede hacer con las notificaciones en este dispositivo. */
 type PushState = 'unsupported' | 'iosInstall' | 'denied' | 'off' | 'on';
@@ -128,6 +129,7 @@ export async function openNotifications(onChange?: () => void): Promise<void> {
         'div',
         { class: 'push-toggles' },
         toggle('duels', t('notifications.duels')),
+        toggle('friends', t('notifications.friends')),
         toggle('reactions', t('notifications.reactions')),
         toggle('streak', t('notifications.streak')),
       ),

@@ -20,7 +20,7 @@ const isKey = (v: unknown, max: number): v is string => typeof v === 'string' &&
 interface SubscriptionInput {
   subscription?: { endpoint?: unknown; keys?: { p256dh?: unknown; auth?: unknown } };
   lang?: unknown;
-  prefs?: { duels?: unknown; reactions?: unknown; streak?: unknown };
+  prefs?: { duels?: unknown; reactions?: unknown; streak?: unknown; friends?: unknown };
 }
 
 /** Guarda (o actualiza) la suscripción de este dispositivo y qué avisos quiere. */
@@ -32,15 +32,15 @@ export async function saveSubscription(env: Env, playerId: string, input: Subscr
   if (!isPushEndpoint(endpoint) || !isKey(p256dh, 120) || !isKey(auth, 40)) throw new HttpError(400, 'invalidSubscription');
   const lang = isLocale(input.lang) ? input.lang : 'es';
   const pref = (v: unknown) => (v === false ? 0 : 1);
-  const prefs = { duels: pref(input.prefs?.duels), reactions: pref(input.prefs?.reactions), streak: pref(input.prefs?.streak) };
+  const prefs = { duels: pref(input.prefs?.duels), reactions: pref(input.prefs?.reactions), streak: pref(input.prefs?.streak), friends: pref(input.prefs?.friends) };
   await env.DB.batch([
     // Si el dispositivo era de otro jugador (otra cuenta en el mismo navegador), pasa a este.
     env.DB.prepare(
-      `INSERT INTO push_subscriptions (endpoint, player_id, p256dh, auth, lang, duels, reactions, streak, created_at)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+      `INSERT INTO push_subscriptions (endpoint, player_id, p256dh, auth, lang, duels, reactions, streak, friends, created_at)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
        ON CONFLICT (endpoint) DO UPDATE SET player_id = excluded.player_id, p256dh = excluded.p256dh, auth = excluded.auth,
-         lang = excluded.lang, duels = excluded.duels, reactions = excluded.reactions, streak = excluded.streak`,
-    ).bind(endpoint, playerId, p256dh, auth, lang, prefs.duels, prefs.reactions, prefs.streak, Date.now()),
+         lang = excluded.lang, duels = excluded.duels, reactions = excluded.reactions, streak = excluded.streak, friends = excluded.friends`,
+    ).bind(endpoint, playerId, p256dh, auth, lang, prefs.duels, prefs.reactions, prefs.streak, prefs.friends, Date.now()),
     env.DB.prepare(
       `DELETE FROM push_subscriptions WHERE player_id = ?1 AND endpoint NOT IN
          (SELECT endpoint FROM push_subscriptions WHERE player_id = ?1 ORDER BY created_at DESC LIMIT ${MAX_SUBSCRIPTIONS})`,

@@ -7,6 +7,7 @@ import { nameKey } from '../../../common/logic/players/names';
 import { isHatId } from '../../../common/art/hats';
 import { type Env, HttpError } from '../http';
 import { requireName } from './players';
+import { background, notify } from '../push';
 
 /** Amigos directos como mucho por jugador. */
 export const MAX_FRIENDS = 100;
@@ -21,6 +22,20 @@ export const CIRCLE = `
   SELECT b.player_id FROM league_members a JOIN league_members b ON b.league_id = a.league_id WHERE a.player_id = ?1 AND b.player_id <> ?1
   UNION SELECT player_b FROM friendships WHERE player_a = ?1
   UNION SELECT player_a FROM friendships WHERE player_b = ?1`;
+
+/** El mismo aviso de amistad a la misma persona, como mucho uno cada tanto (solicitudes que se mandan y cancelan). */
+const FRIEND_NOTIFY_MS = 60 * 60 * 1000;
+
+/** Avisa a `to` de que `from` le pide amistad o ya es su amigo, sin hacer esperar la respuesta. */
+function notifyFriend(env: Env, to: string, from: string, kind: 'friendRequest' | 'friendAccepted'): void {
+  background(
+    env,
+    env.DB.prepare('SELECT name FROM players WHERE id = ?')
+      .bind(from)
+      .first<{ name: string | null }>()
+      .then((row) => notify(env, to, kind, { name: row?.name ?? '?' }, { url: '/?amigos', throttle: { tag: `${kind}:${from}`, ms: FRIEND_NOTIFY_MS } })),
+  );
+}
 
 /** El par ordenado con el que se guarda una amistad. */
 function pair(a: string, b: string): [string, string] {
@@ -109,11 +124,13 @@ export async function requestFriend(env: Env, playerId: string, name: unknown) {
   const theirs = await env.DB.prepare('SELECT 1 FROM friend_requests WHERE from_id = ? AND to_id = ?').bind(target.id, playerId).first();
   if (theirs) {
     await befriend(env, playerId, target.id);
+    notifyFriend(env, target.id, playerId, 'friendAccepted');
     return { status: 'friends' as const, name: target.name };
   }
   const pending = await env.DB.prepare('SELECT COUNT(*) AS n FROM friend_requests WHERE from_id = ?').bind(playerId).first<{ n: number }>();
   if ((pending?.n ?? 0) >= MAX_PENDING) throw new HttpError(429, 'tooManyRequests');
   await env.DB.prepare('INSERT OR IGNORE INTO friend_requests (from_id, to_id, created_at) VALUES (?, ?, ?)').bind(playerId, target.id, Date.now()).run();
+  notifyFriend(env, target.id, playerId, 'friendRequest');
   return { status: 'sent' as const, name: target.name };
 }
 
@@ -121,6 +138,7 @@ export async function acceptFriend(env: Env, playerId: string, fromId: string) {
   const request = await env.DB.prepare('SELECT 1 FROM friend_requests WHERE from_id = ? AND to_id = ?').bind(fromId, playerId).first();
   if (!request) throw new HttpError(404, 'requestNotFound');
   await befriend(env, playerId, fromId);
+  notifyFriend(env, fromId, playerId, 'friendAccepted');
   return { ok: true };
 }
 
@@ -149,6 +167,8 @@ export async function addByLink(env: Env, playerId: string, targetId: string) {
   const target = await env.DB.prepare('SELECT id, name FROM players WHERE id = ? AND name IS NOT NULL').bind(targetId).first<{ id: string; name: string }>();
   if (!target) throw new HttpError(404, 'playerNotFound');
   if (target.id === playerId) throw new HttpError(400, 'cantFriendYourself');
+  const already = await directFriends(env, playerId, target.id);
   await befriend(env, playerId, target.id);
+  if (!already) notifyFriend(env, target.id, playerId, 'friendAccepted');
   return { name: target.name };
 }
