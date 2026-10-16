@@ -15,6 +15,7 @@ export const errors: ErrorMessages = {
   nameLength: 'Le nom doit contenir entre {min} et {max} caractères',
   nameChars: "Utilise uniquement des lettres, des chiffres, des espaces et . _ ' - (en commençant par une lettre ou un chiffre)",
   nameTaken: 'Ce nom (ou un nom qui lui ressemble) est déjà pris. Essaie-en un autre.',
+  nameOffensive: 'Ce nom n’est pas autorisé. Choisis-en un sans insultes ni gros mots.',
 
   tooManyRequests: 'Trop de requêtes. Attends une minute.',
   tooManyAttempts: 'Trop de tentatives. Attends une minute.',

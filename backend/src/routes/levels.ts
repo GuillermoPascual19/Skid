@@ -4,6 +4,7 @@
 import { isHatId } from '../../../common/art/hats';
 import { BoardError, parseBoard } from '../../../common/logic/engine/board';
 import { checkCustomLevel, CUSTOM_LIMITS, decodeRows, encodeRows, movesToFinish } from '../../../common/logic/community/community';
+import { isOffensive } from '../../../common/logic/players/offensive';
 import { type Env, HttpError, cleanText } from '../http';
 import { requireName } from './players';
 
@@ -156,6 +157,7 @@ export async function reportCustomLevel(env: Env, playerId: string, id: string, 
 export async function createCustomLevel(env: Env, playerId: string, input: { name?: unknown; rows?: unknown; log?: unknown }) {
   await requireName(env, playerId);
   const name = cleanText(input.name, CUSTOM_LIMITS.minName, CUSTOM_LIMITS.maxName, 'levelNameLength');
+  if (isOffensive(name)) throw new HttpError(400, 'nameOffensive');
   let checked;
   try {
     checked = checkCustomLevel(input.rows);

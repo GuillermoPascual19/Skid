@@ -17,6 +17,7 @@ export const errors = {
   nameLength: 'El nombre debe tener entre {min} y {max} caracteres',
   nameChars: "Usa solo letras, números, espacios y . _ ' - (empezando por letra o número)",
   nameTaken: 'Ese nombre (o uno que se ve igual) ya lo tiene otro jugador. Prueba con otro.',
+  nameOffensive: 'Ese nombre no está permitido. Elige uno sin insultos ni palabrotas.',
 
   // Límites y peticiones
   tooManyRequests: 'Demasiadas peticiones. Espera un minuto.',
