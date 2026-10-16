@@ -17,7 +17,7 @@ import { askName, currentMe } from '../profile/profile';
 import { confirmDeleteAccount, confirmLogoutEverywhere } from '../profile/account';
 import type { Me } from '../profile/api';
 import { openGuide } from '../guide/guide';
-import { t } from '../../i18n/i18n';
+import { locale, t } from '../../i18n/i18n';
 
 const row = (icon: string, label: string, onclick: () => void) =>
   h('button', { class: 'list-row', onclick }, h('span', { 'aria-hidden': 'true' }, icon), h('span', null, label), h('span', { class: 'chevron' }, '›'));
@@ -153,6 +153,7 @@ export function meTab(): Screen {
     h(
       'footer',
       { class: 'site-footer' },
+      h('a', { href: `/${locale()}/` }, t('me.about')),
       h('a', { href: '/legal/privacidad.html' }, t('footer.privacy')),
       h('a', { href: '/legal/terminos.html' }, t('footer.terms')),
       h('a', { href: '/legal/aviso-legal.html' }, t('footer.legal')),

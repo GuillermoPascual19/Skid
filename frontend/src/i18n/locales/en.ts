@@ -260,6 +260,7 @@ export const messages: Messages = {
     theme: 'Theme (light or dark)',
     sfx: 'Sound effects',
     music: 'Music',
+    about: 'About Skid',
   },
   language: {
     title: 'Language',

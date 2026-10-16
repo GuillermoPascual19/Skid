@@ -1,6 +1,8 @@
 import { readdirSync, readFileSync, statSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { defineConfig, type Plugin } from 'vitest/config';
+import { LOCALES } from './common/i18n/locales.ts';
+import { landingPage, landingPath } from './frontend/landing/template.ts';
 
 /** Identificador de esta compilación: va dentro del juego y en dist/version.json. */
 const BUILD_ID = new Date().toISOString();
@@ -20,7 +22,7 @@ function versionFile(): Plugin {
 }
 
 /** Lo que no hace falta para jugar sin conexión (páginas sueltas, cabeceras, buscadores…). */
-const NOT_OFFLINE = /^(_headers|404\.html|sw\.js|version\.json|robots\.txt|sitemap\.xml|og-image\.jpg|legal\/|contact\.js|static\.css|fonts\/OFL-)/;
+const NOT_OFFLINE = /^(_headers|404\.html|sw\.js|version\.json|robots\.txt|sitemap\.xml|og-image\.jpg|legal\/|contact\.js|static\.css|fonts\/OFL-|landing|(es|en|de|fr|pt|it|ru)\/)/;
 
 /** Todos los archivos de dist/ (rutas con /, relativas a dist). */
 function distFiles(dir: string, prefix = ''): string[] {
@@ -57,6 +59,29 @@ function offlineServiceWorker(): Plugin {
   };
 }
 
+/**
+ * Páginas de presentación para buscadores, una por idioma (/es/, /en/…): HTML
+ * ya escrito a partir de frontend/landing/. Al compilar van a dist/; en
+ * desarrollo, Vite las sirve sobre la marcha.
+ */
+function landingPages(): Plugin {
+  return {
+    name: 'skid-landing',
+    generateBundle() {
+      for (const locale of LOCALES) this.emitFile({ type: 'asset', fileName: `${locale}/index.html`, source: landingPage(locale) });
+    },
+    configureServer(server) {
+      server.middlewares.use((req, res, next) => {
+        const url = (req as { url?: string }).url; // Sin @types/node: lo único que hace falta.
+        const locale = LOCALES.find((l) => url === landingPath(l) || url === `${landingPath(l)}index.html`);
+        if (!locale) return next();
+        res.setHeader('Content-Type', 'text/html; charset=utf-8');
+        res.end(landingPage(locale));
+      });
+    },
+  };
+}
+
 // En desarrollo, /api va al Worker local (`npm run dev:api`, puerto 8787).
 const api = { '/api': 'http://localhost:8787' };
 
@@ -67,7 +92,7 @@ export default defineConfig({
   envDir: '..',
   base: './',
   define: { __BUILD_ID__: JSON.stringify(BUILD_ID) },
-  plugins: [versionFile(), offlineServiceWorker()],
+  plugins: [versionFile(), landingPages(), offlineServiceWorker()],
   server: { proxy: api },
   preview: { proxy: api },
   build: {
