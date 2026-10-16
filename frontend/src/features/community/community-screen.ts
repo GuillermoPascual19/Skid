@@ -1,6 +1,7 @@
 // Multijugador: niveles creados por los jugadores. Listado (mejor valorados,
 // nuevos y los tuyos), acceso al editor y a jugar cada nivel.
 
+import { levelMarks } from './marks';
 import { elementSvg } from '../../../../common/art/elements';
 import { penguinSvg } from '../../../../common/art/hats';
 import { ELEMENTS } from '../../../../common/logic/engine/elements';
@@ -12,12 +13,24 @@ import { type CustomLevel, type CustomLevelSort, type ReportReason, deleteCustom
 import { loadEditorDraft } from './storage';
 import { openLevelRanking } from './level-ranking';
 import { playerName, t, tn } from '../../i18n/i18n';
+import type { TextKey } from '../../i18n/i18n';
 
 const TABS: { id: CustomLevelSort }[] = [
   { id: 'top' },
   { id: 'new' },
   { id: 'mine' },
+  { id: 'liked' },
+  { id: 'saved' },
 ];
+
+/** Qué decir cuando una pestaña no tiene niveles. */
+const EMPTY: Record<CustomLevelSort, TextKey> = {
+  top: 'levels.list.empty',
+  new: 'levels.list.empty',
+  mine: 'levels.list.emptyMine',
+  liked: 'levels.list.emptyLiked',
+  saved: 'levels.list.emptySaved',
+};
 
 /** Pestaña que se estaba viendo (dura mientras la página esté abierta). */
 let lastTab: CustomLevelSort = 'top';
@@ -83,7 +96,7 @@ export function communityScreen(tab?: CustomLevelSort, open?: string): Screen {
   let loading = false;
   let disposed = false;
 
-  const tabs = h('div', { class: 'segmented', role: 'tablist' });
+  const tabs = h('div', { class: 'segmented scroll', role: 'tablist' });
   const list = h('div', { class: 'level-list' });
   const moreBtn = h('button', { class: 'btn secondary block', hidden: true, onclick: () => void load(true) }, t('levels.list.more'));
   const draft = loadEditorDraft();
@@ -159,7 +172,7 @@ export function communityScreen(tab?: CustomLevelSort, open?: string): Screen {
     moreBtn.hidden = !more;
     if (levels.length === 0) {
       list.replaceChildren(
-        h('p', { class: 'empty' }, current === 'mine' ? t('levels.list.emptyMine') : t('levels.list.empty')),
+        h('p', { class: 'empty' }, t(EMPTY[current])),
       );
       return;
     }
@@ -196,6 +209,7 @@ export function communityScreen(tab?: CustomLevelSort, open?: string): Screen {
       h(
         'div',
         { class: 'level-actions' },
+        level.mine ? null : levelMarks(level, (next) => (levels = levels.map((l) => (l.id === next.id ? next : l)))),
         h('button', { class: 'link-btn', onclick: () => void openLevelRanking(level.id, level.name) }, `🏆 ${t('nav.ranking')}`),
         h('button', { class: 'link-btn', onclick: () => shareLevel(level) }, t('common.share')),
         level.mine

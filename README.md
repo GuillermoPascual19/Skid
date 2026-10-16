@@ -29,8 +29,9 @@ y niveles creados por los jugadores.
 - **Ligas**: ranking del día y de la semana con tus amigos, y temporadas mensuales cuyo campeón se
   lleva el gorro de ese mes; reacciones con emojis a los retos de tus amigos; logros del reto
   diario, duelos, contrarreloj, reto semanal y niveles de la comunidad que desbloquean más gorros.
-- **Niveles de jugadores**: editor, publicar (hay que superarlo antes), valorar, ranking por nivel,
-  compartir y denunciar.
+- **Niveles de jugadores**: editor, publicar (hay que superarlo antes), valorar, ❤️ me gusta y 🔖 guardar
+  (con sus filtros), ranking por nivel, compartir y denunciar. El administrador elige un nivel destacado,
+  que sale en la pestaña Jugar.
 - Guía «Cómo se juega», modo oscuro, música y efectos sintetizados, y login con Google para jugar en
   varios dispositivos.
 - Se instala como app y avisa con notificaciones (duelos, amigos, reacciones y recordatorio de racha).

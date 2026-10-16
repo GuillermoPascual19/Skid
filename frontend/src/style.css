@@ -4059,3 +4059,67 @@ input.switch:focus-visible {
   font-size: 28px;
   overflow-wrap: anywhere;
 }
+
+/* Pestañas que pueden no caber: se deslizan */
+.segmented.scroll {
+  display: flex;
+  max-width: 100%;
+  overflow-x: auto;
+  scrollbar-width: none;
+  align-self: stretch;
+}
+
+.segmented.scroll::-webkit-scrollbar {
+  display: none;
+}
+
+.segmented.scroll button {
+  flex: none;
+  white-space: nowrap;
+}
+
+/* Me gusta y guardar */
+.level-marks {
+  display: inline-flex;
+  gap: 6px;
+  margin-right: auto;
+}
+
+.mark-btn {
+  appearance: none;
+  border: 1px solid var(--card-border);
+  background: var(--surface-soft);
+  color: var(--ink);
+  font: inherit;
+  font-weight: 700;
+  font-size: 14px;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 10px;
+  border-radius: 999px;
+  cursor: pointer;
+}
+
+.mark-btn.on {
+  border-color: var(--bad);
+}
+
+.mark-btn.save.on {
+  border-color: var(--secondary);
+}
+
+/* Me gusta y guardar al terminar un nivel */
+.marks-row {
+  display: flex;
+  justify-content: center;
+}
+
+.marks-row .level-marks {
+  margin: 0;
+}
+
+/* Nivel destacado (pestaña Jugar) */
+.featured-card {
+  border: 2px solid var(--gold, #ffc93c);
+}

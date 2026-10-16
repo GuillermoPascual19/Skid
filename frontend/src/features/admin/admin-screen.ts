@@ -10,6 +10,7 @@ import {
   type AdminLevel,
   type AdminPlayer,
   clearLevelReports,
+  featureLevel,
   deleteAdminLevel,
   getAdminLevels,
   getAdminPlayers,
@@ -158,7 +159,7 @@ export function adminScreen(): Screen {
         h(
           'div',
           { class: 'level-info' },
-          h('strong', { class: 'level-name' }, level.name),
+          h('strong', { class: 'level-name' }, `${level.featured ? '⭐ ' : ''}${level.name}`),
           h('span', { class: 'level-author' }, `de ${level.author ?? '(sin nombre)'}`),
           h(
             'span',
@@ -174,6 +175,19 @@ export function adminScreen(): Screen {
         'div',
         { class: 'level-actions' },
         level.reports > 0 ? h('button', { class: 'link-btn', onclick: () => confirmClear(level) }, '✓ Quitar denuncias') : null,
+        level.hidden
+          ? null
+          : h(
+              'button',
+              {
+                class: 'link-btn',
+                onclick: () =>
+                  void featureLevel(level.id, !level.featured)
+                    .then(() => (toast(level.featured ? 'Ya no está destacado' : 'Nivel destacado: sale en la pestaña Jugar'), load()))
+                    .catch((err: Error) => toast(err.message)),
+              },
+              level.featured ? '☆ Quitar destacado' : '⭐ Destacar',
+            ),
         h('button', { class: 'link-btn danger', onclick: () => confirmDelete(level) }, '🗑 Borrar nivel'),
       ),
     );

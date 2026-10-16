@@ -1,5 +1,6 @@
 // Partida de un nivel de la comunidad (o prueba de uno en el editor) y su valoración.
 
+import { levelMarks } from './marks';
 import { initialState, parseBoard, type Direction } from '../../../../common/logic/engine/board';
 import { encodeRows } from '../../../../common/logic/community/community';
 import { encodeRun } from '../../../../common/logic/daily/daily';
@@ -168,6 +169,7 @@ export function customLevelScreen(source: { level: CustomLevel } | { testRows: s
       ...header,
       place,
       rateBox,
+      level!.mine ? null : h('div', { class: 'marks-row' }, levelMarks(level!, (next) => (level = next))),
       h(
         'div',
         { class: 'row' },

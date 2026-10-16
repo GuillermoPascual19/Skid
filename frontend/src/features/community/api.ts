@@ -30,14 +30,34 @@ export interface CustomLevel {
   hidden: boolean;
   /** Ya lo has denunciado. */
   reported: boolean;
+  /** «Me gusta» que tiene, y si le has dado el tuyo. */
+  likes: number;
+  liked: boolean;
+  /** Lo has guardado para luego (solo lo sabes tú). */
+  saved: boolean;
 }
 
 export type ReportReason = 'name' | 'broken' | 'other';
 
-export type CustomLevelSort = 'top' | 'new' | 'mine';
+export type CustomLevelSort = 'top' | 'new' | 'mine' | 'liked' | 'saved';
 
 export function listCustomLevels(sort: CustomLevelSort, offset = 0): Promise<{ levels: CustomLevel[]; more: boolean }> {
   return api('GET', `/levels?sort=${sort}&offset=${offset}`);
+}
+
+/** Me gusta (o quitarlo). Devuelve el nivel actualizado. */
+export function likeCustomLevel(id: string, on: boolean): Promise<CustomLevel> {
+  return api('PUT', `/levels/${encodeURIComponent(id)}/like`, { on });
+}
+
+/** Guardar para luego (o quitarlo de guardados). */
+export function saveCustomLevel(id: string, on: boolean): Promise<CustomLevel> {
+  return api('PUT', `/levels/${encodeURIComponent(id)}/save`, { on });
+}
+
+/** El nivel destacado por el administrador, o null. */
+export function getFeaturedLevel(): Promise<{ level: CustomLevel | null }> {
+  return api('GET', '/levels/featured');
 }
 
 export function getCustomLevel(id: string): Promise<CustomLevel> {

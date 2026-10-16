@@ -23,6 +23,8 @@ export interface AdminLevel {
   reasons: Record<string, number>;
   hidden: boolean;
   plays: number;
+  /** Es el nivel destacado. */
+  featured: boolean;
 }
 
 export interface AdminPlayer {
@@ -45,6 +47,10 @@ export function getAdminLevels(filter: 'reported' | 'all', q: string, offset: nu
 
 export function deleteAdminLevel(id: string): Promise<void> {
   return api('DELETE', `/admin/levels/${encodeURIComponent(id)}`);
+}
+
+export function featureLevel(id: string, on: boolean): Promise<void> {
+  return api('PUT', `/admin/levels/${encodeURIComponent(id)}/featured`, { on });
 }
 
 export function clearLevelReports(id: string): Promise<void> {

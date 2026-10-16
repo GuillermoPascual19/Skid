@@ -31,6 +31,9 @@ import {
   getCustomLevel,
   listCustomLevels,
   rateCustomLevel,
+  likeCustomLevel,
+  saveCustomLevel,
+  featuredCustomLevel,
   reportCustomLevel,
 } from './routes/levels';
 import { playerProfile } from './routes/players';
@@ -40,7 +43,7 @@ import { deleteSubscription, pushKey, saveSubscription, streakReminders, testPus
 import { playerStats } from './routes/stats';
 import { logClientError } from './routes/errors';
 import { acceptFriend, addByLink, dropRequest, friendLink, friendsOverview, removeFriend, requestFriend } from './routes/friends';
-import { adminClearReports, adminDeleteLevel, adminLevels, adminPlayers, adminResetName, adminSummary, isAdmin } from './routes/admin';
+import { adminClearReports, adminDeleteLevel, adminFeatureLevel, adminLevels, adminPlayers, adminResetName, adminSummary, isAdmin } from './routes/admin';
 import { authenticate, createSession, deleteAccount, googleLogin, logoutEverywhere, sealLegacyEmails } from './session';
 import { unseal } from './seal';
 import { nameKey, nameProblem, NAME_MAX, NAME_MIN } from '../../common/logic/players/names';
@@ -255,6 +258,8 @@ async function handleApi(req: Request, url: URL, env: Env): Promise<Response> {
     if (!success) throw new HttpError(429, 'tooManyAttempts');
     return json(await createCustomLevel(env, playerId, await body(req)));
   }
+  // Antes que /levels/:id, que si no se quedaría con «featured».
+  if (route === 'GET /levels/featured') return json(await featuredCustomLevel(env, playerId));
   if ((m = route.match(/^GET \/levels\/([\w-]+)$/))) return json(await getCustomLevel(env, playerId, m[1]));
   // Amigos directos. Solicitudes y enlaces, con el mismo límite que unirse a ligas.
   if (route === 'GET /friends/overview') return json(await friendsOverview(env, playerId));
@@ -280,9 +285,17 @@ async function handleApi(req: Request, url: URL, env: Env): Promise<Response> {
   }
   if ((m = route.match(/^DELETE \/admin\/levels\/([\w-]+)$/))) return json(await adminDeleteLevel(env, playerId, m[1]));
   if ((m = route.match(/^POST \/admin\/levels\/([\w-]+)\/clear-reports$/))) return json(await adminClearReports(env, playerId, m[1]));
+  if ((m = route.match(/^PUT \/admin\/levels\/([\w-]+)\/featured$/))) {
+    const { on } = await body<{ on?: unknown }>(req);
+    return json(await adminFeatureLevel(env, playerId, m[1], on));
+  }
   if (route === 'GET /admin/players') return json(await adminPlayers(env, playerId, url.searchParams.get('q')));
   if ((m = route.match(/^POST \/admin\/players\/([\w-]+)\/reset-name$/))) return json(await adminResetName(env, playerId, m[1]));
 
+  if ((m = route.match(/^PUT \/levels\/([\w-]+)\/(like|save)$/))) {
+    const { on } = await body<{ on?: unknown }>(req);
+    return json(await (m[2] === 'like' ? likeCustomLevel : saveCustomLevel)(env, playerId, m[1], on));
+  }
   if ((m = route.match(/^DELETE \/levels\/([\w-]+)$/))) return json(await deleteCustomLevel(env, playerId, m[1]));
   if ((m = route.match(/^GET \/levels\/([\w-]+)\/ranking$/))) return json(await customLevelRanking(env, playerId, m[1]));
   if ((m = route.match(/^POST \/levels\/([\w-]+)\/finish$/))) {
