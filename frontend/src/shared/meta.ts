@@ -17,6 +17,7 @@ const TITLES: Record<Route['name'], TextKey | null> = {
   duel: 'duels.room.title',
   duelGhost: 'ghost.title',
   ranking: 'nav.ranking',
+  global: 'global.title',
   stats: 'nav.stats',
   achievements: 'nav.achievements',
   player: 'profile.title',

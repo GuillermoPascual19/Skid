@@ -25,6 +25,7 @@ import { communityScreen } from './features/community/community-screen';
 import { editorScreen } from './features/community/editor-screen';
 import { homeScreen } from './features/home/home-screen';
 import { rankingScreen } from './features/ranking/ranking-screen';
+import { globalScreen } from './features/ranking/global-screen';
 import { statsScreen } from './features/daily/stats-screen';
 import { achievementsScreen } from './features/achievements/achievements-screen';
 import { playerScreen } from './features/profile/player-screen';
@@ -84,6 +85,7 @@ setRoutes({
       back: { label: t('nav.duels'), route: { name: 'duels' } },
     }),
   ranking: (route) => rankingScreen(route),
+  global: () => globalScreen(),
   stats: () => statsScreen(),
   achievements: () => achievementsScreen(),
   player: (route) => playerScreen(route.id),

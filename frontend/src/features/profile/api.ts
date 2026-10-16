@@ -13,6 +13,8 @@ export interface Me {
   hat: HatId | null;
   /** Tiene acceso al panel de administración. */
   admin: boolean;
+  /** Sale en el ranking global (si falta, sí). */
+  globalRanking?: boolean;
 }
 
 export function getMe(): Promise<Me> {

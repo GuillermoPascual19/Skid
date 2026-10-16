@@ -27,6 +27,7 @@ export type Route =
   | { name: 'duel'; duel: Duel }
   | { name: 'duelGhost'; duel: Duel }
   | { name: 'ranking'; join?: string }
+  | { name: 'global' }
   | { name: 'stats' }
   | { name: 'achievements' }
   | { name: 'player'; id: string }

@@ -35,7 +35,12 @@ export function friendsScreen(add?: string): Screen {
     { class: 'screen' },
     h('header', { class: 'tab-title' }, h('h1', null, t('nav.friends')), h('p', { class: 'muted' }, t('friends.subtitle'))),
     duels?.el ?? null,
-    h('section', { class: 'card list-card' }, h('button', { class: 'list-row', onclick: () => go({ name: 'ranking' }) }, h('span', { 'aria-hidden': 'true' }, '🏆'), h('span', null, t('friends.leagues')), h('span', { class: 'chevron' }, '›'))),
+    h(
+      'section',
+      { class: 'card list-card' },
+      h('button', { class: 'list-row', onclick: () => go({ name: 'ranking' }) }, h('span', { 'aria-hidden': 'true' }, '🏆'), h('span', null, t('friends.leagues')), h('span', { class: 'chevron' }, '›')),
+      h('button', { class: 'list-row', onclick: () => go({ name: 'global' }) }, h('span', { 'aria-hidden': 'true' }, '🌍'), h('span', null, t('global.title')), h('span', { class: 'chevron' }, '›')),
+    ),
     body,
   );
 
