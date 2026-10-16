@@ -2,6 +2,7 @@
 
 import { isHatId } from '../../../common/art/hats';
 import type { SeasonTotal } from '../../../common/logic/leagues/seasons';
+import { isOffensive } from '../../../common/logic/players/offensive';
 import { type Env, HttpError, cleanText } from '../http';
 import { requireName } from './players';
 import { leagueReactions } from './reactions';
@@ -43,6 +44,7 @@ export async function createLeague(env: Env, playerId: string, name: unknown): P
     throw new HttpError(429, 'maxLeagues', { n: MAX_LEAGUES_PER_PLAYER });
   }
   const clean = cleanText(name, 2, 30, 'leagueNameLength');
+  if (isOffensive(clean)) throw new HttpError(400, 'nameOffensive');
   const id = crypto.randomUUID();
   for (let attempt = 0; attempt < 5; attempt++) {
     const code = randomCode();

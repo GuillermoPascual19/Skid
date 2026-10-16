@@ -3,7 +3,7 @@
 import { h, openModal, toast } from '../../shared/dom';
 import { renderGoogleButton } from './google';
 import { type Me, getMe, setName } from './api';
-import { NAME_MAX, NAME_MIN, nameProblem } from '../../../../common/logic/players/names';
+import { NAME_ERRORS, NAME_MAX, NAME_MIN, nameProblem } from '../../../../common/logic/players/names';
 import { t, te } from '../../i18n/i18n';
 
 let cachedMe: Promise<Me> | null = null;
@@ -70,7 +70,7 @@ export function askName(initial = ''): Promise<string | null> {
           // Las mismas reglas que el servidor, para avisar sin esperar.
           const problem = nameProblem(name);
           if (problem) {
-            error.textContent = te(problem === 'length' ? 'nameLength' : 'nameChars', { min: NAME_MIN, max: NAME_MAX });
+            error.textContent = te(NAME_ERRORS[problem], { min: NAME_MIN, max: NAME_MAX });
             error.hidden = false;
             input.setAttribute('aria-invalid', 'true');
             return;

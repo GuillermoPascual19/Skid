@@ -43,3 +43,16 @@ it('/batch: sin sesión no hay nada, y no se aceptan lotes dentro de lotes ni ru
   expect((await call('/batch', auth)).status).toBe(400);
   expect((await call(`/batch?${Array.from({ length: 13 }, () => 'p=/me').join('&')}`, auth)).status).toBe(400);
 });
+
+it('no deja ponerse un nombre ofensivo ni crear una liga con uno, y lo explica en su idioma', async () => {
+  const { token } = (await (await call('/session', { method: 'POST' })).json()) as { token: string };
+  const headers = { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json', 'X-Skid-Lang': 'es' };
+  const bad = await call('/me', { method: 'PUT', headers, body: JSON.stringify({ name: 'Gi1ipo11as' }) });
+  expect(bad.status).toBe(400);
+  expect(await bad.json()).toMatchObject({ code: 'nameOffensive', error: expect.stringContaining('palabrotas') });
+  expect((await call('/me', { method: 'PUT', headers, body: JSON.stringify({ name: 'Pingüino' }) })).status).toBe(200);
+  const league = await call('/leagues', { method: 'POST', headers, body: JSON.stringify({ name: 'Liga de m.i.e.r.d.a' }) });
+  expect(league.status).toBe(400);
+  expect(await league.json()).toMatchObject({ code: 'nameOffensive' });
+  expect((await call('/leagues', { method: 'POST', headers, body: JSON.stringify({ name: 'Liga del hielo' }) })).status).toBe(200);
+});

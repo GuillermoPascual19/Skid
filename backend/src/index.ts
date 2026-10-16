@@ -46,7 +46,7 @@ import { acceptFriend, addByLink, dropRequest, friendLink, friendsOverview, remo
 import { adminClearReports, adminDeleteLevel, adminFeatureLevel, adminLevels, adminPlayers, adminResetName, adminSummary, isAdmin } from './routes/admin';
 import { authenticate, createSession, deleteAccount, googleLogin, logoutEverywhere, sealLegacyEmails } from './session';
 import { unseal } from './seal';
-import { nameKey, nameProblem, NAME_MAX, NAME_MIN } from '../../common/logic/players/names';
+import { NAME_ERRORS, nameKey, nameProblem, NAME_MAX, NAME_MIN } from '../../common/logic/players/names';
 
 export default {
   async fetch(req, rawEnv, ctx): Promise<Response> {
@@ -190,7 +190,7 @@ async function authedApi(req: Request, url: URL, env: Env, session: Session): Pr
     const { name } = await body<{ name?: unknown }>(req);
     const clean = cleanText(name, NAME_MIN, NAME_MAX, 'nameLength');
     const problem = nameProblem(clean);
-    if (problem) throw new HttpError(400, problem === 'length' ? 'nameLength' : 'nameChars', { min: NAME_MIN, max: NAME_MAX });
+    if (problem) throw new HttpError(400, NAME_ERRORS[problem], { min: NAME_MIN, max: NAME_MAX });
     // Nombres únicos según su clave (sin tildes, mayúsculas ni separadores), para que
     // nadie se haga pasar por otro con un nombre que se ve igual.
     const key = nameKey(clean);
