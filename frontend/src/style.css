@@ -2444,6 +2444,19 @@ input.switch:focus-visible {
 
 .modal.guide {
   gap: 12px;
+  /* La ventana no se desplaza entera: solo la página (los botones quedan siempre a la vista). */
+  overflow: hidden;
+}
+
+.modal.guide > * {
+  flex-shrink: 0;
+}
+
+.modal.guide > .guide-page {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
 }
 
 .guide-page {
