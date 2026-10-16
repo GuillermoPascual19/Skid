@@ -28,6 +28,7 @@ export const errors: ErrorMessages = {
   invalidLog: 'Registo da partida inválido',
   logIncomplete: 'O registo não termina a partida',
   tooFast: 'Partida demasiado rápida para ter sido jogada no jogo',
+  tooManyHints: 'No máximo {n} pistas por dia',
 
   invalidDay: 'Dia inválido',
   invalidPeriod: 'Período inválido',

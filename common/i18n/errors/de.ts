@@ -28,6 +28,7 @@ export const errors: ErrorMessages = {
   invalidLog: 'Ungültiges Spielprotokoll',
   logIncomplete: 'Das Spielprotokoll beendet die Partie nicht',
   tooFast: 'Diese Partie war zu schnell, um im Spiel gespielt worden zu sein',
+  tooManyHints: 'Höchstens {n} Hinweise pro Tag',
 
   invalidDay: 'Ungültiger Tag',
   invalidPeriod: 'Ungültiger Zeitraum',

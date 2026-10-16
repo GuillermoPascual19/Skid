@@ -6,6 +6,7 @@ import { read, write } from '../../shared/storage';
 const PROGRESS_KEY = 'skid.progress.v1';
 const MILESTONES_KEY = 'skid.milestones.v1';
 const ELEMENTS_SEEN_KEY = 'skid.elementsSeen.v1';
+const HINTS_KEY = 'skid.freeHints.v1';
 
 export interface Progress {
   readonly seed: number;
@@ -45,4 +46,14 @@ export function claimElementIntro(id: string): boolean {
   if (seen.includes(id)) return false;
   write(ELEMENTS_SEEN_KEY, [...seen, id]);
   return true;
+}
+
+/** Pistas usadas en el nivel `level` (las de otro nivel no cuentan: se recargan al pasar de nivel). */
+export function hintsUsed(level: number): number {
+  const saved = read<{ level: number; used: number }>(HINTS_KEY);
+  return saved?.level === level ? saved.used : 0;
+}
+
+export function saveHintsUsed(level: number, used: number): void {
+  write(HINTS_KEY, { level, used });
 }

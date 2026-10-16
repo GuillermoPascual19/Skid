@@ -28,6 +28,7 @@ export const errors: ErrorMessages = {
   invalidLog: 'Неверная запись партии',
   logIncomplete: 'Запись не завершает партию',
   tooFast: 'Партия сыграна слишком быстро, чтобы быть настоящей',
+  tooManyHints: 'Не больше {n} подсказок в день',
 
   invalidDay: 'Неверный день',
   invalidPeriod: 'Неверный период',

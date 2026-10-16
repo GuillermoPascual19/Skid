@@ -143,7 +143,8 @@ fuera) y compila el juego a `dist/`.
 ## Reto diario y puntuación
 
 - El mismo tablero para todos, cambia a medianoche de Madrid.
-- El resultado son los movimientos del mejor intento, y cada pista cuenta como uno más: cuantos
+- El resultado son los movimientos del mejor intento, y cada pista cuenta como uno más (como mucho
+  3 pistas al día; en el modo libre, 3 por nivel; ver `common/logic/hints.ts`): cuantos
   menos, mejor. Volver a empezar es gratis; se puede seguir mejorando todo el día (salvo tras ver la
   solución). A igualdad de movimientos, gana quien tarda menos: el reloj empieza al pulsar *Empezar*
   y no se para.
