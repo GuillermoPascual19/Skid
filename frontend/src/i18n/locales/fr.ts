@@ -247,6 +247,20 @@ export const messages: Messages = {
       enter: 'Entrer',
     },
   },
+  tabs: {
+    label: 'Sections',
+    home: 'Aujourd\'hui',
+    play: 'Jouer',
+    friends: 'Amis',
+    me: 'Toi',
+  },
+  me: {
+    settings: 'Réglages',
+    language: 'Langue',
+    theme: 'Thème (clair ou sombre)',
+    sfx: 'Effets sonores',
+    music: 'Musique',
+  },
   language: {
     title: 'Langue',
     change: 'Langue : {language}. Touche pour la changer',
@@ -904,6 +918,7 @@ export const messages: Messages = {
     linkQuestion: 'Vous apparaîtrez dans vos classements, verrez vos parties et pourrez vous défier.',
     addButton: 'Ajouter',
     requests: 'Demandes d\'ami : {n}',
+    leagues: 'Ligues et classement',
   },
   tutorial: {
     title: 'Comment jouer',

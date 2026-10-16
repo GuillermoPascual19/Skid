@@ -247,6 +247,20 @@ export const messages: Messages = {
       enter: 'Enter',
     },
   },
+  tabs: {
+    label: 'Sections',
+    home: 'Today',
+    play: 'Play',
+    friends: 'Friends',
+    me: 'You',
+  },
+  me: {
+    settings: 'Settings',
+    language: 'Language',
+    theme: 'Theme (light or dark)',
+    sfx: 'Sound effects',
+    music: 'Music',
+  },
   language: {
     title: 'Language',
     change: 'Language: {language}. Tap to change it',
@@ -904,6 +918,7 @@ export const messages: Messages = {
     linkQuestion: 'You\'ll show up in each other\'s rankings, see each other\'s games and be able to duel.',
     addButton: 'Add',
     requests: 'Friend requests: {n}',
+    leagues: 'Leagues and ranking',
   },
   tutorial: {
     title: 'How to play',

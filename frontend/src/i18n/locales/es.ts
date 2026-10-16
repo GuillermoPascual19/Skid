@@ -246,6 +246,20 @@ export const messages = {
       enter: 'Entrar',
     },
   },
+  tabs: {
+    label: 'Secciones',
+    home: 'Hoy',
+    play: 'Jugar',
+    friends: 'Amigos',
+    me: 'Tú',
+  },
+  me: {
+    settings: 'Ajustes',
+    language: 'Idioma',
+    theme: 'Tema (claro u oscuro)',
+    sfx: 'Efectos de sonido',
+    music: 'Música',
+  },
   language: {
     title: 'Idioma',
     change: 'Idioma: {language}. Pulsa para cambiarlo',
@@ -903,6 +917,7 @@ export const messages = {
     linkQuestion: 'Saldréis en los rankings del otro, podréis ver vuestras partidas y retaros a duelos.',
     addButton: 'Añadir',
     requests: 'Solicitudes de amistad: {n}',
+    leagues: 'Ligas y ranking',
   },
   tutorial: {
     title: 'Cómo se juega',

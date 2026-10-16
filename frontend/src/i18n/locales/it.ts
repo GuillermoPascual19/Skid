@@ -247,6 +247,20 @@ export const messages: Messages = {
       enter: 'Entra',
     },
   },
+  tabs: {
+    label: 'Sezioni',
+    home: 'Oggi',
+    play: 'Gioca',
+    friends: 'Amici',
+    me: 'Tu',
+  },
+  me: {
+    settings: 'Impostazioni',
+    language: 'Lingua',
+    theme: 'Tema (chiaro o scuro)',
+    sfx: 'Effetti sonori',
+    music: 'Musica',
+  },
   language: {
     title: 'Lingua',
     change: 'Lingua: {language}. Tocca per cambiare',
@@ -904,6 +918,7 @@ export const messages: Messages = {
     linkQuestion: 'Comparirete nelle classifiche l\'uno dell\'altro, vedrete le vostre partite e potrete sfidarvi.',
     addButton: 'Aggiungi',
     requests: 'Richieste di amicizia: {n}',
+    leagues: 'Leghe e classifica',
   },
   tutorial: {
     title: 'Come si gioca',

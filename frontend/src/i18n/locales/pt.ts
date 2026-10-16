@@ -247,6 +247,20 @@ export const messages: Messages = {
       enter: 'Entrar',
     },
   },
+  tabs: {
+    label: 'Secções',
+    home: 'Hoje',
+    play: 'Jogar',
+    friends: 'Amigos',
+    me: 'Tu',
+  },
+  me: {
+    settings: 'Definições',
+    language: 'Idioma',
+    theme: 'Tema (claro ou escuro)',
+    sfx: 'Efeitos sonoros',
+    music: 'Música',
+  },
   language: {
     title: 'Idioma',
     change: 'Idioma: {language}. Toca para mudar',
@@ -904,6 +918,7 @@ export const messages: Messages = {
     linkQuestion: 'Vão aparecer nos rankings um do outro, ver os vossos jogos e desafiar-se em duelos.',
     addButton: 'Adicionar',
     requests: 'Pedidos de amizade: {n}',
+    leagues: 'Ligas e ranking',
   },
   tutorial: {
     title: 'Como se joga',

@@ -94,7 +94,7 @@ export function communityScreen(tab?: CustomLevelSort, open?: string): Screen {
     h(
       'header',
       { class: 'topbar' },
-      h('button', { class: 'icon-btn', 'aria-label': t('common.back'), onclick: () => go({ name: 'home' }) }, '←'),
+      h('button', { class: 'icon-btn', 'aria-label': t('common.back'), onclick: () => go({ name: 'play' }) }, '←'),
       h('div', { class: 'title' }, h('h1', null, t('home.community.eyebrow')), h('p', null, t('levels.list.subtitle'))),
     ),
     h(

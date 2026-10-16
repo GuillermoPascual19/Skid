@@ -1,6 +1,7 @@
 // Contrarreloj: la tarjeta de la portada, la presentación con las reglas (y
 // empezar) y el ranking de la semana con tus amigos.
 
+import { cached } from '../../shared/cache';
 import { penguinSvg } from '../../../../common/art/hats';
 import { TIME_ATTACK_MS, TIME_ATTACK_POINTS, TIME_ATTACK_SKIP_MS } from '../../../../common/logic/timeattack/timeattack';
 import { h, openModal, svg } from '../../shared/dom';
@@ -124,11 +125,9 @@ export function timeAttackCard(): { el: HTMLElement; load(): Promise<void> } {
   return {
     el,
     async load() {
-      try {
-        render(await getTimeAttack(currentWeek()));
-      } catch {
-        // Sin conexión: se queda la invitación a jugar.
-      }
+      const week = currentWeek();
+      // Sin conexión (y sin nada guardado): se queda la invitación a jugar.
+      await cached(`timeattack:${week}`, () => getTimeAttack(week), render, () => {});
     },
   };
 }

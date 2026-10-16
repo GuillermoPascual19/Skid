@@ -1,5 +1,7 @@
 // Reto semanal: la tarjeta de la portada, la presentación con las reglas y el ranking.
 
+import { cached } from '../../shared/cache';
+import { skeleton } from '../../shared/skeleton';
 import { dayKey, shiftDay, weekRange, DAILY_TIME_ZONE } from '../../../../common/logic/daily/daily';
 import { movesBig } from '../../shared/result';
 import { weekKey } from '../../../../common/logic/weekly/weekly';
@@ -83,7 +85,7 @@ export async function openWeekly(info: WeeklyInfo): Promise<void> {
 
 /** Tarjeta de la portada. Se rellena cuando llega la semana del servidor. */
 export function weeklyCard(): { el: HTMLElement; load(): Promise<void> } {
-  const el = h('section', { class: 'card weekly-card' }, h('p', { class: 'eyebrow' }, t('weekly.eyebrow')), h('p', { class: 'muted' }, t('common.loading')));
+  const el = h('section', { class: 'card weekly-card' }, h('p', { class: 'eyebrow' }, t('weekly.eyebrow')), skeleton(3));
   const render = (info: WeeklyInfo) => {
     const best = info.run?.overPar ?? null;
     el.replaceChildren(
@@ -118,15 +120,14 @@ export function weeklyCard(): { el: HTMLElement; load(): Promise<void> } {
   const card = {
     el,
     async load() {
-      try {
-        render(await getWeekly(currentWeek()));
-      } catch (err) {
+      const week = currentWeek();
+      await cached(`weekly:${week}`, () => getWeekly(week), render, (err) =>
         el.replaceChildren(
           h('p', { class: 'eyebrow' }, t('weekly.eyebrow')),
-          h('p', { class: 'error' }, (err as Error).message),
+          h('p', { class: 'error' }, err.message),
           h('button', { class: 'btn ghost', onclick: () => void card.load() }, t('common.retry')),
-        );
-      }
+        ),
+      );
     },
   };
   return card;

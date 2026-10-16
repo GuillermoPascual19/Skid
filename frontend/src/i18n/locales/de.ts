@@ -247,6 +247,20 @@ export const messages: Messages = {
       enter: 'Öffnen',
     },
   },
+  tabs: {
+    label: 'Bereiche',
+    home: 'Heute',
+    play: 'Spielen',
+    friends: 'Freunde',
+    me: 'Du',
+  },
+  me: {
+    settings: 'Einstellungen',
+    language: 'Sprache',
+    theme: 'Design (hell oder dunkel)',
+    sfx: 'Soundeffekte',
+    music: 'Musik',
+  },
   language: {
     title: 'Sprache',
     change: 'Sprache: {language}. Tippen zum Ändern',
@@ -904,6 +918,7 @@ export const messages: Messages = {
     linkQuestion: 'Ihr erscheint in den Ranglisten des anderen, seht eure Partien und könnt euch duellieren.',
     addButton: 'Hinzufügen',
     requests: 'Freundschaftsanfragen: {n}',
+    leagues: 'Ligen und Rangliste',
   },
   tutorial: {
     title: 'So wird gespielt',

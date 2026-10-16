@@ -57,7 +57,7 @@ export function rankingScreen(route: { join?: string }): Screen {
     h(
       'header',
       { class: 'topbar' },
-      h('button', { class: 'icon-btn', 'aria-label': t('common.back'), onclick: () => go({ name: 'home' }) }, '←'),
+      h('button', { class: 'icon-btn', 'aria-label': t('common.back'), onclick: () => go({ name: 'friends' }) }, '←'),
       h('div', { class: 'title' }, h('h1', null, t('nav.ranking')), h('p', null, t('ranking.subtitle'))),
     ),
     body,
