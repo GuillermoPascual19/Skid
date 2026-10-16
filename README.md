@@ -317,3 +317,31 @@ tu jugador: `pnpm exec wrangler d1 execute skid --remote --command "SELECT name,
 WHERE google_sub IS NOT NULL"`. Con el secreto puesto, sale la casilla «Admin» en la portada (resumen,
 niveles denunciados, cualquier nivel y nombres de jugadores). Cada acción queda en los logs del Worker
 (`event = adminAction`).
+
+## Copias de seguridad
+
+Hay dos redes de seguridad para la base de datos:
+
+- **Time Travel de D1** (incluido en Cloudflare): vuelve la base entera a cualquier minuto de los
+  últimos 7 días en el plan gratuito (30 en el de pago). Es lo primero que hay que probar si algo
+  borra o estropea datos: `pnpm exec wrangler d1 time-travel restore skid --timestamp=2026-10-16T10:00:00Z`
+  (la hora en UTC, de antes del problema; `time-travel info` enseña qué punto usaría).
+- **Copia semanal** (`.github/workflows/backup.yml`): cada lunes a las 03:30 UTC exporta la base de
+  producción, la cifra con AES-256 y la guarda como artefacto del run durante 90 días (unas 13 copias).
+  También se puede lanzar a mano desde *Actions → Copia de seguridad → Run workflow*. Necesita el
+  secret `BACKUP_PASSPHRASE` (una contraseña larga): **guárdala también fuera de GitHub**, en tu gestor
+  de contraseñas. Sin ella las copias no se pueden abrir.
+
+Restaurar una copia semanal (sin tocar la base actual hasta el final):
+
+1. En *Actions → Copia de seguridad*, abre el run del día que quieras y descarga el artefacto
+   `skid-AAAA-MM-DD` (un zip con `skid-AAAA-MM-DD.sql.gpg`).
+2. Descífrala (pide la contraseña): `gpg --output skid.sql --decrypt skid-AAAA-MM-DD.sql.gpg`.
+3. Para mirarla antes en local, en una base aparte:
+   `pnpm exec wrangler d1 execute skid --local --persist-to .restaurar --file skid.sql`.
+4. Crea una base nueva y cárgala: `pnpm exec wrangler d1 create skid-restaurada` y
+   `pnpm exec wrangler d1 execute skid-restaurada --remote --file skid.sql`.
+5. En `wrangler.jsonc`, cambia el `database_id` por el de la base nueva (deja `database_name` igual) y
+   sube el cambio: el despliegue apunta el juego a ella. La base vieja queda intacta por si hiciera falta.
+
+El archivo `skid.sql` descifrado tiene datos de los jugadores: bórralo al terminar.

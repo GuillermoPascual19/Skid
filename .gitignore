@@ -5,3 +5,7 @@ dist
 .wrangler
 .dev.vars
 .env
+# Restaurar una copia de seguridad (datos de jugadores: no se suben)
+.restaurar
+skid.sql
+*.sql.gpg

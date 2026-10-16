@@ -322,3 +322,31 @@ separated by commas. To find yours, sign in to Skid with Google and look up your
 google_sub IS NOT NULL"`. With the secret set, an "Admin" tile shows up on the home screen (summary,
 reported levels, any level and player names). Every action is logged in the Worker logs
 (`event = adminAction`).
+
+## Backups
+
+There are two safety nets for the database:
+
+- **D1 Time Travel** (included in Cloudflare): restores the whole database to any minute of the last
+  7 days on the free plan (30 on the paid one). It's the first thing to try if something deletes or
+  breaks data: `pnpm exec wrangler d1 time-travel restore skid --timestamp=2026-10-16T10:00:00Z`
+  (UTC, from before the problem; `time-travel info` shows which point it would use).
+- **Weekly backup** (`.github/workflows/backup.yml`): every Monday at 03:30 UTC it exports the
+  production database, encrypts it with AES-256 and keeps it as a run artifact for 90 days (about 13
+  backups). It can also be started by hand from *Actions → Copia de seguridad → Run workflow*. It
+  needs the `BACKUP_PASSPHRASE` secret (a long password): **keep it outside GitHub too**, in your
+  password manager. Without it the backups can't be opened.
+
+Restoring a weekly backup (without touching the current database until the end):
+
+1. In *Actions → Copia de seguridad*, open the run you want and download the `skid-YYYY-MM-DD`
+   artifact (a zip with `skid-YYYY-MM-DD.sql.gpg`).
+2. Decrypt it (it asks for the password): `gpg --output skid.sql --decrypt skid-YYYY-MM-DD.sql.gpg`.
+3. To look at it locally first, in a separate database:
+   `pnpm exec wrangler d1 execute skid --local --persist-to .restaurar --file skid.sql`.
+4. Create a new database and load it: `pnpm exec wrangler d1 create skid-restaurada` and
+   `pnpm exec wrangler d1 execute skid-restaurada --remote --file skid.sql`.
+5. In `wrangler.jsonc`, replace `database_id` with the new database's one (keep `database_name`) and
+   push the change: the deploy points the game at it. The old database stays untouched just in case.
+
+The decrypted `skid.sql` file holds player data: delete it when you're done.
