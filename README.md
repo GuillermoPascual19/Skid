@@ -31,6 +31,7 @@ y niveles creados por los jugadores.
 - Guía «Cómo se juega», modo oscuro, música y efectos sintetizados, y login con Google para jugar en
   varios dispositivos.
 - Se instala como app y avisa con notificaciones (duelos, amigos, reacciones y recordatorio de racha).
+  Sin conexión se puede seguir jugando al modo libre y al tutorial.
 - En siete idiomas: español, inglés, alemán, francés, portugués, italiano y ruso. Usa el del
   navegador y se cambia desde el inicio.
 - Compartir por WhatsApp o Telegram, copiar el enlace o el mensaje, o el menú del sistema.
@@ -227,6 +228,10 @@ fuera) y compila el juego a `dist/`.
 - El recordatorio lo lanza una tarea programada (`triggers.crons` en `wrangler.jsonc`, 18:00 UTC).
 - La app se puede instalar (`public/manifest.webmanifest`); en iPhone hace falta instalarla para
   recibir notificaciones. El service worker que las muestra es `public/sw.js`.
+- Sin conexión: el service worker guarda el juego. Al compilar, `vite.config.ts` escribe en `dist/sw.js` la
+  versión y la lista de archivos; así cada despliegue instala la versión nueva y borra la anterior. Las
+  páginas van primero a la red (con conexión, siempre lo último) y los archivos, desde lo guardado; la API
+  nunca se guarda.
 
 ## Seguridad
 

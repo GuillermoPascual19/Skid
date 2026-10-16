@@ -265,6 +265,9 @@ export const messages: Messages = {
     available: 'Доступна новая версия',
     reload: 'Обновить',
   },
+  offline: {
+    banner: 'Нет сети: свободный режим работает',
+  },
   notifications: {
     title: 'Уведомления',
     text: 'Мы сообщим, даже если игра закрыта.',

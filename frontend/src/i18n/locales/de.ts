@@ -265,6 +265,9 @@ export const messages: Messages = {
     available: 'Eine neue Version ist da',
     reload: 'Aktualisieren',
   },
+  offline: {
+    banner: 'Offline: Der freie Modus funktioniert weiter',
+  },
   notifications: {
     title: 'Benachrichtigungen',
     text: 'Wir benachrichtigen dich, auch wenn das Spiel geschlossen ist.',
