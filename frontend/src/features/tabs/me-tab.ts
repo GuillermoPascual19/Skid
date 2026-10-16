@@ -16,6 +16,7 @@ import { renderGoogleButton, signOut } from '../profile/google';
 import { askName, currentMe } from '../profile/profile';
 import { confirmDeleteAccount, confirmLogoutEverywhere } from '../profile/account';
 import type { Me } from '../profile/api';
+import { setGlobalVisible } from '../ranking/api';
 import { openGuide } from '../guide/guide';
 import { locale, t } from '../../i18n/i18n';
 
@@ -25,6 +26,27 @@ const row = (icon: string, label: string, onclick: () => void) =>
 /** Ajuste con su nombre a la izquierda y su botón a la derecha. */
 const setting = (label: string, control: Element) => h('div', { class: 'list-row setting' }, h('span', null, label), control);
 
+/** Salir en el ranking global o no: se guarda al momento y, si falla, vuelve como estaba. */
+function globalRankingSwitch(): HTMLInputElement {
+  const input = h('input', { type: 'checkbox', class: 'switch', checked: true, 'aria-label': t('me.globalRanking') });
+  input.addEventListener('change', async () => {
+    const visible = input.checked;
+    input.disabled = true;
+    try {
+      await setGlobalVisible(visible);
+      const me = recall<Me>('me');
+      if (me) remember('me', { ...me, globalRanking: visible });
+      toast(visible ? t('global.shown') : t('global.hiddenDone'));
+    } catch (err) {
+      input.checked = !visible;
+      toast((err as Error).message);
+    } finally {
+      input.disabled = false;
+    }
+  });
+  return input;
+}
+
 export function meTab(): Screen {
   const penguin = h('div', { class: 'me-penguin' }, svg(penguinSvg(recall<Me>('me')?.hat ?? null)));
   const name = h('h1');
@@ -32,10 +54,12 @@ export function meTab(): Screen {
   const links = h('div', { class: 'card list-card' });
   const audio = audioToggles();
   const [sfx, music] = [...audio.el.children];
+  const globalSwitch = globalRankingSwitch();
 
   function renderHeader(me: Me | null) {
     penguin.replaceChildren(svg(penguinSvg(me?.hat ?? null)));
     name.textContent = me?.name ?? t('common.anonymous');
+    globalSwitch.checked = me?.globalRanking ?? true;
   }
 
   function renderLinks(me: Me | null) {
@@ -145,6 +169,7 @@ export function meTab(): Screen {
       setting(t('me.language'), languageButton()),
       setting(t('me.theme'), themeButton()),
       online.onlineEnabled ? setting(t('notifications.title'), notificationsButton()) : null,
+      online.onlineEnabled ? setting(t('me.globalRanking'), globalSwitch) : null,
       setting(t('me.sfx'), sfx),
       setting(t('me.music'), music),
     ),

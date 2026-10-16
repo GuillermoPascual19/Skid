@@ -37,6 +37,7 @@ import {
   reportCustomLevel,
 } from './routes/levels';
 import { playerProfile } from './routes/players';
+import { globalRanking, setGlobalVisible } from './routes/global';
 import { leagueSeason, seasonHats, seasonTitles, settleSeasons } from './routes/seasons';
 import { newReactions, react } from './routes/reactions';
 import { deleteSubscription, pushKey, saveSubscription, streakReminders, testPush } from './routes/push';
@@ -157,14 +158,15 @@ async function authedApi(req: Request, url: URL, env: Env, session: Session): Pr
   }
 
   if (route === 'GET /me') {
-    const row = await env.DB.prepare('SELECT name, email, hat FROM players WHERE id = ?')
+    const row = await env.DB.prepare('SELECT name, email, hat, hide_global FROM players WHERE id = ?')
       .bind(playerId)
-      .first<{ name: string | null; email: string | null; hat: string | null }>();
+      .first<{ name: string | null; email: string | null; hat: string | null; hide_global: number }>();
     return json({
       name: row?.name ?? null,
       email: await unseal(env.EMAIL_KEY, row?.email ?? null),
       hat: isHatId(row?.hat) ? row.hat : null,
       admin: await isAdmin(env, playerId),
+      globalRanking: row?.hide_global !== 1,
     });
   }
   if (route === 'GET /achievements') {
@@ -186,6 +188,11 @@ async function authedApi(req: Request, url: URL, env: Env, session: Session): Pr
     await env.DB.prepare('UPDATE players SET hat = ? WHERE id = ?').bind(hat, playerId).run();
     return json({ hat });
   }
+  if (route === 'PUT /me/global') {
+    const { visible } = await body<{ visible?: unknown }>(req);
+    return json(await setGlobalVisible(env, playerId, visible));
+  }
+  if ((m = route.match(/^GET \/ranking\/global\/(month|all)$/))) return json(await globalRanking(env, playerId, m[1]));
   if (route === 'PUT /me') {
     const { name } = await body<{ name?: unknown }>(req);
     const clean = cleanText(name, NAME_MIN, NAME_MAX, 'nameLength');

@@ -4136,3 +4136,33 @@ input.switch:focus-visible {
 .featured-card {
   border: 2px solid var(--gold, #ffc93c);
 }
+
+/* ---------------------------------------------------------- Ranking global */
+
+.global-ranking .rank-row {
+  cursor: default;
+}
+
+.global-ranking .rank-row:active {
+  transform: none;
+}
+
+.global-ranking li.empty,
+.global-ranking li.gap {
+  display: block;
+  text-align: center;
+  background: none;
+  box-shadow: none;
+  padding: 2px;
+}
+
+.global-note {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.global-note p {
+  flex: 1;
+  margin: 0;
+}

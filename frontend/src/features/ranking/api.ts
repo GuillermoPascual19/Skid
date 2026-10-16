@@ -119,3 +119,43 @@ export interface ReceivedReaction {
 export function newReactions(since: number): Promise<ReceivedReaction[]> {
   return api<ReceivedReaction[]>('GET', `/reactions?since=${since}`);
 }
+
+export type GlobalPeriod = 'month' | 'all';
+
+export interface GlobalEntry {
+  id: string;
+  name: string;
+  hat: HatId | null;
+  /** Puesto (los empatados comparten puesto). */
+  position: number;
+  points: number;
+  /** Retos terminados en el periodo. */
+  days: number;
+  best: number;
+  isMe: boolean;
+}
+
+export interface GlobalRanking {
+  period: GlobalPeriod;
+  /** Primer día del periodo. */
+  from: string;
+  /** Cuántos jugadores salen en total. */
+  total: number;
+  top: GlobalEntry[];
+  /** Tu puesto si no estás entre los de `top`, o null. */
+  me: GlobalEntry | null;
+  /** Te has ocultado del ranking global. */
+  hidden: boolean;
+  /** Tienes nombre (sin él no se sale). */
+  named: boolean;
+}
+
+/** Ranking de todos los jugadores por los puntos del reto diario: este mes o desde siempre. */
+export function globalRanking(period: GlobalPeriod): Promise<GlobalRanking> {
+  return api<GlobalRanking>('GET', `/ranking/global/${period}`);
+}
+
+/** Salir del ranking global o volver a él. */
+export async function setGlobalVisible(visible: boolean): Promise<void> {
+  await api('PUT', '/me/global', { visible });
+}
