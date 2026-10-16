@@ -69,7 +69,17 @@ function session(): Promise<string> {
   return creating;
 }
 
-export async function api<T>(method: string, path: string, body?: unknown): Promise<T> {
+/**
+ * Llamada a la API con la sesión. Las lecturas (GET) que salen a la vez (por
+ * ejemplo, todas las de la portada al abrirla) se agrupan solas en una sola
+ * petición a /batch: menos viajes al servidor y menos peticiones gastadas.
+ */
+export function api<T>(method: string, path: string, body?: unknown): Promise<T> {
+  if (method === 'GET' && body === undefined) return batchedGet<T>(path);
+  return direct<T>(method, path, body);
+}
+
+async function direct<T>(method: string, path: string, body?: unknown): Promise<T> {
   const first = await request<T>(method, path, body, await session());
   if (first.status !== 401) return first.data;
   // El servidor no reconoce el token (p. ej. base de datos nueva): sesión nueva.
@@ -78,6 +88,65 @@ export async function api<T>(method: string, path: string, body?: unknown): Prom
   const second = await request<T>(method, path, body, await session());
   if (second.status === 401) throw new Error(te('invalidSession'));
   return second.data;
+}
+
+// ------------------------------------------------------- Lecturas agrupadas
+
+/** Lecturas como mucho por lote (el servidor admite 12). */
+const MAX_BATCH = 12;
+
+interface Waiter {
+  resolve(data: unknown): void;
+  reject(err: Error): void;
+}
+
+/** Lecturas pendientes de este momento, por ruta (dos iguales comparten respuesta). */
+let pending = new Map<string, Waiter[]>();
+
+function batchedGet<T>(path: string): Promise<T> {
+  return new Promise<T>((resolve, reject) => {
+    // Lo que se pida en este mismo bloque de código va en el lote, que sale en cuanto
+    // termina (sin esperar a que se pinte la pantalla).
+    if (pending.size === 0) queueMicrotask(flush);
+    const waiters = pending.get(path) ?? [];
+    waiters.push({ resolve: resolve as (data: unknown) => void, reject });
+    pending.set(path, waiters);
+  });
+}
+
+function flush(): void {
+  const batch = pending;
+  pending = new Map();
+  const paths = [...batch.keys()];
+  for (let i = 0; i < paths.length; i += MAX_BATCH) void send(paths.slice(i, i + MAX_BATCH), batch);
+}
+
+async function send(paths: string[], batch: Map<string, Waiter[]>): Promise<void> {
+  const settle = (path: string, fn: (w: Waiter) => void) => batch.get(path)!.forEach(fn);
+  // Una sola: tal cual, sin lote.
+  if (paths.length === 1) {
+    const [path] = paths;
+    await direct('GET', path).then(
+      (data) => settle(path, (w) => w.resolve(data)),
+      (err: Error) => settle(path, (w) => w.reject(err)),
+    );
+    return;
+  }
+  let results: Record<string, { status: number; data: { error?: string } }>;
+  try {
+    const query = paths.map((p) => `p=${encodeURIComponent(p)}`).join('&');
+    ({ results } = await direct<{ results: typeof results }>('GET', `/batch?${query}`));
+  } catch (err) {
+    // Sin conexión: todas fallan igual. Otro fallo del lote: cada una por su cuenta.
+    if ((err as Error).message === t('common.offline')) return paths.forEach((p) => settle(p, (w) => w.reject(err as Error)));
+    await Promise.all(paths.map((p) => direct('GET', p).then((data) => settle(p, (w) => w.resolve(data)), (e: Error) => settle(p, (w) => w.reject(e)))));
+    return;
+  }
+  for (const path of paths) {
+    const result = results[path];
+    if (result && result.status < 400) settle(path, (w) => w.resolve(result.data));
+    else settle(path, (w) => w.reject(new Error(result?.data.error ?? t('common.httpError', { status: result?.status ?? 0 }))));
+  }
 }
 
 // ---------------------------------------------------------- Login con Google

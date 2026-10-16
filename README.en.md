@@ -248,6 +248,9 @@ anything from outside) and builds the game to `dist/`.
   rendered as text, never as HTML.
 - Permissions: profiles, games (ghosts) and league rankings are only visible among players who share a
   league. Joining through a link asks for confirmation, and you can leave a league.
+- Batched reads: the ones the game makes at the same time (the home screen's when it opens) go together
+  in a single request, `GET /api/batch?p=…` (up to 12), checking the session once and sending each read
+  through its usual route (`frontend/src/shared/api.ts`, `backend/src/index.ts`).
 - Limits: 120 requests per minute per player across the whole API, request bodies of 32 KB at most,
   and specific limits for creating accounts, joining leagues and publishing levels (`wrangler.jsonc`).
 - Headers: a strict CSP and the other security headers in `frontend/public/_headers`; the API sets its
