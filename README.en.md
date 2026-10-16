@@ -29,8 +29,9 @@ friends, and levels made by the players.
 - **Leagues**: daily and weekly rankings with your friends, and monthly seasons whose champion
   wins that month's hat; emoji reactions to your friends' challenges; achievements in the daily
   challenge, duels, time attack, weekly challenge and community levels unlock more hats.
-- **Player levels**: level editor, publishing (you must beat your level first), ratings, per-level
-  ranking, sharing and reporting.
+- **Player levels**: level editor, publishing (you must beat your level first), ratings, ❤️ likes and
+  🔖 saves (with their filters), per-level ranking, sharing and reporting. The admin picks a featured
+  level, shown in the Play tab.
 - A "How to play" guide, dark mode, synthesized music and sound effects, and Google sign-in to play
   on several devices.
 - It installs as an app and sends notifications (duels, friends, reactions and streak reminder).

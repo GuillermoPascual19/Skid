@@ -85,6 +85,7 @@ interface AdminLevelRow {
   reports: number;
   reasons: string | null;
   plays: number;
+  featured_at: number | null;
 }
 
 /** Niveles: los denunciados (más denuncias primero) o todos (más nuevos primero), con búsqueda por nombre o autor. */
@@ -94,7 +95,7 @@ export async function adminLevels(env: Env, playerId: string, filter: string | n
   const q = searchText(query);
   const { results } = await env.DB.prepare(
     `SELECT * FROM (
-       SELECT l.id, l.name, l.rows, l.optimal, l.created_at, l.author_id, p.name AS author,
+       SELECT l.id, l.name, l.rows, l.optimal, l.created_at, l.author_id, p.name AS author, l.featured_at,
               (SELECT COUNT(*) FROM custom_level_reports r WHERE r.level_id = l.id) AS reports,
               (SELECT GROUP_CONCAT(reason) FROM custom_level_reports r WHERE r.level_id = l.id) AS reasons,
               (SELECT COUNT(*) FROM custom_level_runs r WHERE r.level_id = l.id AND r.player_id <> l.author_id) AS plays
@@ -123,6 +124,7 @@ export async function adminLevels(env: Env, playerId: string, filter: string | n
         reasons,
         hidden: l.reports >= REPORTS_TO_HIDE,
         plays: l.plays,
+        featured: l.featured_at !== null,
       };
     }),
     more: results.length > PAGE,
@@ -136,6 +138,20 @@ export async function adminDeleteLevel(env: Env, playerId: string, levelId: stri
   // Las partidas, valoraciones y denuncias se borran en cascada.
   await env.DB.prepare('DELETE FROM custom_levels WHERE id = ?').bind(levelId).run();
   audit(playerId, 'deleteLevel', levelId, { name: level.name, author: level.author_id });
+  return { ok: true };
+}
+
+/** Destaca un nivel (sale en la pestaña Jugar para todos) o lo quita. Solo hay uno a la vez. */
+export async function adminFeatureLevel(env: Env, playerId: string, levelId: string, on: unknown) {
+  await requireAdmin(env, playerId);
+  if (typeof on !== 'boolean') throw new HttpError(400, 'invalidBody');
+  const level = await env.DB.prepare('SELECT name FROM custom_levels WHERE id = ?').bind(levelId).first<{ name: string }>();
+  if (!level) throw new HttpError(404, 'levelNotFound');
+  await env.DB.batch([
+    env.DB.prepare('UPDATE custom_levels SET featured_at = NULL WHERE featured_at IS NOT NULL'),
+    ...(on ? [env.DB.prepare('UPDATE custom_levels SET featured_at = ? WHERE id = ?').bind(Date.now(), levelId)] : []),
+  ]);
+  audit(playerId, on ? 'featureLevel' : 'unfeatureLevel', levelId, { name: level.name });
   return { ok: true };
 }
 

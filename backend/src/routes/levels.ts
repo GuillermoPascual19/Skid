@@ -1,4 +1,5 @@
-// Niveles de la comunidad: listado, publicar, superar, ranking, valorar, denunciar y borrar.
+// Niveles de la comunidad: listado, publicar, superar, ranking, valorar, me gusta,
+// guardar, el destacado, denunciar y borrar.
 
 import { isHatId } from '../../../common/art/hats';
 import { BoardError, parseBoard } from '../../../common/logic/engine/board';
@@ -34,6 +35,10 @@ interface CustomLevelRow {
   my_rating: number | null;
   reports: number;
   my_report: number;
+  likes: number;
+  my_like: number;
+  my_save: number;
+  featured_at: number | null;
 }
 
 /** Datos de un nivel con sus totales y lo que ha hecho en él quien lo pide. */
@@ -45,7 +50,11 @@ const CUSTOM_LEVEL_SELECT = `
          (SELECT COUNT(r.rating) FROM custom_level_runs r WHERE r.level_id = l.id) AS rating_count,
          me.best_moves AS my_best, me.rating AS my_rating,
          (SELECT COUNT(*) FROM custom_level_reports rp WHERE rp.level_id = l.id) AS reports,
-         EXISTS (SELECT 1 FROM custom_level_reports rp WHERE rp.level_id = l.id AND rp.player_id = ?1) AS my_report
+         EXISTS (SELECT 1 FROM custom_level_reports rp WHERE rp.level_id = l.id AND rp.player_id = ?1) AS my_report,
+         (SELECT COUNT(*) FROM custom_level_likes k WHERE k.level_id = l.id) AS likes,
+         EXISTS (SELECT 1 FROM custom_level_likes k WHERE k.level_id = l.id AND k.player_id = ?1) AS my_like,
+         EXISTS (SELECT 1 FROM custom_level_saves s WHERE s.level_id = l.id AND s.player_id = ?1) AS my_save,
+         l.featured_at
   FROM custom_levels l
   JOIN players p ON p.id = l.author_id
   LEFT JOIN custom_level_runs me ON me.level_id = l.id AND me.player_id = ?1`;
@@ -70,6 +79,9 @@ function customLevelResponse(row: CustomLevelRow, playerId: string) {
     /** Oculto por denuncias (solo lo ve su autor). */
     hidden: row.reports >= REPORTS_TO_HIDE,
     reported: row.my_report === 1,
+    likes: row.likes,
+    liked: row.my_like === 1,
+    saved: row.my_save === 1,
   };
 }
 
@@ -79,10 +91,13 @@ export async function listCustomLevels(env: Env, playerId: string, sort: string,
     top: '(COALESCE(rating_avg * rating_count, 0) + 6) / (rating_count + 2) DESC, plays DESC, created_at DESC',
     new: 'created_at DESC',
     mine: 'created_at DESC',
+    liked: 'created_at DESC',
+    saved: 'created_at DESC',
   }[sort];
   if (!order) throw new HttpError(400, 'invalidSort');
   // Los ocultos por denuncias solo los ve su autor (en "Mis niveles").
-  const where = sort === 'mine' ? 'author_id = ?1' : `reports < ${REPORTS_TO_HIDE}`;
+  const visible = `reports < ${REPORTS_TO_HIDE}`;
+  const where = { mine: 'author_id = ?1', liked: `my_like = 1 AND ${visible}`, saved: `my_save = 1 AND ${visible}` }[sort] ?? visible;
   const { results } = await env.DB.prepare(`SELECT * FROM (${CUSTOM_LEVEL_SELECT}) WHERE ${where} ORDER BY ${order} LIMIT ?2 OFFSET ?3`)
     .bind(playerId, CUSTOM_PAGE_SIZE + 1, offset)
     .all<CustomLevelRow>();
@@ -90,6 +105,32 @@ export async function listCustomLevels(env: Env, playerId: string, sort: string,
     levels: results.slice(0, CUSTOM_PAGE_SIZE).map((r) => customLevelResponse(r, playerId)),
     more: results.length > CUSTOM_PAGE_SIZE,
   };
+}
+
+/** Me gusta (`on`) o lo quita. Cualquiera puede, sin haberlo superado. */
+export async function likeCustomLevel(env: Env, playerId: string, id: string, on: unknown) {
+  return toggleMark(env, playerId, id, on, 'custom_level_likes');
+}
+
+/** Lo guarda para luego (`on`) o lo quita de guardados. Es privado. */
+export async function saveCustomLevel(env: Env, playerId: string, id: string, on: unknown) {
+  return toggleMark(env, playerId, id, on, 'custom_level_saves');
+}
+
+async function toggleMark(env: Env, playerId: string, id: string, on: unknown, table: 'custom_level_likes' | 'custom_level_saves') {
+  if (typeof on !== 'boolean') throw new HttpError(400, 'invalidBody');
+  await getCustomLevel(env, playerId, id); // Que exista y se pueda ver.
+  if (on) await env.DB.prepare(`INSERT OR IGNORE INTO ${table} (level_id, player_id, created_at) VALUES (?, ?, ?)`).bind(id, playerId, Date.now()).run();
+  else await env.DB.prepare(`DELETE FROM ${table} WHERE level_id = ? AND player_id = ?`).bind(id, playerId).run();
+  return getCustomLevel(env, playerId, id);
+}
+
+/** El nivel destacado (el último que eligió el administrador), si lo hay y se puede ver. */
+export async function featuredCustomLevel(env: Env, playerId: string) {
+  const row = await env.DB.prepare(`SELECT * FROM (${CUSTOM_LEVEL_SELECT}) WHERE featured_at IS NOT NULL AND reports < ${REPORTS_TO_HIDE} ORDER BY featured_at DESC LIMIT 1`)
+    .bind(playerId)
+    .first<CustomLevelRow>();
+  return { level: row ? customLevelResponse(row, playerId) : null };
 }
 
 export async function getCustomLevel(env: Env, playerId: string, id: string) {
