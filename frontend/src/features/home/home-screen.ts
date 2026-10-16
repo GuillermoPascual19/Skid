@@ -1,4 +1,5 @@
-// Portada: reto del día, modo niveles y acceso al ranking.
+// Pestaña Hoy (la portada): el reto del día y los retos de la semana (semanal y
+// contrarreloj), con las reacciones de tus amigos y las celebraciones.
 
 import { DAILY_TIME_ZONE } from '../../../../common/logic/daily/daily';
 import * as online from '../../shared/api';
@@ -8,24 +9,19 @@ import { movesBig } from '../../shared/result';
 import { penguinSvg } from '../../../../common/art/hats';
 import { getFriendsOverview } from '../friends/api';
 import { celebrateNewAchievements } from '../achievements/achievements-screen';
-import { audioToggles } from '../../audio/audio-controls';
-import { themeButton } from '../../shared/theme';
-import { languageButton } from '../../shared/language';
-import { formatDay, formatTime, h, openModal, previousDay, share, svg, toast, untilMidnight } from '../../shared/dom';
-import { renderGoogleButton, signOut } from '../profile/google';
-import { askName, currentMe } from '../profile/profile';
-import { confirmDeleteAccount, confirmLogoutEverywhere } from '../profile/account';
+import { formatDay, formatTime, h, previousDay, share, svg, untilMidnight } from '../../shared/dom';
 import { go, type Screen } from '../../shared/router';
+import { setFriendRequests, withTabs } from '../../shared/tabs';
+import { recall, remember } from '../../shared/cache';
+import { currentMe } from '../profile/profile';
+import { startingProgress } from '../free-play/storage';
 import { dailyWins, getDaily, getStats } from '../daily/api';
 import { claimWinCelebration, loadDaily, saveDaily } from '../daily/storage';
-import { startingProgress } from '../free-play/storage';
 import type { Me } from '../profile/api';
 import { NEWS, dismissGuideNews, guideStatus, openGuide } from '../guide/guide';
 import { weeklyCard } from '../weekly/weekly';
-import { duelsCard } from '../duels/duels';
 import { timeAttackCard } from '../timeattack/timeattack';
 import { reactionsCard } from '../ranking/reactions';
-import { notificationsButton } from '../notifications/notifications';
 import { t, tn } from '../../i18n/i18n';
 
 export function homeScreen(): Screen {
@@ -33,16 +29,17 @@ export function homeScreen(): Screen {
   const dailyCard = h('section', { class: 'card daily-card' });
   // El reto semanal necesita el servidor (el tablero y el ranking están allí).
   const weekly = online.onlineEnabled ? weeklyCard() : null;
-  const duels = online.onlineEnabled ? duelsCard() : null;
   const timeAttack = online.onlineEnabled ? timeAttackCard() : null;
   const reactions = online.onlineEnabled ? reactionsCard() : null;
-  const account = h('div', { class: 'account' });
-  const logoPenguin = h('div', { class: 'logo-penguin' }, svg(penguinSvg()));
+  // El gorro de la última vez, al instante (luego llega el del servidor).
+  const logoPenguin = h('div', { class: 'logo-penguin' }, svg(penguinSvg(recall<Me>('me')?.hat ?? null)));
   const wearHat = (hat: Me['hat']) => logoPenguin.replaceChildren(svg(penguinSvg(hat)));
   let ticker = 0;
   let disposed = false;
-  /** Racha del servidor (null hasta que llega, o sin ranking online). */
-  let streak: { current: number; playedToday: boolean } | null = null;
+  /** Racha del servidor (la de la última vez hasta que llega; null sin ranking online). */
+  let streak: { current: number; playedToday: boolean; day?: string } | null = recall('streak');
+  // La guardada es de otro día: «jugado hoy» ya no vale.
+  if (streak && streak.day !== day) streak = { ...streak, playedToday: false };
 
   function renderDaily() {
     const record = loadDaily(day);
@@ -107,29 +104,26 @@ export function homeScreen(): Screen {
 
   async function syncWithServer() {
     if (!online.onlineEnabled) return;
+    // Todo a la vez: nada de esto depende de lo demás.
+    void getFriendsOverview()
+      .then(({ incoming }) => setFriendRequests(incoming.length))
+      .catch(() => {});
+    void getStats()
+      .then((s) => {
+        streak = { current: s.currentStreak, playedToday: s.playedToday, day };
+        remember('streak', streak);
+        if (!disposed) renderDaily();
+      })
+      .catch(() => {});
+    void currentMe()
+      .then((me) => {
+        remember('me', me);
+        wearHat(me.hat);
+        // Primero la victoria de ayer y después los logros nuevos, nunca dos a la vez.
+        return celebrateYesterday(me.name).then(() => (disposed || !me.name ? undefined : celebrateNewAchievements(wearHat)));
+      })
+      .catch(() => {});
     try {
-      const me = await currentMe();
-      renderAccount(me);
-      wearHat(me.hat);
-      void getFriendsOverview()
-        .then(({ incoming }) => {
-          friendsBadge.textContent = String(incoming.length);
-          friendsBadge.hidden = incoming.length === 0;
-          friendsTile?.setAttribute('aria-label', incoming.length ? `${t('nav.friends')} · ${t('friends.requests', { n: incoming.length })}` : t('nav.friends'));
-        })
-        .catch(() => {});
-      // Solo para administradores (el panel va en español: no lo ven los jugadores).
-      if (me.admin && !disposed) navTiles.append(navTile('🛡️', 'Admin', () => go({ name: 'admin' })));
-      // Primero la victoria de ayer y después los logros nuevos, nunca dos a la vez.
-      void celebrateYesterday(me.name)
-        .then(() => (disposed || !me.name ? undefined : celebrateNewAchievements(wearHat)))
-        .catch(() => {});
-      void getStats()
-        .then((s) => {
-          streak = { current: s.currentStreak, playedToday: s.playedToday };
-          if (!disposed) renderDaily();
-        })
-        .catch(() => {});
       // El reto pudo jugarse en otro dispositivo.
       const server = await getDaily(day);
       const record = loadDaily(day);
@@ -168,96 +162,6 @@ export function homeScreen(): Screen {
     } catch {
       // Sin conexión: se celebrará la próxima vez.
     }
-  }
-
-  /** Quién juega en este dispositivo y, si no está vinculado, la invitación a entrar con Google. */
-  function renderAccount(me: Me) {
-    const changeName = h(
-      'button',
-      {
-        class: 'link-btn',
-        onclick: async () => {
-          const name = await askName(me.name ?? '');
-          if (name) renderAccount({ ...me, name });
-        },
-      },
-      me.name ? t('home.account.changeName') : t('home.account.pickName'),
-    );
-    const who = h('p', { class: 'player-line' }, me.name ? `${t('home.account.playingAs', { name: me.name })} · ` : '', changeName);
-
-    // Cerrar sesión en todas partes (con Google) y borrar la cuenta.
-    const privacy = h(
-      'p',
-      { class: 'player-line small account-actions' },
-      me.email ? h('button', { class: 'link-btn', onclick: confirmLogoutEverywhere }, t('home.account.logoutEverywhere')) : null,
-      me.email ? ' · ' : null,
-      h('button', { class: 'link-btn danger', onclick: confirmDeleteAccount }, t('home.account.deleteAccount')),
-    );
-
-    if (me.email) {
-      account.replaceChildren(
-        who,
-        h(
-          'p',
-          { class: 'player-line small' },
-          `🔗 ${t('home.account.googleAccount', { email: me.email })} · `,
-          h('button', { class: 'link-btn', onclick: confirmSignOut }, t('home.account.signOut')),
-        ),
-        privacy,
-      );
-      return;
-    }
-
-    const slot = h('div', { class: 'google-slot' });
-    const card = h(
-      'section',
-      { class: 'card account-card', hidden: true },
-      h('p', { class: 'eyebrow' }, t('home.account.devicesEyebrow')),
-      h('p', { class: 'muted' }, t('home.account.devicesText')),
-      slot,
-    );
-    account.replaceChildren(who, card, privacy);
-    void renderGoogleButton(slot, (result) => {
-      if (result.switched) {
-        toast(result.name ? t('home.account.signedInAs', { name: result.name }) : t('home.account.signedIn'));
-        go({ name: 'home' }); // Otro jugador: se vuelve a cargar todo.
-        return;
-      }
-      toast(t('home.account.linked'));
-      renderAccount({ name: result.name, email: result.email, hat: null, admin: false });
-    }).then((shown) => (card.hidden = !shown));
-  }
-
-  function confirmSignOut() {
-    const modal = openModal(
-      [
-        h('h2', null, t('home.signOut.title')),
-        h('p', { class: 'lead' }, t('home.signOut.text')),
-        h(
-          'div',
-          { class: 'row' },
-          h('button', { class: 'btn ghost', onclick: () => modal.close() }, t('common.cancel')),
-          h(
-            'button',
-            {
-              class: 'btn secondary',
-              onclick: async () => {
-                modal.close();
-                try {
-                  await signOut();
-                  toast(t('home.signOut.done'));
-                } catch (err) {
-                  toast((err as Error).message);
-                }
-                go({ name: 'home' });
-              },
-            },
-            t('home.signOut.button'),
-          ),
-        ),
-      ],
-      { dismissable: true },
-    );
   }
 
   const level = startingProgress().level;
@@ -300,73 +204,19 @@ export function homeScreen(): Screen {
           ),
         )
       : null;
-  const audio = audioToggles();
-  audio.el.prepend(languageButton(), themeButton(), ...(online.onlineEnabled ? [notificationsButton()] : []));
-  // Amigos, con las solicitudes pendientes (se miran al sincronizar con el servidor).
-  const friendsBadge = h('span', { class: 'badge', hidden: true });
-  const friendsTile = online.onlineEnabled ? navTile('👥', t('nav.friends'), () => go({ name: 'friends' })) : null;
-  friendsTile?.append(friendsBadge);
-  const navTiles = h(
-    'nav',
-    { class: 'nav-tiles' },
-    navTile('🏆', t('nav.ranking'), () => go({ name: 'ranking' })),
-    navTile('❓', t('nav.rules'), () => openGuide()),
-    online.onlineEnabled ? navTile('📊', t('nav.stats'), () => go({ name: 'stats' })) : null,
-    online.onlineEnabled ? navTile('🎩', t('nav.achievements'), () => go({ name: 'achievements' })) : null,
-    friendsTile,
-  );
   const el = h(
     'div',
-    { class: 'screen home' },
-    audio.el,
-    h(
-      'header',
-      { class: 'logo' },
-      logoPenguin,
-      h('h1', null, 'Skid'),
-      h('p', null, t('home.tagline')),
-    ),
+    { class: 'screen home tab-screen' },
+    h('header', { class: 'logo compact' }, logoPenguin, h('div', null, h('h1', null, 'Skid'), h('p', null, t('home.tagline')))),
     news,
     dailyCard,
     reactions?.el ?? null,
     weekly?.el ?? null,
     timeAttack?.el ?? null,
-    duels?.el ?? null,
-    h(
-      'section',
-      { class: 'card levels-card' },
-      h('div', { class: 'info' }, h('p', { class: 'eyebrow' }, t('home.free.eyebrow')), h('h2', null, t('common.levelN', { n: level })), h('p', { class: 'muted' }, t('home.free.text'))),
-      h('button', { class: 'btn secondary', onclick: () => go({ name: 'levels' }) }, t('common.play')),
-    ),
-    navTiles,
-    online.onlineEnabled
-      ? h(
-          'section',
-          { class: 'card levels-card multiplayer-card' },
-          h(
-            'div',
-            { class: 'info' },
-            h('p', { class: 'eyebrow' }, t('home.community.eyebrow')),
-            h('h2', null, t('home.community.title')),
-            h('p', { class: 'muted' }, t('home.community.text')),
-          ),
-          h('button', { class: 'btn secondary', onclick: () => go({ name: 'community' }) }, t('home.community.enter')),
-        )
-      : null,
-    online.onlineEnabled ? account : null,
-    // Textos legales (páginas sueltas en /legal; el contacto, en el aviso legal).
-    h(
-      'footer',
-      { class: 'site-footer' },
-      h('a', { href: '/legal/privacidad.html' }, t('footer.privacy')),
-      h('a', { href: '/legal/terminos.html' }, t('footer.terms')),
-      h('a', { href: '/legal/aviso-legal.html' }, t('footer.legal')),
-      h('a', { href: '/legal/aviso-legal.html#contacto' }, t('footer.contact')),
-    ),
   );
 
   return {
-    el,
+    el: withTabs(el, 'home'),
     mount() {
       // Primera vez: se aprende jugando (el tutorial), antes de nada.
       if (guide === 'first') return go({ name: 'tutorial' });
@@ -374,18 +224,12 @@ export function homeScreen(): Screen {
       ticker = window.setInterval(tick, 1000);
       void syncWithServer();
       void weekly?.load();
-      void duels?.load();
       void timeAttack?.load();
       void reactions?.load();
     },
     dispose() {
       disposed = true;
       clearInterval(ticker);
-      audio.dispose();
     },
   };
-}
-
-function navTile(icon: string, label: string, onclick: () => void): HTMLElement {
-  return h('button', { class: 'nav-tile', onclick }, h('span', { class: 'nav-icon', 'aria-hidden': 'true' }, icon), h('span', null, label));
 }

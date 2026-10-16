@@ -247,6 +247,20 @@ export const messages: Messages = {
       enter: 'Войти',
     },
   },
+  tabs: {
+    label: 'Разделы',
+    home: 'Сегодня',
+    play: 'Играть',
+    friends: 'Друзья',
+    me: 'Ты',
+  },
+  me: {
+    settings: 'Настройки',
+    language: 'Язык',
+    theme: 'Тема (светлая или тёмная)',
+    sfx: 'Звуковые эффекты',
+    music: 'Музыка',
+  },
   language: {
     title: 'Язык',
     change: 'Язык: {language}. Нажми, чтобы сменить',
@@ -904,6 +918,7 @@ export const messages: Messages = {
     linkQuestion: 'Вы появитесь в рейтингах друг друга, сможете смотреть игры и вызывать на дуэли.',
     addButton: 'Добавить',
     requests: 'Заявок в друзья: {n}',
+    leagues: 'Лиги и рейтинг',
   },
   tutorial: {
     title: 'Как играть',

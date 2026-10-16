@@ -7,7 +7,8 @@ import { go, type Screen } from '../../shared/router';
 import { movesLabel } from '../../shared/result';
 import * as online from '../../shared/api';
 import { ensureName } from '../profile/profile';
-import { openNewDuel } from '../duels/duels';
+import { duelsCard, openNewDuel } from '../duels/duels';
+import { setFriendRequests, withTabs } from '../../shared/tabs';
 import { playerName, t } from '../../i18n/i18n';
 import {
   type Friend,
@@ -27,16 +28,14 @@ const avatar = (hat: FriendPlayer['hat']) => h('span', { class: 'avatar' }, svg(
 
 /** `add`: alguien abrió tu enlace de amigo (?amigo=…): se le pregunta si quiere añadirlo. */
 export function friendsScreen(add?: string): Screen {
+  const duels = online.onlineEnabled ? duelsCard() : null;
   const body = h('div', { class: 'friends-body' }, h('p', { class: 'empty' }, t('common.loading')));
   const el = h(
     'div',
     { class: 'screen' },
-    h(
-      'header',
-      { class: 'topbar' },
-      h('button', { class: 'icon-btn', 'aria-label': t('common.back'), onclick: () => go({ name: 'home' }) }, '←'),
-      h('div', { class: 'title' }, h('h1', null, t('nav.friends')), h('p', null, t('friends.subtitle'))),
-    ),
+    h('header', { class: 'tab-title' }, h('h1', null, t('nav.friends')), h('p', { class: 'muted' }, t('friends.subtitle'))),
+    duels?.el ?? null,
+    h('section', { class: 'card list-card' }, h('button', { class: 'list-row', onclick: () => go({ name: 'ranking' }) }, h('span', { 'aria-hidden': 'true' }, '🏆'), h('span', null, t('friends.leagues')), h('span', { class: 'chevron' }, '›'))),
     body,
   );
 
@@ -50,6 +49,7 @@ export function friendsScreen(add?: string): Screen {
     }
     try {
       data = await getFriendsOverview();
+      setFriendRequests(data.incoming.length);
       if (!disposed) render();
     } catch (err) {
       if (disposed) return;
@@ -228,9 +228,10 @@ export function friendsScreen(add?: string): Screen {
   }
 
   return {
-    el,
+    el: withTabs(el, 'friends'),
     mount: () => {
       void load();
+      void duels?.load();
       if (add && online.onlineEnabled) void confirmLink(add);
     },
     dispose: () => {

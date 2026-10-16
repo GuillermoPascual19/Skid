@@ -40,7 +40,7 @@ export function levelsScreen(): Screen {
     ],
     hint: { keys: t('play.hintKeys'), touch: t('play.hintTouch') },
     onMenu: () =>
-      openPauseMenu(mounted, { restartLabel: t('play.reset'), onRestart: () => restart(), onExit: () => go({ name: 'home' }) }),
+      openPauseMenu(mounted, { restartLabel: t('play.reset'), onRestart: () => restart(), onExit: () => go({ name: 'play' }) }),
     onRestart: () => restart(),
     onSwipe: (dir) => mounted?.scene.requestMove(dir),
     restartLabel: t('play.reset'),

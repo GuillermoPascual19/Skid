@@ -21,7 +21,7 @@ export function statsScreen(): Screen {
     h(
       'header',
       { class: 'topbar' },
-      h('button', { class: 'icon-btn', 'aria-label': t('common.back'), onclick: () => go({ name: 'home' }) }, '←'),
+      h('button', { class: 'icon-btn', 'aria-label': t('common.back'), onclick: () => go({ name: 'me' }) }, '←'),
       h('div', { class: 'title' }, h('h1', null, t('stats.screen.title')), subtitle),
     ),
     body,

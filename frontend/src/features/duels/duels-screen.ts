@@ -19,7 +19,7 @@ export function duelsScreen(open?: string): Screen {
     h(
       'header',
       { class: 'topbar' },
-      h('button', { class: 'icon-btn', 'aria-label': t('common.back'), onclick: () => go({ name: 'home' }) }, '←'),
+      h('button', { class: 'icon-btn', 'aria-label': t('common.back'), onclick: () => go({ name: 'friends' }) }, '←'),
       h('div', { class: 'title' }, h('h1', null, t('nav.duels')), h('p', null, t('duels.screen.subtitle'))),
     ),
     h('button', { class: 'btn big block', onclick: () => void openNewDuel(() => void load()) }, `⚔️ ${t('duels.new.eyebrow')}`),

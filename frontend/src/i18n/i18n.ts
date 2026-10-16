@@ -39,14 +39,26 @@ const LOCALE_KEY = 'skid.lang.v1';
 /** Etiqueta de Intl de cada idioma (fechas, números, plurales). */
 const INTL: Record<Locale, string> = { es: 'es-ES', en: 'en-GB', de: 'de-DE', fr: 'fr-FR', pt: 'pt-PT', it: 'it-IT', ru: 'ru-RU' };
 
-const LOADERS: Record<Locale, () => Promise<{ messages: Messages; errors: ErrorMessages }>> = {
-  es: async () => ({ messages: es, errors: (await import('../../../common/i18n/errors/es')).errors }),
-  en: async () => ({ messages: (await import('./locales/en')).messages, errors: (await import('../../../common/i18n/errors/en')).errors }),
-  de: async () => ({ messages: (await import('./locales/de')).messages, errors: (await import('../../../common/i18n/errors/de')).errors }),
-  fr: async () => ({ messages: (await import('./locales/fr')).messages, errors: (await import('../../../common/i18n/errors/fr')).errors }),
-  pt: async () => ({ messages: (await import('./locales/pt')).messages, errors: (await import('../../../common/i18n/errors/pt')).errors }),
-  it: async () => ({ messages: (await import('./locales/it')).messages, errors: (await import('../../../common/i18n/errors/it')).errors }),
-  ru: async () => ({ messages: (await import('./locales/ru')).messages, errors: (await import('../../../common/i18n/errors/ru')).errors }),
+/** Los textos del juego (el español va dentro del código principal). */
+const MESSAGES: Record<Locale, () => Promise<Messages>> = {
+  es: async () => es,
+  en: async () => (await import('./locales/en')).messages,
+  de: async () => (await import('./locales/de')).messages,
+  fr: async () => (await import('./locales/fr')).messages,
+  pt: async () => (await import('./locales/pt')).messages,
+  it: async () => (await import('./locales/it')).messages,
+  ru: async () => (await import('./locales/ru')).messages,
+};
+
+/** Los mensajes de error, aparte: no hacen falta para pintar la primera pantalla. */
+const ERRORS: Record<Locale, () => Promise<ErrorMessages>> = {
+  es: async () => (await import('../../../common/i18n/errors/es')).errors,
+  en: async () => (await import('../../../common/i18n/errors/en')).errors,
+  de: async () => (await import('../../../common/i18n/errors/de')).errors,
+  fr: async () => (await import('../../../common/i18n/errors/fr')).errors,
+  pt: async () => (await import('../../../common/i18n/errors/pt')).errors,
+  it: async () => (await import('../../../common/i18n/errors/it')).errors,
+  ru: async () => (await import('../../../common/i18n/errors/ru')).errors,
 };
 
 let current: Locale = 'es';
@@ -64,9 +76,12 @@ function chosenLocale(): Locale {
 /** Carga el idioma antes de pintar nada (se llama al arrancar). */
 export async function initI18n(): Promise<void> {
   current = chosenLocale();
-  const loaded = await LOADERS[current]().catch(() => LOADERS.es());
-  dict = loaded.messages;
-  errorDict = loaded.errors;
+  // Los errores se piden a la vez que los textos, pero no se esperan.
+  void ERRORS[current]()
+    .catch(() => ERRORS.es())
+    .then((errors) => (errorDict = errors))
+    .catch(() => {});
+  dict = await MESSAGES[current]().catch(() => MESSAGES.es());
   pluralRules = new Intl.PluralRules(INTL[current]);
   document.documentElement.lang = current;
 }

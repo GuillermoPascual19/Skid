@@ -44,7 +44,7 @@ export function adminScreen(): Screen {
     h(
       'header',
       { class: 'topbar' },
-      h('button', { class: 'icon-btn', 'aria-label': 'Volver', onclick: () => go({ name: 'home' }) }, '←'),
+      h('button', { class: 'icon-btn', 'aria-label': 'Volver', onclick: () => go({ name: 'me' }) }, '←'),
       h('div', { class: 'title' }, h('h1', null, 'Administración'), h('p', null, 'Moderación y cifras de Skid')),
     ),
     tabs,

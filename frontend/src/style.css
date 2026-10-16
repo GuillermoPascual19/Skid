@@ -3852,3 +3852,210 @@ input.switch:focus-visible {
   font-weight: 700;
   text-align: center;
 }
+
+/* Esqueleto de carga */
+.skeleton {
+  display: grid;
+  gap: 8px;
+  padding: 4px 0;
+}
+
+.skeleton span {
+  display: block;
+  height: 14px;
+  border-radius: 7px;
+  background: linear-gradient(90deg, var(--surface-soft) 0%, var(--card-border) 50%, var(--surface-soft) 100%);
+  background-size: 200% 100%;
+  animation: skeleton-shine 1.2s ease-in-out infinite;
+}
+
+@keyframes skeleton-shine {
+  from {
+    background-position: 100% 0;
+  }
+  to {
+    background-position: -100% 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .skeleton span {
+    animation: none;
+  }
+}
+
+/* Pestañas de abajo */
+.screen.has-tabs {
+  padding-bottom: calc(84px + env(safe-area-inset-bottom));
+}
+
+.tab-bar {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 40;
+  display: grid;
+  grid-auto-flow: column;
+  grid-auto-columns: 1fr;
+  max-width: 560px;
+  margin: 0 auto;
+  padding: 6px 8px calc(6px + env(safe-area-inset-bottom));
+  background: var(--card-solid);
+  border-top: 1px solid var(--card-border);
+  box-shadow: 0 -6px 20px rgba(10, 30, 50, 0.12);
+}
+
+.tab {
+  appearance: none;
+  border: 0;
+  background: none;
+  color: var(--ink-faint);
+  font: inherit;
+  font-size: 12px;
+  font-weight: 700;
+  display: grid;
+  justify-items: center;
+  gap: 2px;
+  padding: 4px 0;
+  border-radius: 12px;
+  cursor: pointer;
+}
+
+.tab.active {
+  color: var(--ink);
+  background: var(--surface-soft);
+}
+
+.tab-icon {
+  position: relative;
+  font-size: 22px;
+  line-height: 1;
+}
+
+.tab:not(.active) .tab-icon {
+  filter: grayscale(0.6);
+  opacity: 0.75;
+}
+
+.tab-icon .badge {
+  position: absolute;
+  top: -6px;
+  right: -12px;
+  min-width: 18px;
+  height: 18px;
+  padding: 0 5px;
+  border-radius: 9px;
+  background: var(--bad);
+  color: #fff;
+  font-size: 11px;
+  font-weight: 800;
+  line-height: 18px;
+}
+
+/* Cabecera de las pestañas */
+.tab-title {
+  padding: 6px 4px 0;
+}
+
+.tab-title h1 {
+  margin: 0;
+  font-size: 28px;
+}
+
+.tab-title p {
+  margin: 2px 0 0;
+}
+
+.logo.compact {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  text-align: left;
+  padding: 4px 4px 0;
+}
+
+.logo.compact .logo-penguin {
+  width: 64px;
+  flex: none;
+}
+
+.logo.compact svg {
+  width: 64px;
+}
+
+.logo.compact h1 {
+  font-size: 40px;
+  margin: 0;
+}
+
+.logo.compact p {
+  margin: 2px 0 0;
+  font-size: 14px;
+}
+
+/* Listas (pestañas Jugar y Tú) */
+.list-card {
+  display: grid;
+  padding: 6px 0;
+}
+
+.list-title {
+  font-size: 15px;
+  margin: 6px 16px 2px;
+  color: var(--ink-faint);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.list-row {
+  appearance: none;
+  border: 0;
+  background: none;
+  color: inherit;
+  font: inherit;
+  font-weight: 700;
+  display: grid;
+  grid-template-columns: 28px 1fr auto;
+  align-items: center;
+  gap: 10px;
+  min-height: 48px;
+  padding: 6px 16px;
+  text-align: left;
+  border-top: 1px solid var(--card-border);
+  cursor: pointer;
+}
+
+.list-row:first-child,
+.list-title + .list-row {
+  border-top: 0;
+}
+
+.list-row.setting {
+  grid-template-columns: 1fr auto;
+  cursor: default;
+}
+
+.list-row .chevron {
+  color: var(--ink-faint);
+  font-size: 22px;
+}
+
+/* Pestaña Tú */
+.me-head {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 6px 4px 0;
+}
+
+.me-penguin {
+  width: 72px;
+  flex: none;
+}
+
+.me-head h1 {
+  margin: 0;
+  font-size: 28px;
+  overflow-wrap: anywhere;
+}

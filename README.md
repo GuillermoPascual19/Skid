@@ -10,6 +10,9 @@ y niveles creados por los jugadores.
 
 ## Qué tiene
 
+- **Organización**: cuatro pestañas abajo: Hoy (reto diario, semanal y contrarreloj), Jugar (modo libre,
+  niveles de jugadores, tutorial), Amigos (amigos, duelos, ligas) y Tú (logros, estadísticas, ajustes, cuenta).
+  Cada tarjeta enseña al instante lo último que se vio mientras llega lo nuevo (`shared/cache.ts`).
 - **Tutorial**: la primera vez se aprende jugando, con tres tableros guiados (y desde la guía de reglas).
 - **Modo libre**: niveles generados cada vez más difíciles, con estrellas según los movimientos y
   elementos que se desbloquean (nieve, corrientes, teletransportes, agujeros, hielo frágil, espejos,

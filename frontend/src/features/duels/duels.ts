@@ -2,6 +2,7 @@
 // fantasma y la revancha) y la tarjeta de la portada. La sala está en
 // duel-room.ts y la partida en duel-play.ts.
 
+import { cached } from '../../shared/cache';
 import { penguinSvg } from '../../../../common/art/hats';
 import { type DuelDifficulty } from '../../../../common/logic/duels/duels';
 import { movesLabel } from '../../shared/result';
@@ -267,11 +268,8 @@ export function duelsCard(): { el: HTMLElement; load(): Promise<void> } {
   return {
     el,
     async load() {
-      try {
-        render(myTurn(await listDuels()).length);
-      } catch {
-        // Sin conexión: se queda la invitación a retar.
-      }
+      // Sin conexión (y sin nada guardado): se queda la invitación a retar.
+      await cached('duels:turn', async () => myTurn(await listDuels()).length, render, () => {});
     },
   };
 }

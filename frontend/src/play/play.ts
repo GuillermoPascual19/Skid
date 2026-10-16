@@ -147,9 +147,19 @@ export function playLayout(opts: {
   };
 }
 
+/**
+ * Phaser pinta los números en canvas: hay que esperar a la fuente o usaría la de
+ * reserva. Solo antes del tablero (la interfaz no la espera: se pinta enseguida).
+ */
+async function waitForFonts(): Promise<void> {
+  const timeout = new Promise<void>((resolve) => setTimeout(resolve, 1500));
+  const fonts = Promise.all(['500', '600', '700', '800'].map((w) => document.fonts.load(`${w} 20px "Baloo 2"`)));
+  await Promise.race([fonts, timeout]).catch(() => {});
+}
+
 /** Monta el tablero cuando la pantalla ya está en el documento (Phaser necesita su tamaño). */
 export async function loadBoard(parent: HTMLElement, board: Board, hooks: BoardHooks): Promise<MountedBoard> {
-  const { mountBoard } = await import('../game/mount');
+  const [{ mountBoard }] = await Promise.all([import('../game/mount'), waitForFonts()]);
   return mountBoard(parent, board, hooks);
 }
 

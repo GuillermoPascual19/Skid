@@ -36,7 +36,9 @@ export type Route =
   | { name: 'customTest'; rows: string[] }
   | { name: 'admin' }
   | { name: 'friends'; add?: string }
-  | { name: 'tutorial' };
+  | { name: 'tutorial' }
+  | { name: 'play' }
+  | { name: 'me' };
 
 type Renderers = { [N in Route['name']]: (route: Extract<Route, { name: N }>) => Screen };
 

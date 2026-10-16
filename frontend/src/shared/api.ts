@@ -1,4 +1,5 @@
 import { locale, t, te } from '../i18n/i18n';
+import { forgetAll } from './cache';
 // Conexión con el servidor (backend/, en Cloudflare): sesión, token y login con
 // Google. Las llamadas de cada apartado están en su carpeta (features/*/api.ts).
 // La API está en /api del mismo dominio. Con VITE_API_BASE= vacía (p. ej. en .env.local),
@@ -22,6 +23,7 @@ function readToken(): string | null {
 }
 
 function writeToken(token: string | null): void {
+  forgetAll();
   try {
     if (token) localStorage.setItem(TOKEN_KEY, token);
     else localStorage.removeItem(TOKEN_KEY);

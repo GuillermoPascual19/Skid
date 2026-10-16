@@ -31,11 +31,11 @@ import { playerScreen } from './features/profile/player-screen';
 import { adminScreen } from './features/admin/admin-screen';
 import { friendsScreen } from './features/friends/friends-screen';
 import { tutorialScreen } from './features/guide/tutorial';
+import { playTab } from './features/tabs/play-tab';
+import { meTab } from './features/tabs/me-tab';
 import { go, setRoutes } from './shared/router';
 import { applyTheme } from './shared/theme';
 import { initI18n, t } from './i18n/i18n';
-
-const FONT_FAMILY = '"Baloo 2"';
 
 /** Copos de nieve decorativos (CSS); se ocultan con prefers-reduced-motion. */
 function snow(): void {
@@ -57,13 +57,6 @@ function snow(): void {
       }),
     );
   }
-}
-
-/** Phaser pinta los números en canvas: hay que esperar a la fuente o usaría la de reserva. */
-async function waitForFonts(): Promise<void> {
-  const timeout = new Promise<void>((resolve) => setTimeout(resolve, 1500));
-  const fonts = Promise.all(['500', '600', '700', '800'].map((w) => document.fonts.load(`${w} 20px ${FONT_FAMILY}`)));
-  await Promise.race([fonts, timeout]).catch(() => {});
 }
 
 setRoutes({
@@ -101,6 +94,8 @@ setRoutes({
   admin: () => adminScreen(),
   friends: (route) => friendsScreen(route.add),
   tutorial: () => tutorialScreen(),
+  play: () => playTab(),
+  me: () => meTab(),
 });
 
 // Lo primero: así también se avisa de los errores al arrancar.
@@ -111,7 +106,6 @@ await initI18n(); // Antes de pintar nada: todos los textos salen del idioma ele
 updateDescription();
 snow();
 installAudio();
-await waitForFonts();
 
 const params = new URLSearchParams(location.search);
 const join = params.get('join');

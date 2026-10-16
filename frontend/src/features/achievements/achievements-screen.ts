@@ -29,7 +29,7 @@ export function achievementsScreen(): Screen {
         {
           class: 'icon-btn',
           'aria-label': t('common.back'),
-          onclick: () => go({ name: 'home' }),
+          onclick: () => go({ name: 'me' }),
         },
         '←',
       ),

@@ -27,6 +27,8 @@ const TITLES: Record<Route['name'], TextKey | null> = {
   admin: null,
   friends: 'nav.friends',
   tutorial: 'tutorial.title',
+  play: 'tabs.play',
+  me: 'tabs.me',
 };
 
 /** Al cambiar de pantalla. */
