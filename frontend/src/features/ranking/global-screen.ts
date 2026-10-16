@@ -1,5 +1,6 @@
 // Ranking global: todos los jugadores por los puntos del reto diario, este mes
-// o desde siempre. Quien no quiera salir se oculta desde la pestaña Tú.
+// o desde siempre. Quien no quiera salir se oculta desde la pestaña Tú. Los tres
+// primeros de cada mes se llevan el laurel de oro, plata o bronce.
 
 import * as online from '../../shared/api';
 import { penguinSvg, type HatId } from '../../../../common/art/hats';
@@ -8,8 +9,10 @@ import { recall, remember } from '../../shared/cache';
 import { go, type Screen } from '../../shared/router';
 import { askName } from '../profile/profile';
 import type { Me } from '../profile/api';
-import { type GlobalEntry, type GlobalPeriod, type GlobalRanking, globalRanking, setGlobalVisible } from './api';
-import { intlLocale, t, tn } from '../../i18n/i18n';
+import { type GlobalEntry, type GlobalPeriod, type GlobalPodiumPlace, type GlobalRanking, globalRanking, setGlobalVisible } from './api';
+import { seasonLeft, seasonName } from './season';
+import { today } from '../daily/daily';
+import { intlLocale, playerName, t, tn } from '../../i18n/i18n';
 
 /** Pestaña que se estaba viendo (dura mientras la página esté abierta). */
 let remembered: GlobalPeriod = 'month';
@@ -30,6 +33,43 @@ function row(entry: GlobalEntry): HTMLElement {
       h('small', null, `${tn('ranking.challenges', entry.days)} · ${t('ranking.bestN', { n: entry.best })}`),
     ),
     h('span', { class: 'pts' }, String(entry.points)),
+  );
+}
+
+/** El premio del mes: los tres laureles y cuánto queda. */
+function prizeCard(ranking: GlobalRanking): HTMLElement {
+  return h(
+    'section',
+    { class: 'card global-prize' },
+    h('p', { class: 'eyebrow' }, `${t('global.prizeEyebrow')} · ${seasonLeft(ranking.ends)}`),
+    h(
+      'ol',
+      { class: 'global-prizes' },
+      ...ranking.prizes.map((hat, i) => h('li', null, svg(penguinSvg(hat)), h('span', null, `${medal(i + 1)} ${t(`hats.${hat}`)}`))),
+    ),
+    h('small', { class: 'muted' }, t('global.prizeRule')),
+  );
+}
+
+/** Podio del mes pasado, cada uno con el laurel que ganó (o que nadie lo ganó). */
+function previousCard(previous: NonNullable<GlobalRanking['previous']>): HTMLElement {
+  const place = (p: GlobalPodiumPlace) => {
+    const name = playerName(p.name);
+    return h(
+      'li',
+      { class: `${p.position === 1 ? 'champion' : ''} ${p.isMe ? 'me' : ''}` },
+      h('span', { class: 'pos' }, medal(p.position)),
+      avatar(p.hat),
+      h('strong', null, p.isMe ? t('ranking.me', { name }) : name),
+      h('span', { class: 'pts' }, String(p.points)),
+    );
+  };
+  return h(
+    'section',
+    { class: 'card season-prev' },
+    h('p', { class: 'eyebrow' }, t('global.previous')),
+    h('h2', null, seasonName(previous.season)),
+    previous.podium.length === 0 ? h('p', { class: 'muted' }, t('global.noPodium')) : h('ol', { class: 'season-podium' }, ...previous.podium.map(place)),
   );
 }
 
@@ -62,6 +102,9 @@ export function globalScreen(): Screen {
     const list = h('ol', { class: 'ranking global-ranking' }, h('li', { class: 'empty' }, t('common.loading')));
     const note = h('div');
     const caption = h('p', { class: 'muted', style: 'text-align:center; margin-top:-6px' });
+    // El premio del mes va encima y el podio del anterior debajo (los primeros días, arriba).
+    const top = h('div', { class: 'season-slot' });
+    const bottom = h('div', { class: 'season-slot' });
     body.replaceChildren(
       h(
         'div',
@@ -75,18 +118,24 @@ export function globalScreen(): Screen {
       ),
       caption,
       note,
+      top,
       list,
+      bottom,
     );
-    void fill(list, caption, note);
+    void fill(list, caption, note, top, bottom);
   }
 
-  async function fill(list: HTMLElement, caption: HTMLElement, note: HTMLElement) {
+  async function fill(list: HTMLElement, caption: HTMLElement, note: HTMLElement, top: HTMLElement, bottom: HTMLElement) {
     const id = ++requestId;
     try {
       const ranking = await globalRanking(period);
       if (disposed || id !== requestId) return;
       caption.textContent = describe(ranking);
       note.replaceChildren(...visibilityNote(ranking));
+      if (ranking.period === 'month') {
+        top.replaceChildren(prizeCard(ranking));
+        if (ranking.previous) (Number(today().slice(8, 10)) <= 7 ? top : bottom).append(previousCard(ranking.previous));
+      }
       const rows = ranking.top.map(row);
       // Si no estás entre los mejores, tu puesto va al final, separado.
       if (ranking.me) rows.push(h('li', { class: 'gap', 'aria-hidden': 'true' }, '⋯'), row(ranking.me));

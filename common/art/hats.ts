@@ -36,7 +36,11 @@ export type HatId =
   | 'mortarboard'
   | 'pumpkin'
   | 'leaves'
-  | 'star';
+  | 'star'
+  // Del podio mensual del ranking global (ver common/logic/leagues/seasons.ts).
+  | 'worldgold'
+  | 'worldsilver'
+  | 'worldbronze';
 
 /** Los nombres de los gorros están en los diccionarios del juego (hats.<id>). */
 export const HAT_IDS: readonly HatId[] = [
@@ -70,6 +74,9 @@ export const HAT_IDS: readonly HatId[] = [
   'pumpkin',
   'leaves',
   'star',
+  'worldgold',
+  'worldsilver',
+  'worldbronze',
 ];
 
 export function isHatId(value: unknown): value is HatId {
@@ -174,6 +181,10 @@ const HATS: Record<HatId, string> = {
   laurel: `
     ${laurel()}
     <path d="M50 3 L52.35 8.76 L58.56 9.22 L53.8 13.24 L55.29 19.28 L50 16 L44.71 19.28 L46.2 13.24 L41.44 9.22 L47.65 8.76 Z" fill="#ffc93c" stroke="#e48f0c" stroke-width="1.5" stroke-linejoin="round"/>`,
+  // Del podio del ranking global: laurel de metal con el mundo delante.
+  worldgold: worldLaurel('#ffc93c', '#ffe08a', '#e48f0c'),
+  worldsilver: worldLaurel('#c3ccd6', '#eef2f6', '#8794a3'),
+  worldbronze: worldLaurel('#d98a4e', '#f2b98b', '#a2582a'),
   // De temporada, de enero a diciembre. La bufanda va al cuello (bajo el pico).
   scarf: `
     <path d="M19 57 Q50 66 81 57 L81 66 Q50 75 19 66 Z" fill="#e5484d"/>
@@ -259,8 +270,8 @@ function checkers(x: number, y: number, cols: number, rows: number, w: number, h
 }
 
 /** Corona de laurel: dos ramas de hojas que suben por los lados de la cabeza. */
-function laurel(): string {
-  let out = '<path d="M23 36 A28 28 0 0 1 77 36" fill="none" stroke="#1f8a55" stroke-width="2"/>';
+function laurel(dark = '#2bb673', light = '#7ee0a8', stem = '#1f8a55'): string {
+  let out = `<path d="M23 36 A28 28 0 0 1 77 36" fill="none" stroke="${stem}" stroke-width="2"/>`;
   for (const side of [-1, 1]) {
     for (let i = 0; i < 6; i++) {
       const deg = 270 + side * (20 + i * 13);
@@ -269,11 +280,19 @@ function laurel(): string {
       const y = (40 + 28 * Math.sin(rad)).toFixed(1);
       const along = deg - side * 90; // Hacia arriba por la rama.
       for (const tilt of [-30, 30]) {
-        out += `<ellipse cx="${x}" cy="${y}" rx="5" ry="2.3" fill="${tilt * side < 0 ? '#2bb673' : '#7ee0a8'}" transform="rotate(${along + tilt} ${x} ${y}) translate(3 0)"/>`;
+        out += `<ellipse cx="${x}" cy="${y}" rx="5" ry="2.3" fill="${tilt * side < 0 ? dark : light}" transform="rotate(${along + tilt} ${x} ${y}) translate(3 0)"/>`;
       }
     }
   }
   return out;
+}
+
+/** Laurel de oro, plata o bronce con un pequeño mundo (mar, tierra y meridianos) en lo alto. */
+function worldLaurel(metal: string, shine: string, edge: string): string {
+  return `${laurel(metal, shine, edge)}
+    <circle cx="50" cy="5" r="9" fill="#2b8fd6" stroke="${edge}" stroke-width="2"/>
+    <path d="M44 1 Q47 -2 50 0 Q52 3 49 5 Q46 7 45 5 Z M52 7 Q56 5 57 8 Q56 12 53 12 Q51 10 52 7 Z" fill="#2bb673"/>
+    <path d="M41 5 H59 M50 -4 Q44 5 50 14 M50 -4 Q56 5 50 14" stroke="#cfe8fb" stroke-width="1" fill="none" opacity=".8"/>`;
 }
 
 /** Flor de cinco pétalos para la corona de flores. */

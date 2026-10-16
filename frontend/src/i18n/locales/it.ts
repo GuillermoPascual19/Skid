@@ -580,6 +580,10 @@ export const messages: Messages = {
     show: 'Torna a comparire',
     shown: 'Torni a comparire nella classifica globale',
     hiddenDone: 'Non compari più nella classifica globale',
+    prizeEyebrow: 'Premio del mese',
+    prizeRule: 'I tre che fanno più punti questo mese nella classifica globale vincono il loro alloro. Si ottengono solo così.',
+    noPodium: 'Nessuno è salito sul podio: dovevano giocare almeno in 2.',
+    previous: 'Il mese scorso',
   },
   season: {
     prize: 'Il campione vince il cappello del mese: {hat}.',
@@ -893,6 +897,9 @@ export const messages: Messages = {
     pumpkin: 'Zucca',
     leaves: 'Berretto di foglie',
     star: 'Stella dell\'albero',
+    worldgold: 'Alloro mondiale d’oro',
+    worldsilver: 'Alloro mondiale d’argento',
+    worldbronze: 'Alloro mondiale di bronzo',
   },
   achievementsScreen: {
     needsOnline: 'I traguardi richiedono la classifica online.',
@@ -981,6 +988,18 @@ export const messages: Messages = {
     title: 'Cappelli di stagione',
     text: 'Ogni mese è una stagione nelle tue leghe: chi fa più punti vince il cappello di quel mese.',
     locked: 'Vinci la stagione di {month} in una delle tue leghe.',
+  },
+  globalHats: {
+    title: 'Cappelli della classifica globale',
+    text: 'Ogni mese i primi tre della classifica globale vincono un alloro d’oro, d’argento o di bronzo.',
+    locked: 'Arriva {place} nella classifica globale di un mese.',
+    won: {
+      eyebrow: 'Classifica globale · {season}',
+      title1: 'Sei il numero 1 al mondo!',
+      title2: 'Secondo posto mondiale!',
+      title3: 'Terzo posto mondiale!',
+      text: '{points} punti a {month}. Il tuo premio: {hat}, che si ottiene solo sul podio della classifica globale.',
+    },
   },
   profile: {
     title: 'Profilo',

@@ -21,7 +21,7 @@ export function monthName(season: string): string {
 }
 
 /** "Quedan 18 días" o, el último día, "Termina en 3 h 20 min". */
-function seasonLeft(ends: string): string {
+export function seasonLeft(ends: string): string {
   const days = Math.round((Date.parse(ends) - Date.parse(dayKey(new Date()))) / 86_400_000);
   return days <= 0 ? t('weekly.endsIn', { time: untilMidnight(DAILY_TIME_ZONE) }) : t('weekly.left', { days: tn('common.days', days + 1) });
 }

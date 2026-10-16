@@ -135,10 +135,27 @@ export interface GlobalEntry {
   isMe: boolean;
 }
 
+/** Un puesto del podio de un mes ya cerrado del ranking global. */
+export interface GlobalPodiumPlace {
+  id: string;
+  name: string | null;
+  position: number;
+  points: number;
+  /** El laurel que ganó con ese puesto. */
+  hat: HatId;
+  isMe: boolean;
+}
+
 export interface GlobalRanking {
   period: GlobalPeriod;
   /** Primer día del periodo. */
   from: string;
+  /** Último día del mes en curso: entonces se reparte su podio. */
+  ends: string;
+  /** Gorros del podio del mes: 1.º, 2.º y 3.º. */
+  prizes: HatId[];
+  /** Podio del mes pasado (solo en «Este mes», y null si aún no hubo). */
+  previous: { season: string; podium: GlobalPodiumPlace[] } | null;
   /** Cuántos jugadores salen en total. */
   total: number;
   top: GlobalEntry[];

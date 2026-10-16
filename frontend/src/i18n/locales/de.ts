@@ -580,6 +580,10 @@ export const messages: Messages = {
     show: 'Wieder anzeigen',
     shown: 'Du erscheinst wieder in der Weltrangliste',
     hiddenDone: 'Du erscheinst nicht mehr in der Weltrangliste',
+    prizeEyebrow: 'Preis des Monats',
+    prizeRule: 'Die drei mit den meisten Punkten in der Weltrangliste dieses Monats gewinnen ihren Lorbeer. Nur so bekommt man ihn.',
+    noPodium: 'Niemand stand auf dem Podest: Es mussten mindestens 2 spielen.',
+    previous: 'Letzter Monat',
   },
   season: {
     prize: 'Der Champion bekommt den Hut des Monats: {hat}.',
@@ -893,6 +897,9 @@ export const messages: Messages = {
     pumpkin: 'Kürbis',
     leaves: 'Blättermütze',
     star: 'Baumspitzen-Stern',
+    worldgold: 'Goldener Weltlorbeer',
+    worldsilver: 'Silberner Weltlorbeer',
+    worldbronze: 'Bronzener Weltlorbeer',
   },
   achievementsScreen: {
     needsOnline: 'Die Erfolge brauchen die Online-Rangliste.',
@@ -981,6 +988,18 @@ export const messages: Messages = {
     title: 'Saisonhüte',
     text: 'Jeder Monat ist eine Saison in deinen Ligen: Wer die meisten Punkte sammelt, bekommt den Hut des Monats.',
     locked: 'Gewinne die Saison im {month} in einer deiner Ligen.',
+  },
+  globalHats: {
+    title: 'Hüte der Weltrangliste',
+    text: 'Jeden Monat gewinnen die drei Besten der Weltrangliste einen goldenen, silbernen oder bronzenen Lorbeer.',
+    locked: 'Werde in einem Monat {place} der Weltrangliste.',
+    won: {
+      eyebrow: 'Weltrangliste · {season}',
+      title1: 'Du bist die Nummer 1 der Welt!',
+      title2: 'Platz 2 weltweit!',
+      title3: 'Platz 3 weltweit!',
+      text: '{points} Punkte im {month}. Dein Preis: {hat}, den es nur auf dem Podest der Weltrangliste gibt.',
+    },
   },
   profile: {
     title: 'Profil',

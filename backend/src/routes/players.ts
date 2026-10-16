@@ -5,6 +5,7 @@ import { isHatId } from '../../../common/art/hats';
 import { type Env, HttpError } from '../http';
 import { playerAchievements } from './achievements';
 import { seasonTitles } from './seasons';
+import { globalTitles } from './global';
 import { playerStats } from './stats';
 
 export async function requireName(env: Env, playerId: string): Promise<void> {
@@ -34,10 +35,11 @@ export async function playerProfile(env: Env, viewerId: string, targetId: string
     .first<{ name: string | null; hat: string | null }>();
   if (!player) throw new HttpError(404, 'playerNotFound');
 
-  const [stats, achievements, seasons, headToHead] = await Promise.all([
+  const [stats, achievements, seasons, global, headToHead] = await Promise.all([
     playerStats(env, targetId),
     playerAchievements(env, targetId),
     seasonTitles(env, targetId),
+    globalTitles(env, targetId),
     isMe ? Promise.resolve(null) : headToHeadRecord(env, viewerId, targetId),
   ]);
 
@@ -49,6 +51,7 @@ export async function playerProfile(env: Env, viewerId: string, targetId: string
     stats,
     achievements: achievements.filter((a) => a.unlocked).map((a) => a.id),
     seasons: seasons.map(({ leagueName, season, hat }) => ({ leagueName, season, hat })),
+    global,
     headToHead,
   };
 }

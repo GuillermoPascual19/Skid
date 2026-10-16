@@ -13,11 +13,23 @@ export interface SeasonTitle {
   hat: HatId;
 }
 
+/** Un puesto en el podio de un mes del ranking global. */
+export interface GlobalTitle {
+  /** "YYYY-MM". */
+  season: string;
+  /** 1, 2 o 3. */
+  position: number;
+  points: number;
+  hat: HatId;
+}
+
 export interface Achievements {
   hat: HatId | null;
   items: AchievementProgress[];
   /** Temporadas ganadas, de la más reciente a la más antigua. */
   seasons: SeasonTitle[];
+  /** Podios del ranking global, del más reciente al más antiguo. */
+  global: GlobalTitle[];
 }
 
 export function getAchievements(): Promise<Achievements> {

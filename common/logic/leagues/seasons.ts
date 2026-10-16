@@ -11,6 +11,17 @@ export const FIRST_SEASON = '2026-09';
 /** Puestos que se guardan de cada temporada. */
 export const PODIUM_SIZE = 3;
 
+/** Primer mes del ranking global con podio: los de antes no tienen premio. */
+export const FIRST_GLOBAL_SEASON = '2026-10';
+
+/** Gorros del podio mensual del ranking global: 1.º, 2.º y 3.º. */
+export const GLOBAL_HATS: readonly HatId[] = ['worldgold', 'worldsilver', 'worldbronze'];
+
+/** Gorro del puesto `position` (1 a 3) del ranking global de un mes. */
+export function globalHat(position: number): HatId {
+  return GLOBAL_HATS[position - 1];
+}
+
 /** Gorro de cada mes, de enero a diciembre. */
 export const SEASON_HATS: readonly HatId[] = [
   'scarf',

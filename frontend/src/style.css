@@ -4166,3 +4166,30 @@ input.switch:focus-visible {
   flex: 1;
   margin: 0;
 }
+
+.global-prize .eyebrow {
+  margin-bottom: 6px;
+}
+
+.global-prizes {
+  list-style: none;
+  margin: 0 0 8px;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+  text-align: center;
+}
+
+.global-prizes svg {
+  width: 64px;
+  height: 78px;
+  display: block;
+  margin: 0 auto 4px;
+}
+
+.global-prizes span {
+  font-size: 12px;
+  font-weight: 800;
+  line-height: 1.2;
+}
