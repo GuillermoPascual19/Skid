@@ -160,8 +160,8 @@ fuera) y compila el juego a `dist/`.
 - Al terminar se puede ver la solución óptima, jugada por el pingüino.
 - El servidor no se fía del cliente: el navegador envía el registro de movimientos y el Worker
   lo reproduce para calcular el mejor intento, el tiempo (con su propio reloj) y los puntos.
-- Los jugadores son anónimos: la primera vez el servidor da un token que se guarda en el
-  navegador (en la base de datos solo se guarda su hash). Cada uno elige su nombre.
+- Los jugadores son anónimos: la primera vez el servidor crea una sesión y la guarda en una cookie
+  del navegador (en la base de datos solo se guarda su hash). Cada uno elige su nombre.
 
 ## Reto semanal
 
@@ -239,8 +239,17 @@ fuera) y compila el juego a `dist/`.
 
 ## Seguridad
 
-- Sesiones: token aleatorio de 256 bits en el navegador; en la base de datos solo su hash. Google se
-  verifica con su firma, emisor, destinatario y caducidad (`backend/src/google.ts`).
+- Sesiones: token aleatorio de 256 bits en una cookie `HttpOnly`, `Secure` y `SameSite=Strict` (con el
+  prefijo `__Host-`): el código de la página no puede leerla, así que un script inyectado no puede robar
+  la sesión, y no viaja en peticiones desde otras webs. En la base de datos solo se guarda su hash. Los
+  juegos de antes, que guardaban el token en `localStorage`, lo mandan una vez y pasan a la cookie.
+  Google se verifica con su firma, emisor, destinatario y caducidad (`backend/src/google.ts`).
+- Lo que cambia algo (todo salvo las lecturas) solo se acepta si viene del propio juego (cabecera
+  `Origin`), además de `SameSite`.
+- Cuentas nuevas: como mucho 3 por minuto y 20 al día desde la misma IP y, si Turnstile está activado,
+  solo tras comprobar que es una persona (`backend/src/turnstile.ts`): un script no puede crearlas en masa.
+- Ligas: como mucho 50 miembros. Quien crea una liga puede expulsar a alguien (no puede volver con el
+  código) y cambiar el código, por si se comparte donde no debía.
 - Todas las consultas SQL van con parámetros. Lo de otros jugadores (nombres, niveles, ligas) se pinta
   siempre como texto, nunca como HTML.
 - Permisos: perfiles, partidas (fantasma) y rankings de liga solo entre quienes comparten liga. Unirse
@@ -310,6 +319,12 @@ emails ya cifrados.
 
 Analíticas: crea el sitio en el panel de Cloudflare (*Web Analytics*, configuración manual con
 JavaScript) y pon su token en `CF_ANALYTICS_TOKEN` (`wrangler.jsonc`). Vacío, no se cargan.
+
+Turnstile (comprobar que es una persona al crear una cuenta): en el panel de Cloudflare, *Turnstile →
+Add widget*, con el dominio del juego (`skid.<tu-subdominio>.workers.dev`) y el modo *Managed*. Pon su
+clave pública (*Site Key*) en `TURNSTILE_SITE_KEY` (`wrangler.jsonc`) y la secreta como secreto del
+Worker: `pnpm exec wrangler secret put TURNSTILE_SECRET`. Sin las dos no se comprueba nada (en local
+tampoco; para probarlo hay claves de prueba en `.dev.vars.example`).
 
 Panel de administración: el secreto `ADMIN_GOOGLE_SUBS` lleva los identificadores («sub») de las
 cuentas de Google con acceso, separados por comas. Para ver el tuyo, entra en Skid con Google y busca

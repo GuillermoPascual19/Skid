@@ -16,6 +16,12 @@ export const errors: ErrorMessages = {
   nameChars: "Use only letters, digits, spaces and . _ ' - (starting with a letter or digit)",
   nameTaken: 'That name (or one that looks the same) is already taken. Try another one.',
   nameOffensive: "That name isn't allowed. Pick one without insults or swear words.",
+  humanCheckFailed: 'We couldn’t check that you’re a person. Reload the page and try again.',
+  forbiddenOrigin: 'Request not allowed',
+  leagueFull: 'The league is full: {n} members at most.',
+  bannedFromLeague: 'You can’t join: the league’s creator removed you.',
+  notLeagueOwner: 'Only the league’s creator can do this.',
+  cantKickYourself: 'You can’t remove yourself: leave the league instead.',
 
   tooManyRequests: 'Too many requests. Wait a minute.',
   tooManyAttempts: 'Too many attempts. Wait a minute.',

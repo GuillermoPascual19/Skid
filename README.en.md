@@ -160,8 +160,8 @@ anything from outside) and builds the game to `dist/`.
 - When you finish you can watch the optimal solution, played by the penguin.
 - The server doesn't trust the client: the browser sends the move log and the Worker replays it to
   work out the best attempt, the time (with its own clock) and the points.
-- Players are anonymous: the first time, the server hands out a token that's stored in the browser
-  (the database only keeps its hash). Everyone picks their own name.
+- Players are anonymous: the first time, the server creates a session and keeps it in a browser
+  cookie (the database only keeps its hash). Everyone picks their own name.
 
 ## Weekly challenge
 
@@ -242,8 +242,17 @@ anything from outside) and builds the game to `dist/`.
 
 ## Security
 
-- Sessions: a random 256-bit token in the browser; the database only keeps its hash. Google tokens are
-  checked for signature, issuer, audience and expiry (`backend/src/google.ts`).
+- Sessions: a random 256-bit token in an `HttpOnly`, `Secure`, `SameSite=Strict` cookie (with the
+  `__Host-` prefix): the page's code can't read it, so an injected script can't steal the session, and it
+  isn't sent on requests from other sites. The database only keeps its hash. Older versions of the game,
+  which kept the token in `localStorage`, send it once and move to the cookie.
+  Google tokens are checked for signature, issuer, audience and expiry (`backend/src/google.ts`).
+- Anything that changes data (everything except reads) is only accepted from the game itself (`Origin`
+  header), on top of `SameSite`.
+- New accounts: at most 3 per minute and 20 per day from the same IP and, with Turnstile on, only after
+  checking it's a person (`backend/src/turnstile.ts`): a script can't create them in bulk.
+- Leagues: 50 members at most. Whoever creates a league can remove someone (they can't come back with
+  the code) and change the code, in case it gets shared where it shouldn't.
 - Every SQL query is parameterized. Anything from other players (names, levels, leagues) is always
   rendered as text, never as HTML.
 - Permissions: profiles, games (ghosts) and league rankings are only visible among players who share a
@@ -315,6 +324,12 @@ emails already encrypted.
 
 Analytics: create the site in the Cloudflare dashboard (*Web Analytics*, manual JavaScript setup) and
 put its token in `CF_ANALYTICS_TOKEN` (`wrangler.jsonc`). If it's empty, nothing is loaded.
+
+Turnstile (checking it's a person when creating an account): in the Cloudflare dashboard, *Turnstile →
+Add widget*, with the game's domain (`skid.<your-subdomain>.workers.dev`) and *Managed* mode. Put its
+public *Site Key* in `TURNSTILE_SITE_KEY` (`wrangler.jsonc`) and the secret one as a Worker secret:
+`pnpm exec wrangler secret put TURNSTILE_SECRET`. Without both, nothing is checked (locally neither; there
+are test keys in `.dev.vars.example` to try it).
 
 Admin panel: the `ADMIN_GOOGLE_SUBS` secret holds the ids ("sub") of the Google accounts with access,
 separated by commas. To find yours, sign in to Skid with Google and look up your player:

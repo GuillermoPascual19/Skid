@@ -1,4 +1,5 @@
 // Ligas entre amigos: crear, ver una invitación, unirse, salir, ranking del día, ganadores y clasificación por periodo.
+// Quien crea una liga la gestiona: puede expulsar a alguien (y no puede volver) y cambiar el código.
 
 import { isHatId } from '../../../common/art/hats';
 import type { SeasonTotal } from '../../../common/logic/leagues/seasons';
@@ -10,6 +11,9 @@ import { leagueReactions } from './reactions';
 /** Ligas que puede crear cada jugador. */
 const MAX_LEAGUES_PER_PLAYER = 10;
 
+/** Miembros como mucho por liga: que nadie pueda llenar la de otro con cuentas falsas. */
+export const MAX_LEAGUE_MEMBERS = 50;
+
 const CODE_ALPHABET = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'; // Sin 0/O ni 1/I.
 
 interface LeagueRow {
@@ -17,19 +21,21 @@ interface LeagueRow {
   name: string;
   code: string;
   members?: number;
+  /** La creó este jugador (y la gestiona). */
+  owner?: boolean;
 }
 
 export async function myLeagues(env: Env, playerId: string): Promise<LeagueRow[]> {
   const { results } = await env.DB.prepare(
-    `SELECT l.id, l.name, l.code,
+    `SELECT l.id, l.name, l.code, l.created_by = ?1 AS owner,
             (SELECT COUNT(*) FROM league_members m2 WHERE m2.league_id = l.id) AS members
      FROM leagues l
-     JOIN league_members m ON m.league_id = l.id AND m.player_id = ?
+     JOIN league_members m ON m.league_id = l.id AND m.player_id = ?1
      ORDER BY m.joined_at`,
   )
     .bind(playerId)
-    .all<LeagueRow>();
-  return results;
+    .all<Omit<LeagueRow, 'owner'> & { owner: number }>();
+  return results.map((l) => ({ ...l, owner: l.owner === 1 }));
 }
 
 function randomCode(): string {
@@ -53,7 +59,7 @@ export async function createLeague(env: Env, playerId: string, name: unknown): P
         env.DB.prepare('INSERT INTO leagues (id, name, code, created_by) VALUES (?, ?, ?, ?)').bind(id, clean, code, playerId),
         env.DB.prepare('INSERT INTO league_members (league_id, player_id) VALUES (?, ?)').bind(id, playerId),
       ]);
-      return { id, name: clean, code, members: 1 };
+      return { id, name: clean, code, members: 1, owner: true };
     } catch (err) {
       if (!String(err).includes('UNIQUE')) throw err; // Código repetido: se prueba otro.
     }
@@ -64,10 +70,60 @@ export async function createLeague(env: Env, playerId: string, name: unknown): P
 export async function joinLeague(env: Env, playerId: string, code: unknown): Promise<LeagueRow> {
   await requireName(env, playerId);
   const clean = typeof code === 'string' ? code.trim().toUpperCase() : '';
-  const league = await env.DB.prepare('SELECT id, name, code FROM leagues WHERE code = ?').bind(clean).first<LeagueRow>();
+  const league = await env.DB.prepare(
+    `SELECT l.id, l.name, l.code,
+            (SELECT COUNT(*) FROM league_members m WHERE m.league_id = l.id) AS members,
+            EXISTS (SELECT 1 FROM league_members m WHERE m.league_id = l.id AND m.player_id = ?2) AS member,
+            EXISTS (SELECT 1 FROM league_bans b WHERE b.league_id = l.id AND b.player_id = ?2) AS banned
+     FROM leagues l WHERE l.code = ?1`,
+  )
+    .bind(clean, playerId)
+    .first<LeagueRow & { members: number; member: number; banned: number }>();
   if (!league) throw new HttpError(404, 'leagueNotFound');
-  await env.DB.prepare('INSERT OR IGNORE INTO league_members (league_id, player_id) VALUES (?, ?)').bind(league.id, playerId).run();
-  return league;
+  const { id, name, members } = league;
+  if (league.member) return { id, name, code: league.code, members, owner: false };
+  if (league.banned) throw new HttpError(403, 'bannedFromLeague');
+  if (members >= MAX_LEAGUE_MEMBERS) throw new HttpError(403, 'leagueFull', { n: MAX_LEAGUE_MEMBERS });
+  await env.DB.prepare('INSERT OR IGNORE INTO league_members (league_id, player_id) VALUES (?, ?)').bind(id, playerId).run();
+  return { id, name, code: league.code, members: members + 1, owner: false };
+}
+
+/** Comprueba que el jugador creó la liga (solo él la gestiona). */
+async function requireOwner(env: Env, playerId: string, leagueId: string): Promise<void> {
+  const league = await env.DB.prepare('SELECT created_by FROM leagues WHERE id = ?').bind(leagueId).first<{ created_by: string }>();
+  if (!league) throw new HttpError(404, 'leagueNotFound');
+  if (league.created_by !== playerId) throw new HttpError(403, 'notLeagueOwner');
+}
+
+/** Quien creó la liga expulsa a un miembro: sale de ella y no puede volver a unirse con el código. */
+export async function kickMember(env: Env, playerId: string, leagueId: string, memberId: string) {
+  await requireOwner(env, playerId, leagueId);
+  if (memberId === playerId) throw new HttpError(400, 'cantKickYourself');
+  const [removed] = await env.DB.batch([
+    env.DB.prepare('DELETE FROM league_members WHERE league_id = ? AND player_id = ?').bind(leagueId, memberId),
+    env.DB.prepare('INSERT OR IGNORE INTO league_bans (league_id, player_id, created_at) SELECT ?1, ?2, ?3 WHERE EXISTS (SELECT 1 FROM players WHERE id = ?2)').bind(
+      leagueId,
+      memberId,
+      Date.now(),
+    ),
+  ]);
+  if (!removed.meta.changes) throw new HttpError(404, 'notLeagueMember');
+  return { ok: true };
+}
+
+/** Código nuevo para la liga: el anterior deja de valer (por si se ha compartido donde no debía). */
+export async function newLeagueCode(env: Env, playerId: string, leagueId: string): Promise<{ code: string }> {
+  await requireOwner(env, playerId, leagueId);
+  for (let attempt = 0; attempt < 5; attempt++) {
+    const code = randomCode();
+    try {
+      await env.DB.prepare('UPDATE leagues SET code = ? WHERE id = ?').bind(code, leagueId).run();
+      return { code };
+    } catch (err) {
+      if (!String(err).includes('UNIQUE')) throw err; // Código repetido: se prueba otro.
+    }
+  }
+  throw new HttpError(500, 'leagueCreateFailed');
 }
 
 /**

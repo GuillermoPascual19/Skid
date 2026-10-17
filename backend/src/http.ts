@@ -24,6 +24,9 @@ export interface Env {
   EMAIL_KEY?: string;
   /** Cuentas de Google con acceso al panel de administración: sus «sub», separados por comas (secreto). */
   ADMIN_GOOGLE_SUBS?: string;
+  /** Turnstile (backend/src/turnstile.ts): la clave pública del widget y la secreta. Sin las dos, no se comprueba. */
+  TURNSTILE_SITE_KEY?: string;
+  TURNSTILE_SECRET?: string;
   /** Deja una tarea corriendo después de responder (ctx.waitUntil de la petición). */
   waitUntil?(task: Promise<unknown>): void;
 }
@@ -31,6 +34,10 @@ export interface Env {
 export interface Session {
   readonly playerId: string;
   readonly tokenHash: string;
+  /** El token tal cual (para volver a poner la cookie). */
+  readonly token: string;
+  /** Hay que (re)poner la cookie: llegó por la cabecera antigua o se acaba de usar tras un día. */
+  readonly renew: boolean;
 }
 
 /**

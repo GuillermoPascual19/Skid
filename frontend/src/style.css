@@ -2852,11 +2852,57 @@ input.switch:focus-visible {
   font-size: 44px;
 }
 
-.leave-league {
-  display: block;
-  margin: 4px auto 0;
-  color: var(--ink-faint);
+.league-links {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 4px 18px;
+  margin: 4px 0 0;
+}
+
+.league-links .link-btn {
   font-size: 14px;
+}
+
+.leave-league {
+  color: var(--ink-faint);
+}
+
+.manage-code {
+  align-items: center;
+  justify-content: space-between;
+  margin: 8px 0 14px;
+}
+
+.league-members {
+  list-style: none;
+  margin: 8px 0 12px;
+  padding: 0;
+  max-height: 40vh;
+  overflow-y: auto;
+}
+
+.league-members .friend-row {
+  text-align: left;
+}
+
+.league-members .friend-row strong {
+  flex: 1;
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+/* Turnstile: solo se ve si Cloudflare necesita que la persona pulse algo. */
+.turnstile-box {
+  position: fixed;
+  left: 50%;
+  bottom: calc(16px + env(safe-area-inset-bottom));
+  transform: translateX(-50%);
+  z-index: 1000;
+}
+
+.turnstile-box:empty {
+  display: none;
 }
 
 /* Acción que no se puede deshacer (borrar la cuenta…). */

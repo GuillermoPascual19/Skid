@@ -5,6 +5,7 @@ import { dayKey } from '../../common/logic/daily/daily';
 import { isSealed, seal } from './seal';
 import { GOOGLE_CERTS_URL, googleKeyProvider, InvalidTokenError, verifyGoogleIdToken } from './google';
 import { type Env, HttpError, type Session } from './http';
+import { verifyTurnstile } from './turnstile';
 
 /** Cuentas nuevas por IP y día (alto a propósito: en una universidad muchos comparten IP). */
 const MAX_SESSIONS_PER_IP_PER_DAY = 20;
@@ -24,7 +25,32 @@ function randomToken(): string {
   return btoa(String.fromCharCode(...bytes)).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
 }
 
-export async function createSession(req: Request, env: Env): Promise<{ token: string }> {
+/**
+ * La sesión va en una cookie HttpOnly: el código de la página no puede leerla, así
+ * que un script inyectado no puede robarla. SameSite=Strict: no viaja en peticiones
+ * desde otras webs. En producción lleva el prefijo __Host- (solo HTTPS, sin dominio).
+ */
+function cookieName(url: URL): string {
+  return url.protocol === 'https:' ? '__Host-skid' : 'skid';
+}
+
+/** Cabecera Set-Cookie con la sesión, o para borrarla (token null). */
+export function sessionCookie(url: URL, token: string | null): string {
+  const parts = [`${cookieName(url)}=${token ?? ''}`, 'Path=/', 'HttpOnly', 'SameSite=Strict', `Max-Age=${token ? SESSION_MAX_IDLE_MS / 1000 : 0}`];
+  if (url.protocol === 'https:') parts.push('Secure');
+  return parts.join('; ');
+}
+
+function cookieToken(req: Request, url: URL): string | null {
+  const name = cookieName(url);
+  for (const part of (req.headers.get('Cookie') ?? '').split(';')) {
+    const [key, ...value] = part.trim().split('=');
+    if (key === name && value.length) return value.join('=') || null;
+  }
+  return null;
+}
+
+export async function createSession(req: Request, env: Env, turnstile: unknown): Promise<{ token: string }> {
   const ip = req.headers.get('CF-Connecting-IP') ?? 'desconocida';
   // Solo se guarda el hash, y con el día dentro: no sirve para seguir a una IP de un día a otro
   // (y la tabla se vacía a diario).
@@ -34,6 +60,8 @@ export async function createSession(req: Request, env: Env): Promise<{ token: st
   // Ráfagas: el limitador de Cloudflare, en memoria (no gasta base de datos).
   const { success } = await env.SESSION_RATE_LIMITER.limit({ key: ipHash });
   if (!success) throw new HttpError(429, 'tooManyNewAccounts');
+  // Que sea una persona y no un script (antes de gastar nada en la base de datos).
+  await verifyTurnstile(env, turnstile, ip);
 
   // Total diario, en D1. Los días anteriores se borran sobre la marcha.
   const [, counter] = await env.DB.batch([
@@ -59,8 +87,11 @@ export async function createSession(req: Request, env: Env): Promise<{ token: st
   return { token };
 }
 
-export async function authenticate(req: Request, env: Env): Promise<Session> {
-  const token = req.headers.get('Authorization')?.match(/^Bearer (.+)$/)?.[1];
+export async function authenticate(req: Request, url: URL, env: Env): Promise<Session> {
+  // La cookie; o, de los juegos de antes, la cabecera con el token que guardaban en el navegador
+  // (la respuesta les pone la cookie y el juego lo borra de allí).
+  const fromCookie = cookieToken(req, url);
+  const token = fromCookie ?? req.headers.get('Authorization')?.match(/^Bearer (.+)$/)?.[1];
   if (!token) throw new HttpError(401, 'noSession');
   const tokenHash = await sha256(token);
   const row = await env.DB.prepare('SELECT player_id, last_used_at FROM sessions WHERE token_hash = ?')
@@ -73,10 +104,12 @@ export async function authenticate(req: Request, env: Env): Promise<Session> {
     await env.DB.prepare('DELETE FROM sessions WHERE token_hash = ?').bind(tokenHash).run();
     throw new HttpError(401, 'sessionExpired');
   }
-  if (now - lastUsed > SESSION_TOUCH_MS) {
+  const touch = now - lastUsed > SESSION_TOUCH_MS;
+  if (touch) {
     await env.DB.prepare('UPDATE sessions SET last_used_at = ? WHERE token_hash = ?').bind(now, tokenHash).run();
   }
-  return { playerId: row.player_id, tokenHash };
+  // Al usarla tras un día, la cookie se renueva: caduca a la vez que la sesión.
+  return { playerId: row.player_id, tokenHash, token, renew: !fromCookie || touch };
 }
 
 let googleKeys: ReturnType<typeof googleKeyProvider> | null = null;

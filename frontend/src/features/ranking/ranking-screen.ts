@@ -15,6 +15,8 @@ import {
   type RankingRow,
   createLeague,
   joinLeague,
+  kickMember,
+  newLeagueCode,
   leagueInvite,
   leagueRanking,
   leagueSeason,
@@ -262,7 +264,12 @@ export function rankingScreen(route: { join?: string }): Screen {
           t('ranking.invite.button'),
         ),
       ),
-      h('button', { class: 'link-btn leave-league', onclick: () => confirmLeave(league) }, t('ranking.leave.link')),
+      h(
+        'p',
+        { class: 'league-links' },
+        league.owner ? h('button', { class: 'link-btn', onclick: () => openManage(league) }, `⚙️ ${t('ranking.manage.link')}`) : null,
+        h('button', { class: 'link-btn leave-league', onclick: () => confirmLeave(league) }, t('ranking.leave.link')),
+      ),
     );
 
     if (range) void fillStandings(list, league.id, range);
@@ -382,6 +389,88 @@ export function rankingScreen(route: { join?: string }): Screen {
     } catch (err) {
       if (id === requestId) list.replaceChildren(h('li', { class: 'empty', style: 'display:block' }, (err as Error).message));
     }
+  }
+
+  /** Gestionar tu liga: cambiar el código y expulsar a quien no debería estar. */
+  function openManage(league: League) {
+    const code = h('div', { class: 'code' }, league.code);
+    const members = h('ul', { class: 'league-members' }, h('li', { class: 'muted' }, t('common.loading')));
+    const error = h('p', { class: 'error', hidden: true });
+    const fail = (err: unknown) => {
+      error.textContent = (err as Error).message;
+      error.hidden = false;
+    };
+    let changed = false;
+
+    const newCode: HTMLButtonElement = h('button', { class: 'btn secondary small' }, t('ranking.manage.newCode'));
+    newCode.addEventListener('click', async () => {
+      newCode.disabled = true;
+      try {
+        league.code = (await newLeagueCode(league.id)).code;
+        code.textContent = league.code;
+        changed = true;
+        toast(t('ranking.manage.codeChanged'));
+      } catch (err) {
+        fail(err);
+      } finally {
+        newCode.disabled = false;
+      }
+    });
+
+    /** Expulsar pide confirmación en el mismo botón: un toque lo arma y el segundo expulsa. */
+    const kickButton = (row: RankingRow, li: HTMLElement) => {
+      const button: HTMLButtonElement = h('button', { class: 'btn ghost small' }, t('ranking.manage.kick'));
+      let armed = false;
+      button.addEventListener('click', async () => {
+        if (!armed) {
+          armed = true;
+          button.textContent = t('ranking.manage.kickConfirm');
+          button.classList.replace('ghost', 'danger');
+          return;
+        }
+        button.disabled = true;
+        try {
+          await kickMember(league.id, row.id);
+          li.remove();
+          changed = true;
+          toast(t('ranking.manage.kicked', { name: row.name }));
+        } catch (err) {
+          button.disabled = false;
+          fail(err);
+        }
+      });
+      return button;
+    };
+
+    const modal = openModal(
+      [
+        h('p', { class: 'eyebrow' }, t('ranking.manage.eyebrow')),
+        h('h2', null, league.name),
+        h('p', { class: 'muted' }, t('ranking.manage.codeText')),
+        h('div', { class: 'row manage-code' }, code, newCode),
+        h('h3', null, t('ranking.manage.members')),
+        h('p', { class: 'muted' }, t('ranking.manage.kickText')),
+        members,
+        error,
+        h('button', { class: 'btn block', onclick: () => modal.close() }, t('common.close')),
+      ],
+      { dismissable: true, onClose: () => changed && void load() },
+    );
+
+    void leagueRanking(league.id, today())
+      .then((rows) => {
+        const others = rows.filter((r) => !r.isMe);
+        members.replaceChildren(
+          ...(others.length
+            ? others.map((row) => {
+                const li = h('li', { class: 'friend-row' }, avatar(row.hat), h('strong', null, row.name));
+                li.append(kickButton(row, li));
+                return li;
+              })
+            : [h('li', { class: 'muted' }, t('ranking.manage.alone'))]),
+        );
+      })
+      .catch(fail);
   }
 
   function openLeagueForms() {

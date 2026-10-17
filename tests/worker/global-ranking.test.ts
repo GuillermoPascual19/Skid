@@ -94,12 +94,13 @@ it('al acabar el mes, los tres primeros se llevan su laurel (los ocultos no cuen
 
 it('el laurel ganado se puede llevar; el de otro puesto, no', async () => {
   vi.setSystemTime(new Date('2026-11-03T12:00:00Z'));
-  const { token } = (await (await worker.fetch(new Request('http://localhost/api/session', { method: 'POST' }) as never, t.env, ctx)).json()) as { token: string };
+  const session = await worker.fetch(new Request('http://localhost/api/session', { method: 'POST' }) as never, t.env, ctx);
+  const cookie = session.headers.get('Set-Cookie')!.split(';')[0];
   const { id } = t.db.prepare('SELECT player_id AS id FROM sessions ORDER BY rowid DESC LIMIT 1').get() as { id: string };
   t.db.prepare("UPDATE players SET name = 'Fran', name_key = 'fran' WHERE id = ?").run(id);
   run(id, '2026-10-06', 5000);
   const wear = (hat: string) =>
-    worker.fetch(new Request('http://localhost/api/me/hat', { method: 'PUT', headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' }, body: JSON.stringify({ hat }) }) as never, t.env, ctx);
+    worker.fetch(new Request('http://localhost/api/me/hat', { method: 'PUT', headers: { Cookie: cookie, 'Content-Type': 'application/json' }, body: JSON.stringify({ hat }) }) as never, t.env, ctx);
   await globalRanking(t.env, id, 'month');
   expect((await wear('worldgold')).status).toBe(200);
   expect((await wear('worldsilver')).status).toBe(403);
