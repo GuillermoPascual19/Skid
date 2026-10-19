@@ -22,7 +22,7 @@ import {
   timeAttackSummary,
 } from './routes/timeattack';
 import { acceptDuel, createDuel, declineDuel, duelGhost, finishDuel, getDuel, here, listDuels, listFriends, setReady } from './routes/duels';
-import { createLeague, dailyWins, joinLeague, leagueInvite, leagueRanking, leagueStandings, leaveLeague, myLeagues } from './routes/leagues';
+import { createLeague, dailyWins, joinLeague, kickMember, leagueInvite, leagueRanking, leagueStandings, leaveLeague, myLeagues, newLeagueCode } from './routes/leagues';
 import {
   createCustomLevel,
   customLevelRanking,
@@ -45,7 +45,8 @@ import { playerStats } from './routes/stats';
 import { logClientError } from './routes/errors';
 import { acceptFriend, addByLink, dropRequest, friendLink, friendsOverview, removeFriend, requestFriend } from './routes/friends';
 import { adminClearReports, adminDeleteLevel, adminFeatureLevel, adminLevels, adminPlayers, adminResetName, adminSummary, isAdmin } from './routes/admin';
-import { authenticate, createSession, deleteAccount, googleLogin, logoutEverywhere, sealLegacyEmails } from './session';
+import { authenticate, createSession, deleteAccount, googleLogin, logoutEverywhere, sealLegacyEmails, sessionCookie } from './session';
+import { turnstileSiteKey } from './turnstile';
 import { unseal } from './seal';
 import { NAME_ERRORS, nameKey, nameProblem, NAME_MAX, NAME_MIN } from '../../common/logic/players/names';
 
@@ -121,18 +122,55 @@ async function friendLimit(env: Env, playerId: string): Promise<void> {
   if (!success) throw new HttpError(429, 'tooManyRequests');
 }
 
+/** La respuesta con la cookie de sesión puesta (o borrada, con token null). */
+function withSession(res: Response, url: URL, token: string | null): Response {
+  res.headers.append('Set-Cookie', sessionCookie(url, token));
+  return res;
+}
+
+/**
+ * Las peticiones que cambian algo solo valen desde el propio juego: además de
+ * SameSite en la cookie, se mira de dónde vienen. En local, cualquier localhost
+ * (el servidor de Vite va en otro puerto).
+ */
+function sameOrigin(req: Request, url: URL): boolean {
+  const origin = req.headers.get('Origin');
+  if (!origin || origin === url.origin) return true;
+  const local = (host: string) => host === 'localhost' || host === '127.0.0.1';
+  try {
+    return local(url.hostname) && local(new URL(origin).hostname);
+  } catch {
+    return false;
+  }
+}
+
 async function handleApi(req: Request, url: URL, env: Env): Promise<Response> {
   const route = `${req.method} ${url.pathname.replace(/^\/api/, '')}`;
+  if (req.method !== 'GET' && !sameOrigin(req, url)) throw new HttpError(403, 'forbiddenOrigin');
 
-  if (route === 'POST /session') return json(await createSession(req, env));
+  if (route === 'POST /session') {
+    // El token va solo en la cookie: el juego nunca lo ve.
+    const { turnstile } = await optionalBody<{ turnstile?: unknown }>(req);
+    const { token } = await createSession(req, env, turnstile);
+    return withSession(json({ ok: true }), url, token);
+  }
   if (route === 'POST /errors') return logClientError(req, env);
-  if (route === 'GET /config') return json({ googleClientId: env.GOOGLE_CLIENT_ID || null, analyticsToken: env.CF_ANALYTICS_TOKEN || null });
+  if (route === 'GET /config') {
+    return json({ googleClientId: env.GOOGLE_CLIENT_ID || null, analyticsToken: env.CF_ANALYTICS_TOKEN || null, turnstileSiteKey: turnstileSiteKey(env) });
+  }
 
-  const session = await authenticate(req, env);
+  const session = await authenticate(req, url, env);
   // Límite general por jugador: de sobra para jugar, corta los scripts que machacan la API.
   if (!(await env.API_RATE_LIMITER.limit({ key: session.playerId })).success) throw new HttpError(429, 'tooManyRequests');
-  if (route === 'GET /batch') return json(await batch(req, url, env, session));
-  return authedApi(req, url, env, session);
+  const res = route === 'GET /batch' ? json(await batch(req, url, env, session)) : await authedApi(req, url, env, session);
+  // Las rutas que cambian de sesión ya ponen (o borran) su cookie.
+  return session.renew && !res.headers.has('Set-Cookie') ? withSession(res, url, session.token) : res;
+}
+
+/** Como body(), pero un cuerpo vacío vale como {} (los juegos de antes crean la sesión sin cuerpo). */
+async function optionalBody<T extends object>(req: Request): Promise<Partial<T>> {
+  if (Number(req.headers.get('Content-Length') ?? 0) === 0 && !req.headers.get('Content-Type')) return {};
+  return body<Partial<T>>(req);
 }
 
 /** Las rutas que necesitan sesión (ya comprobada, igual que el límite de peticiones). */
@@ -143,18 +181,20 @@ async function authedApi(req: Request, url: URL, env: Env, session: Session): Pr
 
   if (route === 'POST /auth/google') {
     const { credential } = await body<{ credential?: unknown }>(req);
-    return json(await googleLogin(env, session, credential));
+    const { token, ...result } = await googleLogin(env, session, credential);
+    // Si este dispositivo pasa a ser otro jugador, su sesión nueva va en la cookie.
+    return token ? withSession(json(result), url, token) : json(result);
   }
   if (route === 'POST /auth/logout') {
     await env.DB.prepare('DELETE FROM sessions WHERE token_hash = ?').bind(session.tokenHash).run();
-    return json({ ok: true });
+    return withSession(json({ ok: true }), url, null);
   }
-  if (route === 'POST /auth/logout-all') return json(await logoutEverywhere(env, session));
+  if (route === 'POST /auth/logout-all') return withSession(json(await logoutEverywhere(env, session)), url, null);
   if (route === 'DELETE /me') {
     // Se pide la palabra exacta: que no se borre una cuenta por una llamada equivocada.
     const { confirm } = await body<{ confirm?: unknown }>(req);
     if (confirm !== 'BORRAR') throw new HttpError(400, 'missingConfirmation');
-    return json(await deleteAccount(env, session));
+    return withSession(json(await deleteAccount(env, session)), url, null);
   }
 
   if (route === 'GET /me') {
@@ -292,6 +332,8 @@ async function authedApi(req: Request, url: URL, env: Env, session: Session): Pr
     return json(await leagueInvite(env, playerId, m[1]));
   }
   if ((m = route.match(/^POST \/leagues\/([\w-]+)\/leave$/))) return json(await leaveLeague(env, playerId, m[1]));
+  if ((m = route.match(/^POST \/leagues\/([\w-]+)\/members\/([\w-]+)\/kick$/))) return json(await kickMember(env, playerId, m[1], m[2]));
+  if ((m = route.match(/^POST \/leagues\/([\w-]+)\/code$/))) return json(await newLeagueCode(env, playerId, m[1]));
   if ((m = route.match(/^GET \/leagues\/([\w-]+)\/ranking$/))) {
     const day = url.searchParams.get('day') ?? '';
     if (!/^\d{4}-\d{2}-\d{2}$/.test(day)) throw new HttpError(400, 'invalidDay');

@@ -12,3 +12,8 @@ EMAIL_KEY=
 
 # Cuentas de Google con acceso al panel de administración: sus «sub», separados por comas.
 ADMIN_GOOGLE_SUBS=
+
+# Turnstile: para probarlo en local, las claves de prueba de Cloudflare (siempre aprueban).
+# Vacías, no se comprueba nada al crear cuentas.
+# TURNSTILE_SITE_KEY=1x00000000000000000000AA
+# TURNSTILE_SECRET=1x0000000000000000000000000000000AA

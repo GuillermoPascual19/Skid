@@ -1,48 +1,56 @@
 import { locale, t, te } from '../i18n/i18n';
 import { forgetAll } from './cache';
-// Conexión con el servidor (backend/, en Cloudflare): sesión, token y login con
-// Google. Las llamadas de cada apartado están en su carpeta (features/*/api.ts).
+import { humanCheck } from './turnstile';
+// Conexión con el servidor (backend/, en Cloudflare): sesión y login con Google.
+// Las llamadas de cada apartado están en su carpeta (features/*/api.ts).
 // La API está en /api del mismo dominio. Con VITE_API_BASE= vacía (p. ej. en .env.local),
 // `onlineEnabled` es false y el juego funciona sin ranking (el reto diario solo
 // se controla en este navegador).
 //
-// Cada jugador es anónimo: la primera vez el servidor le da un token, que se
-// guarda en el navegador y lo identifica a partir de entonces.
+// Cada jugador es anónimo: la primera vez el servidor crea su sesión y la guarda
+// en una cookie HttpOnly, que el código de la página no puede leer (así un script
+// inyectado no puede robarla). El juego no ve nunca el token.
 
 const API = import.meta.env.VITE_API_BASE ?? '/api';
-const TOKEN_KEY = 'skid.token.v1';
 
 export const onlineEnabled = API !== '';
 
-function readToken(): string | null {
+/** Donde los juegos de antes guardaban el token. Se manda una vez para pasarlo a la cookie y se borra. */
+const LEGACY_TOKEN_KEY = 'skid.token.v1';
+
+function readLegacyToken(): string | null {
   try {
-    return localStorage.getItem(TOKEN_KEY);
+    return localStorage.getItem(LEGACY_TOKEN_KEY);
   } catch {
     return null;
   }
 }
 
-function writeToken(token: string | null): void {
-  forgetAll();
+function dropLegacyToken(): void {
+  legacyToken = null;
   try {
-    if (token) localStorage.setItem(TOKEN_KEY, token);
-    else localStorage.removeItem(TOKEN_KEY);
+    localStorage.removeItem(LEGACY_TOKEN_KEY);
   } catch {
-    // Sin almacenamiento: la sesión dura lo que la pestaña.
+    // Sin almacenamiento: no había nada que borrar.
   }
 }
 
-let memoryToken: string | null = readToken();
-let creating: Promise<string> | null = null;
+let legacyToken = readLegacyToken();
 
-async function request<T>(method: string, path: string, body?: unknown, token?: string): Promise<{ status: number; data: T }> {
+/** Sube cada vez que cambia la sesión: una respuesta 401 de antes del cambio no crea otra cuenta. */
+let generation = 0;
+let creating: Promise<void> | null = null;
+
+async function request<T>(method: string, path: string, body?: unknown): Promise<{ status: number; data: T }> {
+  const legacy = legacyToken;
   let res: Response;
   try {
     res = await fetch(`${API}${path}`, {
       method,
+      credentials: 'same-origin',
       headers: {
         ...(body !== undefined ? { 'Content-Type': 'application/json' } : {}),
-        ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        ...(legacy ? { Authorization: `Bearer ${legacy}` } : {}),
         // El servidor contesta los errores en el idioma del jugador.
         'X-Skid-Lang': locale(),
       },
@@ -51,22 +59,29 @@ async function request<T>(method: string, path: string, body?: unknown, token?: 
   } catch {
     throw new Error(t('common.offline'));
   }
+  // El servidor ya ha puesto la cookie con ese token (o no lo reconoce): fuera del navegador.
+  if (legacy && legacy === legacyToken) dropLegacyToken();
   const data = (await res.json().catch(() => ({}))) as T & { error?: string };
   if (!res.ok && res.status !== 401) throw new Error(data.error ?? t('common.httpError', { status: res.status }));
   return { status: res.status, data };
 }
 
-/** Token de la sesión; la crea la primera vez. */
-function session(): Promise<string> {
-  if (memoryToken) return Promise.resolve(memoryToken);
-  creating ??= request<{ token: string }>('POST', '/session')
-    .then(({ data }) => {
-      memoryToken = data.token;
-      writeToken(data.token);
-      return data.token;
-    })
-    .finally(() => (creating = null));
+/** Sesión nueva (jugador anónimo nuevo), con la comprobación de que es una persona. Las llamadas a la vez comparten una. */
+function newSession(): Promise<void> {
+  creating ??= (async () => {
+    const siteKey = (await config().catch(() => null))?.turnstileSiteKey ?? null;
+    const turnstile = siteKey ? await humanCheck(siteKey) : undefined;
+    await request('POST', '/session', { turnstile });
+    forgetAll();
+    generation++;
+  })().finally(() => (creating = null));
   return creating;
+}
+
+/** Ha cambiado el jugador de este dispositivo (otra cuenta, sesión cerrada, cuenta borrada). */
+function sessionChanged(): void {
+  forgetAll();
+  generation++;
 }
 
 /**
@@ -80,12 +95,15 @@ export function api<T>(method: string, path: string, body?: unknown): Promise<T>
 }
 
 async function direct<T>(method: string, path: string, body?: unknown): Promise<T> {
-  const first = await request<T>(method, path, body, await session());
+  if (creating) await creating;
+  const sent = generation;
+  const first = await request<T>(method, path, body);
   if (first.status !== 401) return first.data;
-  // El servidor no reconoce el token (p. ej. base de datos nueva): sesión nueva.
-  memoryToken = null;
-  writeToken(null);
-  const second = await request<T>(method, path, body, await session());
+  // Sin sesión (primera visita, o el servidor no la reconoce): se crea una, salvo
+  // que otra llamada lo haya hecho mientras tanto.
+  if (sent === generation) await newSession();
+  else if (creating) await creating;
+  const second = await request<T>(method, path, body);
   if (second.status === 401) throw new Error(te('invalidSession'));
   return second.data;
 }
@@ -155,6 +173,8 @@ interface PublicConfig {
   googleClientId: string | null;
   /** Token (público) de Cloudflare Web Analytics; null si no se usan analíticas. */
   analyticsToken: string | null;
+  /** Clave pública de Turnstile; null si no se comprueba al crear cuentas. */
+  turnstileSiteKey?: string | null;
 }
 
 let configPromise: Promise<PublicConfig> | null = null;
@@ -188,26 +208,22 @@ export interface GoogleLogin {
 
 /** Entra con el token que da el botón de Google. Puede cambiar el jugador de este dispositivo. */
 export async function loginWithGoogle(credential: string): Promise<GoogleLogin> {
-  const result = await api<GoogleLogin & { token: string | null }>('POST', '/auth/google', { credential });
-  if (result.token) {
-    memoryToken = result.token;
-    writeToken(result.token);
-  }
+  // Si este dispositivo pasa a ser otro jugador, el servidor cambia la cookie.
+  const result = await api<GoogleLogin>('POST', '/auth/google', { credential });
+  if (result.switched) sessionChanged();
   return { switched: result.switched, name: result.name, email: result.email };
 }
 
 /** Cierra la sesión en todos los dispositivos (solo con cuenta de Google). */
 export async function logoutEverywhere(): Promise<void> {
   await api('POST', '/auth/logout-all');
-  memoryToken = null;
-  writeToken(null);
+  sessionChanged();
 }
 
 /** Borra la cuenta en el servidor y olvida la sesión de este navegador. */
 export async function deleteAccount(): Promise<void> {
   await api('DELETE', '/me', { confirm: 'BORRAR' });
-  memoryToken = null;
-  writeToken(null);
+  sessionChanged();
 }
 
 /** Cierra la sesión de este dispositivo. La próxima llamada crea un jugador anónimo nuevo. */
@@ -215,7 +231,6 @@ export async function logout(): Promise<void> {
   try {
     await api('POST', '/auth/logout');
   } finally {
-    memoryToken = null;
-    writeToken(null);
+    sessionChanged();
   }
 }

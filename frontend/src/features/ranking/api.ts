@@ -9,6 +9,8 @@ export interface League {
   name: string;
   code: string;
   members?: number;
+  /** La creaste tú: puedes expulsar a alguien y cambiar el código. */
+  owner?: boolean;
 }
 
 export function myLeagues(): Promise<League[]> {
@@ -94,6 +96,16 @@ export function leagueSeason(leagueId: string): Promise<LeagueSeason> {
 /** Clasificación de una liga entre dos días (ambos incluidos). */
 export function leagueStandings(leagueId: string, from: string, to: string): Promise<StandingRow[]> {
   return api<StandingRow[]>('GET', `/leagues/${encodeURIComponent(leagueId)}/standings?from=${from}&to=${to}`);
+}
+
+/** Expulsa a un miembro de tu liga (no podrá volver a unirse con el código). */
+export async function kickMember(leagueId: string, playerId: string): Promise<void> {
+  await api('POST', `/leagues/${encodeURIComponent(leagueId)}/members/${encodeURIComponent(playerId)}/kick`);
+}
+
+/** Código nuevo para tu liga: el anterior deja de valer. */
+export function newLeagueCode(leagueId: string): Promise<{ code: string }> {
+  return api('POST', `/leagues/${encodeURIComponent(leagueId)}/code`);
 }
 
 export function leagueRanking(leagueId: string, day: string): Promise<RankingRow[]> {

@@ -3,10 +3,10 @@
 #
 # CSP: solo código de este dominio (también las tipografías); fuera de él, únicamente el
 # botón de «Iniciar sesión con Google» (sus dominios, según la documentación de Google)
-# y Cloudflare Web Analytics (sin cookies).
+# Cloudflare Web Analytics (sin cookies) y Turnstile (la comprobación de que es una persona al crear cuenta).
 # 'unsafe-inline' en estilos: la interfaz pone algunos `style` en línea (no ejecuta código).
 /*
-  Content-Security-Policy: default-src 'self'; script-src 'self' https://accounts.google.com/gsi/client https://static.cloudflareinsights.com; style-src 'self' 'unsafe-inline' https://accounts.google.com/gsi/style; font-src 'self'; img-src 'self' data: blob:; connect-src 'self' https://accounts.google.com/gsi/ https://cloudflareinsights.com; frame-src https://accounts.google.com/gsi/; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'
+  Content-Security-Policy: default-src 'self'; script-src 'self' https://accounts.google.com/gsi/client https://static.cloudflareinsights.com https://challenges.cloudflare.com; style-src 'self' 'unsafe-inline' https://accounts.google.com/gsi/style; font-src 'self'; img-src 'self' data: blob:; connect-src 'self' https://accounts.google.com/gsi/ https://cloudflareinsights.com; frame-src https://accounts.google.com/gsi/ https://challenges.cloudflare.com; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'
   X-Frame-Options: DENY
   X-Content-Type-Options: nosniff
   Referrer-Policy: strict-origin-when-cross-origin

@@ -18,6 +18,12 @@ export const errors = {
   nameChars: "Usa solo letras, números, espacios y . _ ' - (empezando por letra o número)",
   nameTaken: 'Ese nombre (o uno que se ve igual) ya lo tiene otro jugador. Prueba con otro.',
   nameOffensive: 'Ese nombre no está permitido. Elige uno sin insultos ni palabrotas.',
+  humanCheckFailed: 'No hemos podido comprobar que eres una persona. Recarga la página e inténtalo otra vez.',
+  forbiddenOrigin: 'Petición no permitida',
+  leagueFull: 'La liga está llena: como mucho {n} miembros.',
+  bannedFromLeague: 'No puedes unirte: quien creó la liga te expulsó.',
+  notLeagueOwner: 'Solo quien creó la liga puede hacer esto.',
+  cantKickYourself: 'No puedes expulsarte a ti mismo: si quieres, sal de la liga.',
 
   // Límites y peticiones
   tooManyRequests: 'Demasiadas peticiones. Espera un minuto.',

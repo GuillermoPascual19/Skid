@@ -16,6 +16,12 @@ export const errors: ErrorMessages = {
   nameChars: "Utilise uniquement des lettres, des chiffres, des espaces et . _ ' - (en commençant par une lettre ou un chiffre)",
   nameTaken: 'Ce nom (ou un nom qui lui ressemble) est déjà pris. Essaie-en un autre.',
   nameOffensive: 'Ce nom n’est pas autorisé. Choisis-en un sans insultes ni gros mots.',
+  humanCheckFailed: 'Nous n’avons pas pu vérifier que tu es une personne. Recharge la page et réessaie.',
+  forbiddenOrigin: 'Requête non autorisée',
+  leagueFull: 'La ligue est pleine : {n} membres au maximum.',
+  bannedFromLeague: 'Tu ne peux pas la rejoindre : le créateur de la ligue t’a exclu.',
+  notLeagueOwner: 'Seul le créateur de la ligue peut faire ça.',
+  cantKickYourself: 'Tu ne peux pas t’exclure toi-même : quitte plutôt la ligue.',
 
   tooManyRequests: 'Trop de requêtes. Attends une minute.',
   tooManyAttempts: 'Trop de tentatives. Attends une minute.',

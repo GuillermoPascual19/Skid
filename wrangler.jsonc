@@ -54,7 +54,10 @@
     // Cloudflare Web Analytics (sin cookies): el token del sitio, del panel de Cloudflare. Vacío, sin analíticas.
     "CF_ANALYTICS_TOKEN": "022874063bf5466a908b1e6ee5b6f706",
     // Clave pública VAPID de las notificaciones (la privada es el secreto VAPID_PRIVATE_KEY).
-    "VAPID_PUBLIC_KEY": "BJmwTicRwRFCqeHJTNHkdKJifK-JaekC5lIyPBaBiRU6UXPTLhWNBm9kCu9PTPqlq8tLN2qF22GGEZMEp5Y754o"
+    "VAPID_PUBLIC_KEY": "BJmwTicRwRFCqeHJTNHkdKJifK-JaekC5lIyPBaBiRU6UXPTLhWNBm9kCu9PTPqlq8tLN2qF22GGEZMEp5Y754o",
+    // Turnstile (comprobar que es una persona al crear cuenta): la clave pública del widget, del panel
+    // de Cloudflare. La secreta es el secreto TURNSTILE_SECRET. Sin las dos, no se comprueba.
+    "TURNSTILE_SITE_KEY": "0x4AAAAAAFbIFJ7ZfHClT6vR"
   },
   // Recordatorio de racha: cada día a las 18:00 UTC (las 20:00 en Madrid en verano, las 19:00 en invierno).
   "triggers": { "crons": ["0 18 * * *"] },
