@@ -24,13 +24,21 @@ export function boardThumb(rows: readonly string[]): string {
       // Hielo, nieve y piezas con las variables del CSS: cambian con el tema oscuro.
       parts.push(`<rect x="${x}" y="${y}" width="1" height="1" fill="${ch === '#' ? 'var(--snow)' : (x + y) % 2 ? 'var(--ice-alt)' : 'var(--ice)'}"/>`);
       if (ch === '@') parts.push(`<circle cx="${cx}" cy="${cy}" r=".36" fill="#1f2f45"/><circle cx="${cx}" cy="${cy + 0.08}" r=".2" fill="#fff"/>`);
-      else if (/^[1-9]$/.test(ch)) parts.push(`<circle cx="${cx}" cy="${cy}" r=".34" fill="${ch === '1' ? '#ffc93c' : 'var(--coin)'}" stroke="var(--coin-rim)" stroke-width=".06"/>`);
+      else if (/^[1-9]$/.test(ch))
+        parts.push(`<circle cx="${cx}" cy="${cy}" r=".34" fill="${ch === '1' ? '#ffc93c' : 'var(--coin)'}" stroke="var(--coin-rim)" stroke-width=".06"/>`);
       else if (ch === '*') parts.push(`<circle cx="${cx}" cy="${cy}" r=".36" fill="#fff"/>`);
       else if (ch === 'O') parts.push(`<ellipse cx="${cx}" cy="${cy}" rx=".34" ry=".28" fill="#1d5f8a"/>`);
-      else if (ch === 'x') parts.push(`<path d="M${cx - 0.3} ${cy - 0.25} L${cx} ${cy} L${cx + 0.3} ${cy - 0.15} M${cx} ${cy} L${cx - 0.1} ${cy + 0.32} M${cx} ${cy} L${cx + 0.25} ${cy + 0.25}" stroke="#5aa9d6" stroke-width=".09" stroke-linecap="round" fill="none"/>`);
+      else if (ch === 'x')
+        parts.push(
+          `<path d="M${cx - 0.3} ${cy - 0.25} L${cx} ${cy} L${cx + 0.3} ${cy - 0.15} M${cx} ${cy} L${cx - 0.1} ${cy + 0.32} M${cx} ${cy} L${cx + 0.25} ${cy + 0.25}" stroke="#5aa9d6" stroke-width=".09" stroke-linecap="round" fill="none"/>`,
+        );
       else if (ch in ARROW_ANGLE) parts.push(`<path d="M-.25 -.3 L.25 0 L-.25 .3 Z" fill="#1f86c2" transform="translate(${cx} ${cy}) rotate(${ARROW_ANGLE[ch]})"/>`);
-      else if (ch in ONEWAY_ANGLE) parts.push(`<path d="M-.3 -.12 L0 -.12 L0 -.28 L.3 0 L0 .28 L0 .12 L-.3 .12 Z" fill="#ff9f1c" transform="translate(${cx} ${cy}) rotate(${ONEWAY_ANGLE[ch]})"/>`);
-      else if (ch === 'm' || ch === 'n') parts.push(`<path d="M${cx - 0.35} ${cy + (ch === 'm' ? 0.35 : -0.35)} L${cx + 0.35} ${cy + (ch === 'm' ? -0.35 : 0.35)}" stroke="#5aa9d6" stroke-width=".16" stroke-linecap="round"/>`);
+      else if (ch in ONEWAY_ANGLE)
+        parts.push(`<path d="M-.3 -.12 L0 -.12 L0 -.28 L.3 0 L0 .28 L0 .12 L-.3 .12 Z" fill="#ff9f1c" transform="translate(${cx} ${cy}) rotate(${ONEWAY_ANGLE[ch]})"/>`);
+      else if (ch === 'm' || ch === 'n')
+        parts.push(
+          `<path d="M${cx - 0.35} ${cy + (ch === 'm' ? 0.35 : -0.35)} L${cx + 0.35} ${cy + (ch === 'm' ? -0.35 : 0.35)}" stroke="#5aa9d6" stroke-width=".16" stroke-linecap="round"/>`,
+        );
       else if (ch === 'S') parts.push(`<circle cx="${cx}" cy="${cy}" r=".3" fill="#e5484d"/>`);
       else if (ch === 'G') parts.push(`<rect x="${x + 0.12}" y="${y + 0.12}" width=".76" height=".76" rx=".1" fill="#5b6b8c"/>`);
       else if (ch === 'g') parts.push(`<rect x="${x + 0.12}" y="${y + 0.62}" width=".76" height=".18" rx=".06" fill="#5b6b8c"/>`);

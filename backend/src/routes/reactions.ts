@@ -72,7 +72,13 @@ export async function react(env: Env, fromId: string, toId: string, day: string,
         .bind(fromId)
         .first<{ name: string | null }>()
         .then((row) =>
-          notify(env, toId, 'reaction', { name: row?.name ?? '?', emoji: REACTIONS[reaction] }, { url: '/', throttle: { tag: `reaction:${fromId}:${day}`, ms: 86_400_000 } }),
+          notify(
+            env,
+            toId,
+            'reaction',
+            { name: row?.name ?? '?', emoji: REACTIONS[reaction] },
+            { url: '/', throttle: { tag: `reaction:${fromId}:${day}`, ms: 86_400_000 } },
+          ),
         ),
     );
   }

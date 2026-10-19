@@ -4,16 +4,7 @@
 
 import { type HatId, isHatId } from '../../../common/art/hats';
 import { dayKey } from '../../../common/logic/daily/daily';
-import {
-  FIRST_GLOBAL_SEASON,
-  GLOBAL_HATS,
-  finishedSeasons,
-  globalHat,
-  seasonOf,
-  seasonPodium,
-  seasonRange,
-  shiftSeason,
-} from '../../../common/logic/leagues/seasons';
+import { FIRST_GLOBAL_SEASON, GLOBAL_HATS, finishedSeasons, globalHat, seasonOf, seasonPodium, seasonRange, shiftSeason } from '../../../common/logic/leagues/seasons';
 import { type Env, HttpError } from '../http';
 import { forget, memo } from '../memo';
 
@@ -101,7 +92,9 @@ export async function globalRanking(env: Env, playerId: string, period: string) 
 /** Salir del ranking global o volver a él. */
 export async function setGlobalVisible(env: Env, playerId: string, visible: unknown) {
   if (typeof visible !== 'boolean') throw new HttpError(400, 'invalidBody');
-  await env.DB.prepare('UPDATE players SET hide_global = ? WHERE id = ?').bind(visible ? 0 : 1, playerId).run();
+  await env.DB.prepare('UPDATE players SET hide_global = ? WHERE id = ?')
+    .bind(visible ? 0 : 1, playerId)
+    .run();
   forgetGlobalRanking();
   return { visible };
 }

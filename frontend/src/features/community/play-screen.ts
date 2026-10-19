@@ -169,7 +169,13 @@ export function customLevelScreen(source: { level: CustomLevel } | { testRows: s
       ...header,
       place,
       rateBox,
-      level!.mine ? null : h('div', { class: 'marks-row' }, levelMarks(level!, (next) => (level = next))),
+      level!.mine
+        ? null
+        : h(
+            'div',
+            { class: 'marks-row' },
+            levelMarks(level!, (next) => (level = next)),
+          ),
       h(
         'div',
         { class: 'row' },

@@ -57,9 +57,7 @@ export function solutionScreen(day: string): Screen {
   const hud = () => {
     ui.setStat('step', `${step}/${solution.length}`);
     ui.setStat('optimal', solution.length);
-    trail.replaceChildren(
-      ...solution.map((dir, i) => h('span', { class: i < step ? 'done' : i === step ? 'next' : '' }, ARROW[dir])),
-    );
+    trail.replaceChildren(...solution.map((dir, i) => h('span', { class: i < step ? 'done' : i === step ? 'next' : '' }, ARROW[dir])));
   };
 
   const hooks: BoardHooks = {

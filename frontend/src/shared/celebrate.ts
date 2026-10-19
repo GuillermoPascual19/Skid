@@ -115,8 +115,8 @@ export function confetti(): () => void {
 
     for (let i = particles.length - 1; i >= 0; i--) {
       const p = particles[i];
-      p.vx *= Math.pow(0.985, dt);
-      p.vy = p.vy * Math.pow(0.985, dt) + 0.32 * dt; // Rozamiento del aire y gravedad.
+      p.vx *= 0.985 ** dt;
+      p.vy = p.vy * 0.985 ** dt + 0.32 * dt; // Rozamiento del aire y gravedad.
       p.x += p.vx * dt;
       p.y += p.vy * dt;
       p.rotation += p.spin * dt;

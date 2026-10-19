@@ -22,7 +22,8 @@ function versionFile(): Plugin {
 }
 
 /** Lo que no hace falta para jugar sin conexión (páginas sueltas, cabeceras, buscadores…). */
-const NOT_OFFLINE = /^(_headers|404\.html|sw\.js|version\.json|robots\.txt|sitemap\.xml|og-image\.jpg|legal\/|contact\.js|static\.css|fonts\/OFL-|landing|google[0-9a-f]+\.html|(es|en|de|fr|pt|it|ru)\/)/;
+const NOT_OFFLINE =
+  /^(_headers|404\.html|sw\.js|version\.json|robots\.txt|sitemap\.xml|og-image\.jpg|legal\/|contact\.js|static\.css|fonts\/OFL-|landing|google[0-9a-f]+\.html|(es|en|de|fr|pt|it|ru)\/)/;
 
 /** Todos los archivos de dist/ (rutas con /, relativas a dist). */
 function distFiles(dir: string, prefix = ''): string[] {

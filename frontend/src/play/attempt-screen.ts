@@ -131,9 +131,7 @@ export function attemptScreen(opts: AttemptScreenOptions): Screen {
     const note = h('p', { class: 'result-note' }, t('common.saving'));
     const highlight = h('p', { class: 'level-place', hidden: true });
     const retry = h('button', { class: 'btn secondary', onclick: () => restart() }, over === 0 ? t('golf.again') : `↺ ${t('golf.improve')}`);
-    const handIn = opts.handIn
-      ? h('button', { class: 'btn block', hidden: true, onclick: () => void doHandIn() }, opts.handIn.label)
-      : null;
+    const handIn = opts.handIn ? h('button', { class: 'btn block', hidden: true, onclick: () => void doHandIn() }, opts.handIn.label) : null;
     const show = (outcome: AttemptOutcome) => {
       best = outcome.bestOverPar;
       closed = !!outcome.closed;

@@ -105,7 +105,10 @@ export async function friendsOverview(env: Env, playerId: string) {
     day: today,
     friends: (friends.results as FriendRow[]).map((f) => ({
       ...publicPlayer(f),
-      today: f.finished_at !== null ? { status: 'finished' as const, moves: f.over_par !== null ? optimal + f.over_par : null } : { status: f.started_at !== null ? ('playing' as const) : ('none' as const), moves: null },
+      today:
+        f.finished_at !== null
+          ? { status: 'finished' as const, moves: f.over_par !== null ? optimal + f.over_par : null }
+          : { status: f.started_at !== null ? ('playing' as const) : ('none' as const), moves: null },
     })),
     incoming: (incoming.results as PlayerRow[]).map(publicPlayer),
     outgoing: (outgoing.results as PlayerRow[]).map(publicPlayer),

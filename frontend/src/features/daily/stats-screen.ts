@@ -49,11 +49,7 @@ export function statsScreen(): Screen {
   function render(s: PlayerStats) {
     body.replaceChildren(
       streakCard(s),
-      h(
-        'div',
-        { class: 'tiles' },
-        ...movesTiles(s),
-      ),
+      h('div', { class: 'tiles' }, ...movesTiles(s)),
       h('section', { class: 'card chart-card' }, h('h2', null, t('stats.screen.calendar')), streakCalendar(s.calendar)),
       h('section', { class: 'card chart-card' }, h('h2', null, t('stats.screen.last30')), overChart(s.history)),
     );
@@ -101,20 +97,13 @@ function freezeRow(freezes: number): HTMLElement {
     'div',
     { class: 'freeze-row', title: t('stats.freeze.title') },
     h('span', { class: 'shields', 'aria-hidden': 'true' }, ...shields),
-    h(
-      'span',
-      null,
-      h('strong', null, t('stats.freeze.count', { n: freezes, max: MAX_FREEZES })),
-      h('small', null, t('stats.freeze.how', { every: FREEZE_EVERY })),
-    ),
+    h('span', null, h('strong', null, t('stats.freeze.count', { n: freezes, max: MAX_FREEZES })), h('small', null, t('stats.freeze.how', { every: FREEZE_EVERY }))),
   );
 }
 
 /** Iniciales de los días de la semana, de lunes a domingo, en el idioma del jugador. */
 const weekdays = () =>
-  Array.from({ length: 7 }, (_, i) =>
-    new Intl.DateTimeFormat(intlLocale(), { weekday: 'narrow', timeZone: 'UTC' }).format(new Date(Date.UTC(2024, 0, 1 + i))),
-  );
+  Array.from({ length: 7 }, (_, i) => new Intl.DateTimeFormat(intlLocale(), { weekday: 'narrow', timeZone: 'UTC' }).format(new Date(Date.UTC(2024, 0, 1 + i))));
 
 /** Primer día del mes de `day`, desplazado `months` meses. */
 function monthStart(day: string, months = 0): string {
@@ -152,7 +141,13 @@ function streakCalendar(calendar: PlayerStats['calendar'] | undefined): HTMLElem
     for (let i = 0; i < offset; i++) cells.push(h('span', { class: 'cal-day empty' }));
     for (let day = month; day.slice(0, 7) === month.slice(0, 7); day = shiftDay(day, 1)) {
       const state = won.has(day) ? 'won' : played.has(day) ? 'played' : frozen.has(day) ? 'frozen' : day > today ? 'future' : 'missed';
-      const text = { won: t('stats.calendar.won'), played: t('stats.calendar.played'), frozen: t('stats.calendar.frozen'), future: '', missed: t('stats.calendar.missed') }[state];
+      const text = {
+        won: t('stats.calendar.won'),
+        played: t('stats.calendar.played'),
+        frozen: t('stats.calendar.frozen'),
+        future: '',
+        missed: t('stats.calendar.missed'),
+      }[state];
       cells.push(
         h(
           'span',
@@ -202,11 +197,7 @@ export function movesTiles(s: PlayerStats): HTMLElement[] {
   const average = s.averageOver === null ? '—' : `+${s.averageOver.toLocaleString(intlLocale(), { maximumFractionDigits: 1 })}`;
   return [
     tile(t('stats.screen.played'), s.played),
-    tile(
-      t('stats.screen.perfect'),
-      s.perfect,
-      s.counted > 0 ? `🎯 ${t('stats.screen.perfectShare', { percent: Math.round((s.perfect / s.counted) * 100) })}` : null,
-    ),
+    tile(t('stats.screen.perfect'), s.perfect, s.counted > 0 ? `🎯 ${t('stats.screen.perfectShare', { percent: Math.round((s.perfect / s.counted) * 100) })}` : null),
     tile(t('stats.screen.averageOver'), average, s.averageOver === null ? null : t('common.movesUnit')),
     tile(t('stats.screen.daysWon'), s.wins, s.wins > 0 ? `🏆 ${t('stats.screen.firstInLeague')}` : null),
   ];
@@ -253,10 +244,7 @@ export function overChart(history: PlayerStats['history']): HTMLElement {
   const tooltip = h('div', { class: 'chart-tooltip', hidden: true });
   const show = (i: number) => {
     const d = history[i];
-    tooltip.replaceChildren(
-      h('strong', null, formatDay(d.day)),
-      h('span', null, `${describe(d)}${d.won ? ` · 🏆 ${t('stats.calendar.won')}` : ''}`),
-    );
+    tooltip.replaceChildren(h('strong', null, formatDay(d.day)), h('span', null, `${describe(d)}${d.won ? ` · 🏆 ${t('stats.calendar.won')}` : ''}`));
     tooltip.style.left = `${((pad.left + i * slot + slot / 2) / W) * 100}%`;
     tooltip.hidden = false;
     svg.querySelectorAll('.bar.active').forEach((b) => b.classList.remove('active'));
@@ -291,7 +279,12 @@ export function overChart(history: PlayerStats['history']): HTMLElement {
   });
 
   for (const i of [0, Math.floor((history.length - 1) / 2), history.length - 1]) {
-    const label = svgEl('text', { x: pad.left + i * slot + slot / 2, y: H - 6, class: 'tick', 'text-anchor': i === 0 ? 'start' : i === history.length - 1 ? 'end' : 'middle' });
+    const label = svgEl('text', {
+      x: pad.left + i * slot + slot / 2,
+      y: H - 6,
+      class: 'tick',
+      'text-anchor': i === 0 ? 'start' : i === history.length - 1 ? 'end' : 'middle',
+    });
     label.textContent = i === history.length - 1 ? t('stats.chart.today') : shortDay(history[i].day);
     svg.append(label);
   }

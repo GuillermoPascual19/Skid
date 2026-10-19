@@ -103,7 +103,5 @@ export function seasonPodium(totals: readonly SeasonTotal[]): SeasonPlace[] {
     const prev = played[i - 1];
     positions.push(prev && prev.points === t.points && prev.wins === t.wins ? positions[i - 1] : i + 1);
   });
-  return played
-    .map((t, i) => ({ playerId: t.playerId, position: positions[i], points: t.points }))
-    .filter((p) => p.position <= PODIUM_SIZE);
+  return played.map((t, i) => ({ playerId: t.playerId, position: positions[i], points: t.points })).filter((p) => p.position <= PODIUM_SIZE);
 }

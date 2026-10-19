@@ -10,16 +10,71 @@ describe('isOffensive', () => {
   });
 
   it('ve a través de los trucos habituales', () => {
-    for (const name of ['PUTA', 'pütá', 'pu7a', 'put@', 'fuuuuck', 'f u c k', 'p.u.t.a', 'p_u_t_a', 'Fuckboy', 'xXfuckXx', 'MotherFucker', 'mierdaaa', 'Cu1o', 'merd4', 'putas', 'c4zz0']) {
+    for (const name of [
+      'PUTA',
+      'pütá',
+      'pu7a',
+      'put@',
+      'fuuuuck',
+      'f u c k',
+      'p.u.t.a',
+      'p_u_t_a',
+      'Fuckboy',
+      'xXfuckXx',
+      'MotherFucker',
+      'mierdaaa',
+      'Cu1o',
+      'merd4',
+      'putas',
+      'c4zz0',
+    ]) {
       expect(isOffensive(name), name).toBe(true);
     }
   });
 
   it('no bloquea palabras normales que contienen una mala', () => {
     for (const name of [
-      'Computadora', 'Disputa', 'Cálculo', 'Ridículo', 'Scunthorpe', 'Essex', 'Sussex', 'Ignazio', 'Análisis', 'Dickens', 'Peacock', 'Cockpit', 'Grape', 'Debate',
-      'Cazo', 'Matsushita', 'Assassin', 'Classic', 'Bass', 'Swank', 'Técnica', 'Concha', 'Débil', 'Huy', 'Fica', 'Clase', 'Pastel', 'Montaña', 'Hielo resbaladizo',
-      'Pingüino 92', 'Ana', 'José Luis', 'As de picas', 'Dutch', 'Puntaje', 'Excelente', 'Arsenal', 'Скользкий лёд', 'Дебаты', 'Небо', 'Хлеб',
+      'Computadora',
+      'Disputa',
+      'Cálculo',
+      'Ridículo',
+      'Scunthorpe',
+      'Essex',
+      'Sussex',
+      'Ignazio',
+      'Análisis',
+      'Dickens',
+      'Peacock',
+      'Cockpit',
+      'Grape',
+      'Debate',
+      'Cazo',
+      'Matsushita',
+      'Assassin',
+      'Classic',
+      'Bass',
+      'Swank',
+      'Técnica',
+      'Concha',
+      'Débil',
+      'Huy',
+      'Fica',
+      'Clase',
+      'Pastel',
+      'Montaña',
+      'Hielo resbaladizo',
+      'Pingüino 92',
+      'Ana',
+      'José Luis',
+      'As de picas',
+      'Dutch',
+      'Puntaje',
+      'Excelente',
+      'Arsenal',
+      'Скользкий лёд',
+      'Дебаты',
+      'Небо',
+      'Хлеб',
     ]) {
       expect(isOffensive(name), name).toBe(false);
     }

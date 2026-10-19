@@ -58,9 +58,9 @@ export const errors: ErrorMessages = {
 
   tooManyFriends: '{n} friends at most',
 
-  cantFriendYourself: 'You can\'t add yourself',
+  cantFriendYourself: "You can't add yourself",
 
-  alreadyFriends: 'You\'re already friends',
+  alreadyFriends: "You're already friends",
 
   requestNotFound: 'That request no longer exists',
 

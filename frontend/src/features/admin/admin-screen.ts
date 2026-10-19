@@ -111,7 +111,12 @@ export function adminScreen(): Screen {
     } catch (err) {
       if (stale(id)) return;
       body.replaceChildren(
-        h('section', { class: 'card empty' }, h('p', { class: 'error' }, (err as Error).message), h('button', { class: 'btn', onclick: () => void load() }, 'Reintentar')),
+        h(
+          'section',
+          { class: 'card empty' },
+          h('p', { class: 'error' }, (err as Error).message),
+          h('button', { class: 'btn', onclick: () => void load() }, 'Reintentar'),
+        ),
       );
     }
   }
@@ -119,7 +124,8 @@ export function adminScreen(): Screen {
   const stale = (id: number) => disposed || id !== request;
 
   function summary(s: Awaited<ReturnType<typeof getAdminSummary>>): HTMLElement {
-    const stat = (label: string, value: number, warn = false) => h('div', { class: `stat ${warn && value > 0 ? 'warn' : ''}` }, h('span', null, label), h('strong', null, String(value)));
+    const stat = (label: string, value: number, warn = false) =>
+      h('div', { class: `stat ${warn && value > 0 ? 'warn' : ''}` }, h('span', null, label), h('strong', null, String(value)));
     return h(
       'div',
       { class: 'admin-grid' },
@@ -141,10 +147,7 @@ export function adminScreen(): Screen {
       body.replaceChildren(h('p', { class: 'empty' }, current === 'reported' ? 'No hay niveles denunciados. 🎉' : 'No hay niveles con ese nombre.'));
       return;
     }
-    body.replaceChildren(
-      ...levels.map(levelCard),
-      ...(more ? [h('button', { class: 'btn secondary block', onclick: () => void load(true) }, 'Cargar más')] : []),
-    );
+    body.replaceChildren(...levels.map(levelCard), ...(more ? [h('button', { class: 'btn secondary block', onclick: () => void load(true) }, 'Cargar más')] : []));
   }
 
   function levelCard(level: AdminLevel): HTMLElement {
@@ -170,7 +173,13 @@ export function adminScreen(): Screen {
           ),
         ),
       ),
-      level.reports > 0 ? h('p', { class: 'hidden-note' }, `${level.hidden ? '🚫 Oculto · ' : '⚠️ '}${level.reports} ${level.reports === 1 ? 'denuncia' : 'denuncias'}: ${reasons.join(', ')}`) : null,
+      level.reports > 0
+        ? h(
+            'p',
+            { class: 'hidden-note' },
+            `${level.hidden ? '🚫 Oculto · ' : '⚠️ '}${level.reports} ${level.reports === 1 ? 'denuncia' : 'denuncias'}: ${reasons.join(', ')}`,
+          )
+        : null,
       h(
         'div',
         { class: 'level-actions' },

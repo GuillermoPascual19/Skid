@@ -39,8 +39,7 @@ export function levelsScreen(): Screen {
       { key: 'optimal', label: t('stats.optimal'), tone: 'gold' },
     ],
     hint: { keys: t('play.hintKeys'), touch: t('play.hintTouch') },
-    onMenu: () =>
-      openPauseMenu(mounted, { restartLabel: t('play.reset'), onRestart: () => restart(), onExit: () => go({ name: 'play' }) }),
+    onMenu: () => openPauseMenu(mounted, { restartLabel: t('play.reset'), onRestart: () => restart(), onExit: () => go({ name: 'play' }) }),
     onRestart: () => restart(),
     onSwipe: (dir) => mounted?.scene.requestMove(dir),
     restartLabel: t('play.reset'),
@@ -141,10 +140,7 @@ export function levelsScreen(): Screen {
         icon: done >= 100 ? '👑' : done >= 75 ? '💎' : done >= 50 ? '🏆' : '⭐',
         eyebrow: t('free.milestone.eyebrow', { n: done }),
         title: done >= 100 ? t('free.milestone.legend') : t('free.milestone.congrats'),
-        text:
-          done >= 100
-            ? t('free.milestone.hundred')
-            : t('free.milestone.text', { n: done }),
+        text: done >= 100 ? t('free.milestone.hundred') : t('free.milestone.text', { n: done }),
         button: t('play.continue'),
       });
       celebrating = false;

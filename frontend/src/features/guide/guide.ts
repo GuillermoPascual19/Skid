@@ -33,8 +33,7 @@ interface Page {
 
 const pageTitle = (id: GuidePage) => t(`guide.${id}.title`);
 
-const rules = (...items: [string, string][]) =>
-  h('ul', { class: 'rules' }, ...items.map(([icon, text]) => h('li', null, h('b', null, icon), h('span', null, text))));
+const rules = (...items: [string, string][]) => h('ul', { class: 'rules' }, ...items.map(([icon, text]) => h('li', null, h('b', null, icon), h('span', null, text))));
 
 type DemoCell = 'ice' | 'wall' | { coin: number; collect?: boolean };
 
@@ -58,34 +57,20 @@ function demoRow(cells: DemoCell[], penguin: { at: number; slideTo?: number }): 
 const PAGES: Page[] = [
   {
     id: 'slide',
-    body: () => [
-      demoRow(['ice', 'ice', 'ice', 'ice', 'ice', 'wall'], { at: 0, slideTo: 4 }),
-      rules(
-        ['🐧', t('guide.slide.r1')],
-        ['⌨️', t('guide.slide.r2')],
-      ),
-    ],
+    body: () => [demoRow(['ice', 'ice', 'ice', 'ice', 'ice', 'wall'], { at: 0, slideTo: 4 }), rules(['🐧', t('guide.slide.r1')], ['⌨️', t('guide.slide.r2')])],
   },
   {
     id: 'pieces',
     body: () => [
       demoRow(['ice', { coin: 1, collect: true }, 'ice', { coin: 2 }, 'ice', { coin: 3 }], { at: 0, slideTo: 2 }),
-      rules(
-        ['🔢', t('guide.pieces.r1')],
-        ['🪙', t('guide.pieces.r2')],
-        ['🧊', t('guide.pieces.r3')],
-      ),
+      rules(['🔢', t('guide.pieces.r1')], ['🪙', t('guide.pieces.r2')], ['🧊', t('guide.pieces.r3')]),
     ],
   },
   {
     id: 'free',
     body: () => [
       h('div', { class: 'guide-stars' }, starSvg(true), starSvg(true), starSvg(true)),
-      rules(
-        ['⭐', t('guide.free.r1')],
-        ['📈', t('guide.free.r2')],
-        ['💡', t('guide.free.r3')],
-      ),
+      rules(['⭐', t('guide.free.r1')], ['📈', t('guide.free.r2')], ['💡', t('guide.free.r3')]),
     ],
   },
   {
@@ -122,25 +107,12 @@ const PAGES: Page[] = [
         h('div', null, h('span', null, t('guide.daily.doneIn', { n: 14 })), h('strong', null, t('common.movesShort', { n: 14 }))),
         h('div', null, h('span', null, t('guide.daily.withHint', { n: 12 })), h('strong', null, t('common.movesShort', { n: 13 }))),
       ),
-      rules(
-        ['🎯', t('guide.daily.r1')],
-        ['↺', t('guide.daily.r2')],
-        ['💡', t('guide.daily.r3')],
-        ['⏱', t('guide.daily.r4')],
-        ['👀', t('guide.daily.r5')],
-      ),
+      rules(['🎯', t('guide.daily.r1')], ['↺', t('guide.daily.r2')], ['💡', t('guide.daily.r3')], ['⏱', t('guide.daily.r4')], ['👀', t('guide.daily.r5')]),
     ],
   },
   {
     id: 'weekly',
-    body: () => [
-      rules(
-        ['🗺️', t('guide.weekly.r1')],
-        ['↺', t('guide.weekly.r2')],
-        ['🚫', t('guide.weekly.r3')],
-        ['🏆', t('guide.weekly.r4')],
-      ),
-    ],
+    body: () => [rules(['🗺️', t('guide.weekly.r1')], ['↺', t('guide.weekly.r2')], ['🚫', t('guide.weekly.r3')], ['🏆', t('guide.weekly.r4')])],
   },
   {
     id: 'timeattack',
@@ -155,15 +127,7 @@ const PAGES: Page[] = [
   },
   {
     id: 'duels',
-    body: () => [
-      rules(
-        ['⚔️', t('guide.duels.r1')],
-        ['🗺️', t('guide.duels.r2')],
-        ['↺', t('guide.duels.r3')],
-        ['🙈', t('guide.duels.r4')],
-        ['🏆', t('guide.duels.r5')],
-      ),
-    ],
+    body: () => [rules(['⚔️', t('guide.duels.r1')], ['🗺️', t('guide.duels.r2')], ['↺', t('guide.duels.r3')], ['🙈', t('guide.duels.r4')], ['🏆', t('guide.duels.r5')])],
   },
   {
     id: 'leagues',
@@ -181,14 +145,7 @@ const PAGES: Page[] = [
   },
   {
     id: 'community',
-    body: () => [
-      rules(
-        ['✏️', t('guide.community.r1')],
-        ['✅', t('guide.community.r2')],
-        ['⭐', t('guide.community.r3')],
-        ['🔗', t('guide.community.r4')],
-      ),
-    ],
+    body: () => [rules(['✏️', t('guide.community.r1')], ['✅', t('guide.community.r2')], ['⭐', t('guide.community.r3')], ['🔗', t('guide.community.r4')])],
   },
 ];
 
@@ -201,7 +158,10 @@ function pages(): Page[] {
 export function openGuide(start: GuidePage = 'slide'): void {
   write(GUIDE_SEEN_KEY, GUIDE_VERSION);
   const list = pages();
-  let index = Math.max(0, list.findIndex((p) => p.id === start));
+  let index = Math.max(
+    0,
+    list.findIndex((p) => p.id === start),
+  );
 
   const eyebrow = h('p', { class: 'eyebrow' });
   const title = h('h2');

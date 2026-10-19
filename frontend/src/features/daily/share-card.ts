@@ -110,7 +110,9 @@ export async function dailyCard(day: string, r: DailyResult, hat: HatId | null):
     centered(ctx, t('common.pts'), col, 735, 44, 700, '#ffffff', 420);
   }
 
-  const facts = [`⏱ ${formatTime(r.timeMs)}`, r.hints ? `💡 ${r.hints}` : null, r.streak && r.streak > 1 ? `🔥 ${tn('common.days', r.streak)}` : null].filter(Boolean).join('   ·   ');
+  const facts = [`⏱ ${formatTime(r.timeMs)}`, r.hints ? `💡 ${r.hints}` : null, r.streak && r.streak > 1 ? `🔥 ${tn('common.days', r.streak)}` : null]
+    .filter(Boolean)
+    .join('   ·   ');
   centered(ctx, facts, SIZE / 2, 935, 44, 700, '#ffffff', SIZE - 120);
   centered(ctx, location.host, SIZE / 2, 1022, 32, 600, '#7fa6c9', SIZE - 120);
 

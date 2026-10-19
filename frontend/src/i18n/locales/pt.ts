@@ -302,7 +302,8 @@ export const messages: Messages = {
     disable: 'Desativar neste dispositivo',
     disabled: 'Notificações desativadas',
     unsupported: 'Este navegador não permite notificações.',
-    iosInstall: 'No iPhone, primeiro adiciona o Skid ao ecrã principal: toca em Partilhar e depois em «Adicionar ao ecrã principal». Abre-o a partir daí e ativa-as aqui.',
+    iosInstall:
+      'No iPhone, primeiro adiciona o Skid ao ecrã principal: toca em Partilhar e depois em «Adicionar ao ecrã principal». Abre-o a partir daí e ativa-as aqui.',
     denied: 'As notificações do Skid estão bloqueadas. Podes permiti-las nas definições do navegador.',
     unavailable: 'As notificações não estão disponíveis neste momento.',
     duelHint: 'Avisa-me quando entrar',

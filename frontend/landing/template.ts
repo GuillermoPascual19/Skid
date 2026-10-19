@@ -10,7 +10,7 @@ import { LANDING, SITE } from './content.ts';
 /** Tamaño de las capturas (las de frontend/public/landing/, hechas a 375 × 812 y a doble resolución). */
 const SHOT = { width: 375, height: 812 };
 
-const escape = (text: string) => text.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+const escapeHtml = (text: string) => text.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
 
 /** Dirección de la presentación de un idioma. */
 export const landingPath = (locale: Locale) => `/${locale}/`;
@@ -38,15 +38,15 @@ export function landingPage(locale: Locale): string {
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>${escape(c.title)}</title>
-    <meta name="description" content="${escape(c.description)}" />
+    <title>${escapeHtml(c.title)}</title>
+    <meta name="description" content="${escapeHtml(c.description)}" />
     <link rel="canonical" href="${url}" />
     ${alternates}
     <link rel="alternate" hreflang="x-default" href="${SITE}${landingPath('en')}" />
     <meta property="og:type" content="website" />
     <meta property="og:url" content="${url}" />
-    <meta property="og:title" content="${escape(c.title)}" />
-    <meta property="og:description" content="${escape(c.description)}" />
+    <meta property="og:title" content="${escapeHtml(c.title)}" />
+    <meta property="og:description" content="${escapeHtml(c.description)}" />
     <meta property="og:image" content="${SITE}/og-image.jpg" />
     <meta property="og:locale" content="${locale}" />
     <meta name="twitter:card" content="summary_large_image" />
@@ -64,50 +64,50 @@ export function landingPage(locale: Locale): string {
     <header class="hero">
       <div class="hero-penguin" aria-hidden="true">${penguinSvg('beanie')}</div>
       <p class="brand">Skid</p>
-      <h1>${escape(c.h1)}</h1>
-      <p class="lead">${escape(c.intro)}</p>
-      <p class="cta"><a class="btn big" href="/">${escape(c.play)}</a> <a class="link" href="#como">${escape(c.howLink)}</a></p>
+      <h1>${escapeHtml(c.h1)}</h1>
+      <p class="lead">${escapeHtml(c.intro)}</p>
+      <p class="cta"><a class="btn big" href="/">${escapeHtml(c.play)}</a> <a class="link" href="#como">${escapeHtml(c.howLink)}</a></p>
     </header>
 
-    <section class="shots" aria-label="${escape(c.shots[0])}">
+    <section class="shots" aria-label="${escapeHtml(c.shots[0])}">
       ${c.shots
         .map(
           (alt, i) =>
-            `<img src="/landing/${locale}-${i + 1}.webp" width="${SHOT.width}" height="${SHOT.height}" alt="${escape(alt)}" ${i === 0 ? 'fetchpriority="high"' : 'loading="lazy"'} decoding="async" />`,
+            `<img src="/landing/${locale}-${i + 1}.webp" width="${SHOT.width}" height="${SHOT.height}" alt="${escapeHtml(alt)}" ${i === 0 ? 'fetchpriority="high"' : 'loading="lazy"'} decoding="async" />`,
         )
         .join('\n      ')}
     </section>
 
     <main>
       <section>
-        <h2>${escape(c.featuresTitle)}</h2>
+        <h2>${escapeHtml(c.featuresTitle)}</h2>
         <ul class="features">
-          ${c.features.map(([icon, title, text]) => `<li><span class="icon" aria-hidden="true">${icon}</span><h3>${escape(title)}</h3><p>${escape(text)}</p></li>`).join('\n          ')}
+          ${c.features.map(([icon, title, text]) => `<li><span class="icon" aria-hidden="true">${icon}</span><h3>${escapeHtml(title)}</h3><p>${escapeHtml(text)}</p></li>`).join('\n          ')}
         </ul>
       </section>
 
       <section id="como">
-        <h2>${escape(c.howTitle)}</h2>
+        <h2>${escapeHtml(c.howTitle)}</h2>
         <ol class="steps">
-          ${c.steps.map((step) => `<li>${escape(step)}</li>`).join('\n          ')}
+          ${c.steps.map((step) => `<li>${escapeHtml(step)}</li>`).join('\n          ')}
         </ol>
       </section>
 
       <section>
-        <h2>${escape(c.faqTitle)}</h2>
-        ${c.faq.map(([q, a]) => `<details><summary>${escape(q)}</summary><p>${escape(a)}</p></details>`).join('\n        ')}
+        <h2>${escapeHtml(c.faqTitle)}</h2>
+        ${c.faq.map(([q, a]) => `<details><summary>${escapeHtml(q)}</summary><p>${escapeHtml(a)}</p></details>`).join('\n        ')}
       </section>
 
       <section class="final">
-        <h2>${escape(c.finalTitle)}</h2>
-        <p>${escape(c.finalText)}</p>
-        <p><a class="btn big" href="/">${escape(c.play)}</a></p>
+        <h2>${escapeHtml(c.finalTitle)}</h2>
+        <p>${escapeHtml(c.finalText)}</p>
+        <p><a class="btn big" href="/">${escapeHtml(c.play)}</a></p>
       </section>
     </main>
 
     <footer class="landing-footer">
-      <nav aria-label="${escape(c.languages)}">${LOCALES.map((l) => (l === locale ? `<strong>${LOCALE_NAMES[l]}</strong>` : `<a href="${landingPath(l)}" hreflang="${l}" lang="${l}">${LOCALE_NAMES[l]}</a>`)).join(' · ')}</nav>
-      <nav><a href="/legal/privacidad.html">${escape(c.legal[0])}</a> · <a href="/legal/terminos.html">${escape(c.legal[1])}</a> · <a href="/legal/aviso-legal.html">${escape(c.legal[2])}</a></nav>
+      <nav aria-label="${escapeHtml(c.languages)}">${LOCALES.map((l) => (l === locale ? `<strong>${LOCALE_NAMES[l]}</strong>` : `<a href="${landingPath(l)}" hreflang="${l}" lang="${l}">${LOCALE_NAMES[l]}</a>`)).join(' · ')}</nav>
+      <nav><a href="/legal/privacidad.html">${escapeHtml(c.legal[0])}</a> · <a href="/legal/terminos.html">${escapeHtml(c.legal[1])}</a> · <a href="/legal/aviso-legal.html">${escapeHtml(c.legal[2])}</a></nav>
     </footer>
   </body>
 </html>

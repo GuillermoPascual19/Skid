@@ -4,7 +4,7 @@
 
 import { cached } from '../../shared/cache';
 import { penguinSvg } from '../../../../common/art/hats';
-import { type DuelDifficulty } from '../../../../common/logic/duels/duels';
+import type { DuelDifficulty } from '../../../../common/logic/duels/duels';
 import { movesLabel } from '../../shared/result';
 import { formatDuration, formatTime, h, openModal, share, svg, toast } from '../../shared/dom';
 import { go } from '../../shared/router';
@@ -127,7 +127,13 @@ export async function openNewDuel(onCreated: () => void, preset?: { difficulty: 
     friends.replaceChildren(
       ...(list.length
         ? list.map((f) =>
-            h('button', { class: `duel-friend ${preset?.rival.id === f.id ? 'suggested' : ''}`, onclick: () => void create(f) }, avatar(f.hat), h('span', null, f.name), h('span', { class: 'go' }, '⚔️')),
+            h(
+              'button',
+              { class: `duel-friend ${preset?.rival.id === f.id ? 'suggested' : ''}`, onclick: () => void create(f) },
+              avatar(f.hat),
+              h('span', null, f.name),
+              h('span', { class: 'go' }, '⚔️'),
+            ),
           )
         : [h('p', { class: 'muted' }, t('duels.new.noFriends'))]),
     );
@@ -217,7 +223,9 @@ export function duelResultContent(duel: Duel, opts: { onChange: () => void; clos
     h(
       'div',
       { class: 'row' },
-      rival?.finished && finished ? h('button', { class: 'btn secondary', onclick: () => (opts.close?.(), go({ name: 'duelGhost', duel })) }, `👻 ${t('duels.result.watch')}`) : null,
+      rival?.finished && finished
+        ? h('button', { class: 'btn secondary', onclick: () => (opts.close?.(), go({ name: 'duelGhost', duel })) }, `👻 ${t('duels.result.watch')}`)
+        : null,
       rival
         ? h(
             'button',
@@ -249,7 +257,6 @@ export function myTurn(duels: Duel[]): Duel[] {
   return duels.filter((d) => d.status === 'waiting' || (d.status === 'playing' && !d.me.handedIn));
 }
 
-
 /** Tarjeta de la portada: cuántos duelos te esperan y botones para verlos o retar. */
 export function duelsCard(): { el: HTMLElement; load(): Promise<void> } {
   const el = h('section', { class: 'card levels-card duels-card' });
@@ -269,7 +276,12 @@ export function duelsCard(): { el: HTMLElement; load(): Promise<void> } {
     el,
     async load() {
       // Sin conexión (y sin nada guardado): se queda la invitación a retar.
-      await cached('duels:turn', async () => myTurn(await listDuels()).length, render, () => {});
+      await cached(
+        'duels:turn',
+        async () => myTurn(await listDuels()).length,
+        render,
+        () => {},
+      );
     },
   };
 }

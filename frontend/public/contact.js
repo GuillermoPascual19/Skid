@@ -8,7 +8,7 @@ for (const el of document.querySelectorAll('[data-contact]')) {
   button.addEventListener('click', () => {
     const email = atob(el.dataset.contact).split('').reverse().join('');
     const link = document.createElement('a');
-    link.href = 'mailto:' + email;
+    link.href = `mailto:${email}`;
     link.textContent = email;
     el.replaceChildren(link);
     link.focus();

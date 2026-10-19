@@ -3,12 +3,7 @@ import { EXAMPLE_BOARD, isWall, parseBoard } from '../../../../common/logic/engi
 
 describe('parseBoard', () => {
   it('lee dimensiones, muros, jugador y piezas', () => {
-    const board = parseBoard([
-      '#####',
-      '#@.2#',
-      '#1..#',
-      '#####',
-    ]);
+    const board = parseBoard(['#####', '#@.2#', '#1..#', '#####']);
 
     expect(board.width).toBe(5);
     expect(board.height).toBe(4);

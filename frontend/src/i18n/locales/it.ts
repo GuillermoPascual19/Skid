@@ -15,7 +15,7 @@ export const messages: Messages = {
     saving: 'Salvataggio…',
     moves: { one: '{n} mossa', other: '{n} mosse' },
     optimalN: 'ottimo {n}',
-    backHome: 'Torna all\'inizio',
+    backHome: "Torna all'inizio",
     saveFailed: 'Impossibile salvare: {error}',
     days: { one: '{n} giorno', other: '{n} giorni' },
     pts: 'pt',
@@ -43,7 +43,7 @@ export const messages: Messages = {
     linkCopied: 'Link copiato',
     image: 'Immagine',
     imageSaved: 'Immagine salvata',
-    imageFailed: 'Impossibile creare l\'immagine',
+    imageFailed: "Impossibile creare l'immagine",
   },
   sound: {
     sfxOff: 'Disattiva gli effetti sonori',
@@ -73,7 +73,7 @@ export const messages: Messages = {
       description: 'Marimba vivace e ritmo leggero',
     },
     lofi: {
-      name: 'Lofi dell\'igloo',
+      name: "Lofi dell'igloo",
       description: 'Piano elettrico e batteria morbida',
     },
   },
@@ -94,7 +94,7 @@ export const messages: Messages = {
     },
     hintsLeft: 'Ti restano {hints}',
     continue: 'Continua',
-    exit: 'Torna all\'inizio',
+    exit: "Torna all'inizio",
     hintKeysFreeRestart: 'Frecce o WASD per muoverti · R ricomincia (gratis)',
     hintTouchFreeRestart: 'Scorri il dito ovunque · ↺ ricomincia (gratis)',
     restart: 'Ricomincia',
@@ -106,7 +106,7 @@ export const messages: Messages = {
     headline: {
       par: 'Perfetto!',
       close: 'Quasi!',
-      done: 'Ce l\'hai fatta!',
+      done: "Ce l'hai fatta!",
     },
     again: 'Di nuovo',
     improve: 'Migliora',
@@ -127,7 +127,7 @@ export const messages: Messages = {
       played: 'Sfide giocate',
       perfect: 'Perfetti',
       perfectShare: '{percent}% delle sfide',
-      averageOver: 'Media sopra l\'ottimo',
+      averageOver: "Media sopra l'ottimo",
       daysWon: 'Giorni vinti',
       firstInLeague: '1° nella tua lega',
       calendar: 'Calendario',
@@ -223,8 +223,8 @@ export const messages: Messages = {
       signOut: 'esci',
       devicesEyebrow: 'Tutti i tuoi dispositivi',
       devicesText: 'Accedi con Google e il tuo nome, le tue leghe e i tuoi punti ti seguono su telefono e computer.',
-      signedInAs: 'Hai effettuato l\'accesso come {name}',
-      signedIn: 'Hai effettuato l\'accesso con il tuo account Google',
+      signedInAs: "Hai effettuato l'accesso come {name}",
+      signedIn: "Hai effettuato l'accesso con il tuo account Google",
       linked: 'Account collegato a Google',
     },
     signOut: {
@@ -240,7 +240,7 @@ export const messages: Messages = {
     tagline: 'Scivola sul ghiaccio. Raccogli in ordine.',
     free: {
       eyebrow: 'Modalità libera',
-      text: 'Ogni livello un po\' più difficile.',
+      text: "Ogni livello un po' più difficile.",
     },
     community: {
       eyebrow: 'Multigiocatore',
@@ -289,7 +289,7 @@ export const messages: Messages = {
   notifications: {
     title: 'Notifiche',
     text: 'Ti avvisiamo anche a gioco chiuso.',
-    duels: 'Duelli: quando ti sfidano o l\'avversario ti aspetta nella sala',
+    duels: "Duelli: quando ti sfidano o l'avversario ti aspetta nella sala",
     friends: 'Amici: richieste di amicizia e nuovi amici',
     reactions: 'Reazioni alle tue sfide',
     streak: 'Promemoria della serie (la sera, se non hai ancora giocato)',
@@ -310,7 +310,7 @@ export const messages: Messages = {
   daily: {
     intro: {
       start: 'Inizia',
-      golf: 'Il tuo risultato è il numero di mosse del tuo tentativo migliore: meno sono, meglio è. L\'ottimo è il minimo possibile.',
+      golf: "Il tuo risultato è il numero di mosse del tuo tentativo migliore: meno sono, meglio è. L'ottimo è il minimo possibile.",
       restart: 'Ricominciare è gratis e conta il tuo tentativo migliore. Puoi continuare a migliorarlo per tutto il giorno.',
       hint: 'Se ti blocchi, chiedi un suggerimento (ne hai 3 al giorno): ti mostra la mossa successiva e conta come una mossa in più.',
       clock: 'Il cronometro parte quando tocchi Inizia e non si ferma. A parità di mosse, vince chi impiega meno tempo.',
@@ -371,15 +371,15 @@ export const messages: Messages = {
     eyebrow: 'Sfida settimanale',
     ranking: {
       title: 'I tuoi amici',
-      summary: 'Ottimo {optimal} · {finished} (te compreso). A parità, vince chi l\'ha ottenuto prima.',
-      finished: { one: '{n} amico l\'ha completata', other: '{n} amici l\'hanno completata' },
-      empty: 'Nessuno dei tuoi amici l\'ha ancora completata. Sii il primo!',
+      summary: "Ottimo {optimal} · {finished} (te compreso). A parità, vince chi l'ha ottenuto prima.",
+      finished: { one: "{n} amico l'ha completata", other: "{n} amici l'hanno completata" },
+      empty: "Nessuno dei tuoi amici l'ha ancora completata. Sii il primo!",
     },
     intro: {
       board: 'Un tabellone grande per tutta la settimana, lo stesso per tutti. Ottimo: {optimal} mosse.',
       attempts: 'Gioca quante volte vuoi fino a domenica: conta il tuo tentativo migliore.',
       noHints: 'Niente suggerimenti: è la sfida difficile.',
-      ranking: 'Classifica con gli amici di tutte le tue leghe. A parità, vince chi l\'ha ottenuto prima.',
+      ranking: "Classifica con gli amici di tutte le tue leghe. A parità, vince chi l'ha ottenuto prima.",
     },
     place: 'Posizione {position} di {total} tra i tuoi amici',
     pitch: 'Un tabellone grande e difficile per tutta la settimana. Gioca quante volte vuoi: conta il tuo tentativo migliore.',
@@ -391,8 +391,8 @@ export const messages: Messages = {
     title: 'A tempo',
     intro: {
       title: '{minutes} minuti, quanti più tabelloni possibile',
-      boards: 'Tabelloni piccoli, uno dopo l\'altro e sempre più difficili. Puoi ricominciarne uno, ma il cronometro continua.',
-      points: 'Ogni tabellone vale {base} punti o più (di più quanto più avanzi) e {perfect} di bonus se lo fai nell\'ottimo.',
+      boards: "Tabelloni piccoli, uno dopo l'altro e sempre più difficili. Puoi ricominciarne uno, ma il cronometro continua.",
+      points: "Ogni tabellone vale {base} punti o più (di più quanto più avanzi) e {perfect} di bonus se lo fai nell'ottimo.",
       skip: 'Se ti blocchi, saltalo: perdi {seconds} secondi.',
       week: 'Gli stessi tabelloni per tutti per tutta la settimana. Gioca quante volte vuoi: conta la tua partita migliore nella classifica con i tuoi amici.',
     },
@@ -443,13 +443,13 @@ export const messages: Messages = {
     },
     yourRival: 'il tuo avversario',
     outcome: {
-      youDeclined: 'L\'hai rifiutato',
-      theyDeclined: '{name} l\'ha rifiutato',
+      youDeclined: "L'hai rifiutato",
+      theyDeclined: "{name} l'ha rifiutato",
       nobody: 'Nessuno ha accettato la sfida',
       win: 'Hai vinto tu!',
       winNoShow: 'Hai vinto tu! {name} non ha giocato',
       loseNoShow: 'Vince {name}: non hai giocato',
-      noneFinished: 'Nessuno l\'ha completato',
+      noneFinished: "Nessuno l'ha completato",
     },
     result: {
       notFinished: 'Non completato',
@@ -480,7 +480,7 @@ export const messages: Messages = {
       seeResult: 'Vedi il risultato',
       linkDuel: 'Duello via link',
       sectionTurn: 'Tocca a te',
-      sectionWaiting: 'In attesa dell\'avversario',
+      sectionWaiting: "In attesa dell'avversario",
       sectionOver: 'Conclusi',
       empty: 'Non hai ancora duelli. Sfida un amico!',
     },
@@ -604,7 +604,7 @@ export const messages: Messages = {
     prize: 'Il campione vince il cappello del mese: {hat}.',
     rule: 'Vince chi fa più punti nel mese, se giocano almeno in 2. Ogni cappello di stagione si ottiene solo vincendo il suo mese.',
     previous: 'Stagione precedente',
-    noChampion: 'Nessuno l\'ha vinta: servivano almeno 2 giocatori.',
+    noChampion: "Nessuno l'ha vinta: servivano almeno 2 giocatori.",
     won: {
       eyebrow: 'Fine stagione · {season}',
       title: 'Hai vinto la stagione in {league}!',
@@ -634,9 +634,9 @@ export const messages: Messages = {
   levels: {
     ranking: {
       eyebrow: 'Classifica del livello',
-      summary: 'Ottimo {optimal} · {beaten}. A parità, vince chi l\'ha ottenuto prima.',
-      beaten: { one: '{n} giocatore l\'ha superato', other: '{n} giocatori l\'hanno superato' },
-      empty: 'Nessuno l\'ha ancora superato.',
+      summary: "Ottimo {optimal} · {beaten}. A parità, vince chi l'ha ottenuto prima.",
+      beaten: { one: "{n} giocatore l'ha superato", other: "{n} giocatori l'hanno superato" },
+      empty: "Nessuno l'ha ancora superato.",
     },
     tabs: {
       top: 'Migliori',
@@ -707,7 +707,7 @@ export const messages: Messages = {
       beaten: 'Livello superato!',
       canPublish: 'Ora puoi pubblicarlo. Se lo modifichi, dovrai superarlo di nuovo.',
       repeat: 'Ripeti',
-      backToEditor: 'Torna all\'editor',
+      backToEditor: "Torna all'editor",
       savingMark: 'Salvataggio del punteggio…',
       more: 'Altri livelli',
       seeRanking: 'Vedi la classifica',
@@ -736,11 +736,11 @@ export const messages: Messages = {
       },
       start: {
         label: 'Pinguino',
-        help: 'Dove parte il pinguino. Ce n\'è solo uno.',
+        help: "Dove parte il pinguino. Ce n'è solo uno.",
       },
       piece: {
         label: 'Pezzo',
-        help: 'Metti i pezzi nell\'ordine in cui vanno raccolti (fino a 9). Tocca un pezzo per toglierlo.',
+        help: "Metti i pezzi nell'ordine in cui vanno raccolti (fino a 9). Tocca un pezzo per toglierlo.",
       },
       snow: {
         label: 'Neve',
@@ -830,7 +830,7 @@ export const messages: Messages = {
     },
     perfect: {
       name: 'Perfezione',
-      description: 'Completa una sfida nell\'ottimo: con le mosse giuste.',
+      description: "Completa una sfida nell'ottimo: con le mosse giuste.",
     },
     streak14: {
       name: 'Quindicina polare',
@@ -846,11 +846,11 @@ export const messages: Messages = {
     },
     weekChampion: {
       name: 'Campione della settimana',
-      description: 'Vinci un\'intera settimana nella tua lega.',
+      description: "Vinci un'intera settimana nella tua lega.",
     },
     duelWin: {
       name: 'Duellante',
-      description: 'Vinci un duello contro un avversario che l\'ha giocato anche lui.',
+      description: "Vinci un duello contro un avversario che l'ha giocato anche lui.",
     },
     duelWin10: {
       name: 'Cavaliere del ghiaccio',
@@ -911,7 +911,7 @@ export const messages: Messages = {
     mortarboard: 'Tocco',
     pumpkin: 'Zucca',
     leaves: 'Berretto di foglie',
-    star: 'Stella dell\'albero',
+    star: "Stella dell'albero",
     worldgold: 'Alloro mondiale d’oro',
     worldsilver: 'Alloro mondiale d’argento',
     worldbronze: 'Alloro mondiale di bronzo',
@@ -968,7 +968,7 @@ export const messages: Messages = {
     yourOwnLink: 'È il tuo link amico: condividilo per farti aggiungere',
     alreadyFriend: 'Sei già amico di {name}',
     linkTitle: 'Aggiungere {name} come amico?',
-    linkQuestion: 'Comparirete nelle classifiche l\'uno dell\'altro, vedrete le vostre partite e potrete sfidarvi.',
+    linkQuestion: "Comparirete nelle classifiche l'uno dell'altro, vedrete le vostre partite e potrete sfidarvi.",
     addButton: 'Aggiungi',
     requests: 'Richieste di amicizia: {n}',
     leagues: 'Leghe e classifica',
@@ -1059,7 +1059,7 @@ export const messages: Messages = {
   google: {
     continue: 'Continua con Google',
     noResponse: 'Google non ha risposto',
-    loadFailed: 'Impossibile caricare l\'accesso con Google',
+    loadFailed: "Impossibile caricare l'accesso con Google",
   },
   elements: {
     snow: {
@@ -1092,7 +1092,7 @@ export const messages: Messages = {
     },
     switch: {
       name: 'Interruttore e porte',
-      description: 'Ogni volta che passi sull\'interruttore, tutte le porte cambiano: quelle aperte si chiudono e quelle chiuse si aprono.',
+      description: "Ogni volta che passi sull'interruttore, tutte le porte cambiano: quelle aperte si chiudono e quelle chiuse si aprono.",
     },
     block: {
       name: 'Blocchi di ghiaccio',
@@ -1131,8 +1131,8 @@ export const messages: Messages = {
     },
     free: {
       title: 'Modalità libera',
-      r1: 'Tre stelle se lo fai con le mosse giuste (l\'ottimo); due se ne usi 1 o 2 in più; una se ne usi di più.',
-      r2: 'Ogni livello è un po\' più difficile, e ogni tanto compaiono elementi nuovi.',
+      r1: "Tre stelle se lo fai con le mosse giuste (l'ottimo); due se ne usi 1 o 2 in più; una se ne usi di più.",
+      r2: "Ogni livello è un po' più difficile, e ogni tanto compaiono elementi nuovi.",
       r3: 'Se ti blocchi, la lampadina ti dice la prossima mossa.',
     },
     elements: {
@@ -1155,12 +1155,12 @@ export const messages: Messages = {
       r1: 'Un tabellone più grande e difficile, da lunedì a domenica, lo stesso per tutti.',
       r2: 'Gioca quante volte vuoi durante la settimana: conta il tuo tentativo migliore.',
       r3: 'Niente suggerimenti.',
-      r4: 'Classifica con gli amici di tutte le tue leghe. A parità di mosse, vince chi l\'ha ottenuto prima.',
+      r4: "Classifica con gli amici di tutte le tue leghe. A parità di mosse, vince chi l'ha ottenuto prima.",
     },
     timeattack: {
       title: 'A tempo',
-      r1: '{minutes} minuti per superare quanti più tabelloni possibile, uno dopo l\'altro e sempre più difficili.',
-      r2: 'Ogni tabellone vale {base} punti o più (di più quanto più avanzi) e {perfect} di bonus se lo fai nell\'ottimo.',
+      r1: "{minutes} minuti per superare quanti più tabelloni possibile, uno dopo l'altro e sempre più difficili.",
+      r2: "Ogni tabellone vale {base} punti o più (di più quanto più avanzi) e {perfect} di bonus se lo fai nell'ottimo.",
       r3: 'Se ti blocchi, puoi saltare il tabellone al costo di {seconds} secondi.',
       r4: 'I tabelloni sono gli stessi per tutti per tutta la settimana. Conta la tua partita migliore nella classifica con i tuoi amici.',
     },
@@ -1169,22 +1169,22 @@ export const messages: Messages = {
       r1: 'Sfida un amico delle tue leghe, o chiunque con un link. Scegli tu la difficoltà.',
       r2: 'Un tabellone nuovo che nessuno di voi ha visto, lo stesso per entrambi.',
       r3: 'Quando siete entrambi nella sala, toccate Inizia e, dopo un conto alla rovescia di 5 secondi, giocate insieme. Un tentativo, senza suggerimenti: puoi ricominciare, ma il cronometro continua.',
-      r4: 'Non vedi il risultato dell\'altro finché non avete finito entrambi (avete 20 minuti).',
+      r4: "Non vedi il risultato dell'altro finché non avete finito entrambi (avete 20 minuti).",
       r5: 'Vince chi fa meno mosse; a parità, chi impiega meno tempo. Poi potete rivedere il duello con il fantasma e chiedere la rivincita.',
     },
     leagues: {
       title: 'Leghe, serie e cappelli',
       r1: 'Crea una lega e passa il codice ai tuoi amici: vedrete chi vince la sfida ogni giorno.',
-      r2: 'Classifica settimanale e di stagione: ogni sfida vale {par} punti nell\'ottimo e {stroke} in meno per ogni mossa in più.',
+      r2: "Classifica settimanale e di stagione: ogni sfida vale {par} punti nell'ottimo e {stroke} in meno per ogni mossa in più.",
       r3: 'Gioca la sfida più giorni di fila per fare una serie.',
       r4: 'Ogni {every} giorni di fila guadagni una protezione (fino a {max}): se un giorno non giochi, la tua serie non si perde.',
       r5: 'I traguardi sbloccano cappelli per il tuo pinguino.',
       r6: 'Ogni mese è una stagione: chi fa più punti nella lega vince il cappello di quel mese, che si ottiene solo così.',
-      r7: 'Reagisci con un\'emoji alle sfide dei tuoi amici dalla classifica.',
+      r7: "Reagisci con un'emoji alle sfide dei tuoi amici dalla classifica.",
     },
     community: {
       title: 'Livelli dei giocatori',
-      r1: 'Crea i tuoi livelli con l\'editor, usando gli elementi che hai già sbloccato.',
+      r1: "Crea i tuoi livelli con l'editor, usando gli elementi che hai già sbloccato.",
       r2: 'Per pubblicare un livello devi prima superarlo.',
       r3: 'Gioca quelli degli altri e votali da 1 a 5 stelle.',
       r4: 'Condividi un livello con un link, o segnalalo se non è appropriato.',

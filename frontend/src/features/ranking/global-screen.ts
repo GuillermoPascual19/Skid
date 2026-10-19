@@ -42,11 +42,7 @@ function prizeCard(ranking: GlobalRanking): HTMLElement {
     'section',
     { class: 'card global-prize' },
     h('p', { class: 'eyebrow' }, `${t('global.prizeEyebrow')} · ${seasonLeft(ranking.ends)}`),
-    h(
-      'ol',
-      { class: 'global-prizes' },
-      ...ranking.prizes.map((hat, i) => h('li', null, svg(penguinSvg(hat)), h('span', null, `${medal(i + 1)} ${t(`hats.${hat}`)}`))),
-    ),
+    h('ol', { class: 'global-prizes' }, ...ranking.prizes.map((hat, i) => h('li', null, svg(penguinSvg(hat)), h('span', null, `${medal(i + 1)} ${t(`hats.${hat}`)}`)))),
     h('small', { class: 'muted' }, t('global.prizeRule')),
   );
 }

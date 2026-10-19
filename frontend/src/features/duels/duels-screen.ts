@@ -34,9 +34,7 @@ export function duelsScreen(open?: string): Screen {
     if (over) detail = outcomeText(duel);
     else if (duel.status === 'open') detail = t('duels.screen.noOneYet');
     else if (duel.status === 'playing')
-      detail = duel.me.handedIn
-        ? t('duels.screen.notHandedIn', { mark: movesLabel(duel.me.moves ?? duel.optimal) })
-        : t('duels.screen.yourTurn');
+      detail = duel.me.handedIn ? t('duels.screen.notHandedIn', { mark: movesLabel(duel.me.moves ?? duel.optimal) }) : t('duels.screen.yourTurn');
     else detail = rival?.present ? `⚡ ${t('duels.room.rivalHere', { name: rivalName(duel) })}` : t('duels.screen.waitingFor', { name: rivalName(duel) });
 
     const actions: (HTMLElement | null)[] = [];
@@ -77,9 +75,11 @@ export function duelsScreen(open?: string): Screen {
       const turn = myTurn(duels);
       const waiting = duels.filter((d) => !turn.includes(d) && (d.status === 'open' || d.status === 'waiting' || d.status === 'playing'));
       const over = duels.filter((d) => d.status === 'finished' || d.status === 'declined');
-      const sections = [section(t('duels.screen.sectionTurn'), turn), section(t('duels.screen.sectionWaiting'), waiting), section(t('duels.screen.sectionOver'), over)].filter(
-        (s) => s !== null,
-      );
+      const sections = [
+        section(t('duels.screen.sectionTurn'), turn),
+        section(t('duels.screen.sectionWaiting'), waiting),
+        section(t('duels.screen.sectionOver'), over),
+      ].filter((s) => s !== null);
       body.replaceChildren(
         ...(sections.length
           ? sections
@@ -87,7 +87,12 @@ export function duelsScreen(open?: string): Screen {
       );
     } catch (err) {
       body.replaceChildren(
-        h('section', { class: 'card empty' }, h('p', { class: 'error' }, (err as Error).message), h('button', { class: 'btn', onclick: () => void load() }, t('common.retry'))),
+        h(
+          'section',
+          { class: 'card empty' },
+          h('p', { class: 'error' }, (err as Error).message),
+          h('button', { class: 'btn', onclick: () => void load() }, t('common.retry')),
+        ),
       );
     }
   }

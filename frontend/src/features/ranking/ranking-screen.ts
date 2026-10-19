@@ -72,11 +72,7 @@ export function rankingScreen(route: { join?: string }): Screen {
         { class: 'card' },
         h('p', { class: 'eyebrow' }, t('ranking.offline.eyebrow')),
         h('h2', null, t('ranking.offline.title')),
-        h(
-          'p',
-          { class: 'muted', style: 'margin-top: 8px' },
-          t('ranking.offline.text'),
-        ),
+        h('p', { class: 'muted', style: 'margin-top: 8px' }, t('ranking.offline.text')),
       ),
     );
     return { el };
@@ -235,13 +231,9 @@ export function rankingScreen(route: { join?: string }): Screen {
       h(
         'div',
         { class: 'segmented' },
-        ...PERIODS.map(([p, label]) =>
-          h('button', { class: p === period ? 'active' : '', onclick: () => ((period = p), render()) }, label),
-        ),
+        ...PERIODS.map(([p, label]) => h('button', { class: p === period ? 'active' : '', onclick: () => ((period = p), render()) }, label)),
       ),
-      period === 'season'
-        ? seasonTop
-        : h('p', { class: 'muted', style: 'text-align:center; margin-top:-6px' }, range ? formatWeek(range) : formatDay(day)),
+      period === 'season' ? seasonTop : h('p', { class: 'muted', style: 'text-align:center; margin-top:-6px' }, range ? formatWeek(range) : formatDay(day)),
       list,
       seasonBottom,
       h(
@@ -258,8 +250,7 @@ export function rankingScreen(route: { join?: string }): Screen {
           'button',
           {
             class: 'btn secondary',
-            onclick: () =>
-              share(`${t('ranking.shareInvite', { name: league.name })}\n${location.origin}${location.pathname}?join=${league.code}`),
+            onclick: () => share(`${t('ranking.shareInvite', { name: league.name })}\n${location.origin}${location.pathname}?join=${league.code}`),
           },
           t('ranking.invite.button'),
         ),
@@ -314,9 +305,7 @@ export function rankingScreen(route: { join?: string }): Screen {
                 'small',
                 null,
                 row.days > 0
-                  ? [tn('ranking.challenges', row.days), row.wins > 0 ? `🏆 ${row.wins}` : null, t('ranking.bestN', { n: row.best ?? 0 })]
-                      .filter(Boolean)
-                      .join(' · ')
+                  ? [tn('ranking.challenges', row.days), row.wins > 0 ? `🏆 ${row.wins}` : null, t('ranking.bestN', { n: row.best ?? 0 })].filter(Boolean).join(' · ')
                   : t('ranking.noChallenges'),
               ),
             ),

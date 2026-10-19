@@ -15,13 +15,7 @@ import { openLevelRanking } from './level-ranking';
 import { playerName, t, tn } from '../../i18n/i18n';
 import type { TextKey } from '../../i18n/i18n';
 
-const TABS: { id: CustomLevelSort }[] = [
-  { id: 'top' },
-  { id: 'new' },
-  { id: 'mine' },
-  { id: 'liked' },
-  { id: 'saved' },
-];
+const TABS: { id: CustomLevelSort }[] = [{ id: 'top' }, { id: 'new' }, { id: 'mine' }, { id: 'liked' }, { id: 'saved' }];
 
 /** Qué decir cuando una pestaña no tiene niveles. */
 const EMPTY: Record<CustomLevelSort, TextKey> = {
@@ -46,11 +40,7 @@ export function shareLevel(level: CustomLevel): void {
   void share(`${text}\n${levelLink(level)}`);
 }
 
-const REPORT_REASONS: { id: ReportReason }[] = [
-  { id: 'name' },
-  { id: 'broken' },
-  { id: 'other' },
-];
+const REPORT_REASONS: { id: ReportReason }[] = [{ id: 'name' }, { id: 'broken' }, { id: 'other' }];
 
 /** Pide el motivo y denuncia el nivel. Se resuelve a true si se envió. */
 export function reportLevel(level: CustomLevel): Promise<boolean> {
@@ -113,12 +103,7 @@ export function communityScreen(tab?: CustomLevelSort, open?: string): Screen {
     h(
       'section',
       { class: 'card create-card' },
-      h(
-        'div',
-        { class: 'info' },
-        h('h2', null, t('levels.create.title')),
-        h('p', { class: 'muted' }, draft ? t('levels.create.draft') : t('levels.create.text')),
-      ),
+      h('div', { class: 'info' }, h('h2', null, t('levels.create.title')), h('p', { class: 'muted' }, draft ? t('levels.create.draft') : t('levels.create.text'))),
       h('button', { class: 'btn', onclick: () => go({ name: 'editor' }) }, draft ? t('duels.screen.resume') : t('levels.create.button')),
     ),
     tabs,
@@ -161,7 +146,12 @@ export function communityScreen(tab?: CustomLevelSort, open?: string): Screen {
       renderList();
     } catch (err) {
       list.replaceChildren(
-        h('section', { class: 'card empty' }, h('p', { class: 'error' }, (err as Error).message), h('button', { class: 'btn', onclick: () => void load(false) }, t('common.retry'))),
+        h(
+          'section',
+          { class: 'card empty' },
+          h('p', { class: 'error' }, (err as Error).message),
+          h('button', { class: 'btn', onclick: () => void load(false) }, t('common.retry')),
+        ),
       );
     } finally {
       loading = false;
@@ -171,9 +161,7 @@ export function communityScreen(tab?: CustomLevelSort, open?: string): Screen {
   function renderList() {
     moreBtn.hidden = !more;
     if (levels.length === 0) {
-      list.replaceChildren(
-        h('p', { class: 'empty' }, t(EMPTY[current])),
-      );
+      list.replaceChildren(h('p', { class: 'empty' }, t(EMPTY[current])));
       return;
     }
     list.replaceChildren(...levels.map(levelCard));
@@ -181,7 +169,9 @@ export function communityScreen(tab?: CustomLevelSort, open?: string): Screen {
 
   function levelCard(level: CustomLevel): HTMLElement {
     const rating = level.rating === null ? t('levels.card.unrated') : `★ ${level.rating.toFixed(1)} (${level.ratingCount})`;
-    const icons = ELEMENTS.filter((e) => level.elements.includes(e.id)).map((e) => h('span', { class: 'mini-element', title: t(`elements.${e.id}.name`) }, svg(elementSvg(e.id))));
+    const icons = ELEMENTS.filter((e) => level.elements.includes(e.id)).map((e) =>
+      h('span', { class: 'mini-element', title: t(`elements.${e.id}.name`) }, svg(elementSvg(e.id))),
+    );
     return h(
       'article',
       { class: `card level-card ${level.myBest !== null && !level.mine ? 'done' : ''}` },
@@ -193,7 +183,12 @@ export function communityScreen(tab?: CustomLevelSort, open?: string): Screen {
           'div',
           { class: 'level-info' },
           h('strong', { class: 'level-name' }, level.name),
-          h('span', { class: 'level-author' }, h('span', { class: 'mini-penguin' }, svg(penguinSvg(level.authorHat))), level.mine ? t('ghost.you') : playerName(level.author)),
+          h(
+            'span',
+            { class: 'level-author' },
+            h('span', { class: 'mini-penguin' }, svg(penguinSvg(level.authorHat))),
+            level.mine ? t('ghost.you') : playerName(level.author),
+          ),
           h(
             'span',
             { class: 'level-meta' },

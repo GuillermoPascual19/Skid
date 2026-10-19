@@ -13,14 +13,7 @@ import { errorMessage, requestLocale } from './i18n';
 import { playerAchievements } from './routes/achievements';
 import { finishRun, getRun, ghostRuns, startRun } from './routes/daily';
 import { finishWeekly, getWeekly, startWeekly, weeklyRanking } from './routes/weekly';
-import {
-  finishTimeAttackBoard,
-  skipTimeAttackBoard,
-  startTimeAttack,
-  timeAttackRanking,
-  timeAttackResult,
-  timeAttackSummary,
-} from './routes/timeattack';
+import { finishTimeAttackBoard, skipTimeAttackBoard, startTimeAttack, timeAttackRanking, timeAttackResult, timeAttackSummary } from './routes/timeattack';
 import { acceptDuel, createDuel, declineDuel, duelGhost, finishDuel, getDuel, here, listDuels, listFriends, setReady } from './routes/duels';
 import { createLeague, dailyWins, joinLeague, kickMember, leagueInvite, leagueRanking, leagueStandings, leaveLeague, myLeagues, newLeagueCode } from './routes/leagues';
 import {

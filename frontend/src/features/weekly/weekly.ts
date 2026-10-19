@@ -39,8 +39,7 @@ export function openWeeklyRanking(week: string): Promise<void> {
     eyebrow: `${t('weekly.eyebrow')} · ${formatWeek(week)}`,
     title: t('weekly.ranking.title'),
     load: () => getWeeklyRanking(week),
-    summary: (r) =>
-      t('weekly.ranking.summary', { optimal: r.optimal, finished: tn('weekly.ranking.finished', r.total) }),
+    summary: (r) => t('weekly.ranking.summary', { optimal: r.optimal, finished: tn('weekly.ranking.finished', r.total) }),
     empty: t('weekly.ranking.empty'),
   });
 }
@@ -121,12 +120,16 @@ export function weeklyCard(): { el: HTMLElement; load(): Promise<void> } {
     el,
     async load() {
       const week = currentWeek();
-      await cached(`weekly:${week}`, () => getWeekly(week), render, (err) =>
-        el.replaceChildren(
-          h('p', { class: 'eyebrow' }, t('weekly.eyebrow')),
-          h('p', { class: 'error' }, err.message),
-          h('button', { class: 'btn ghost', onclick: () => void card.load() }, t('common.retry')),
-        ),
+      await cached(
+        `weekly:${week}`,
+        () => getWeekly(week),
+        render,
+        (err) =>
+          el.replaceChildren(
+            h('p', { class: 'eyebrow' }, t('weekly.eyebrow')),
+            h('p', { class: 'error' }, err.message),
+            h('button', { class: 'btn ghost', onclick: () => void card.load() }, t('common.retry')),
+          ),
       );
     },
   };

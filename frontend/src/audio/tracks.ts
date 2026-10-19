@@ -20,13 +20,7 @@ export interface MusicTrack {
 }
 
 /** Oscilador con envolvente, la pieza básica de los instrumentos de abajo. */
-function tone(
-  ctx: Ctx,
-  out: AudioNode,
-  t: number,
-  freq: number,
-  { type = 'sine' as OscillatorType, peak = 0.05, attack = 0.005, decay = 0.4, detune = 0 } = {},
-): void {
+function tone(ctx: Ctx, out: AudioNode, t: number, freq: number, { type = 'sine' as OscillatorType, peak = 0.05, attack = 0.005, decay = 0.4, detune = 0 } = {}): void {
   const osc = ctx.createOscillator();
   osc.type = type;
   osc.frequency.setValueAtTime(freq, t);

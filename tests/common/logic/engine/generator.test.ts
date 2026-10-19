@@ -51,8 +51,7 @@ describe('generateLevel', () => {
   });
 
   it('el óptimo crece con el nivel', () => {
-    const avg = (level: number) =>
-      [1, 2, 3, 4, 5].reduce((sum, seed) => sum + generateLevel(level, seed).solution.length, 0) / 5;
+    const avg = (level: number) => [1, 2, 3, 4, 5].reduce((sum, seed) => sum + generateLevel(level, seed).solution.length, 0) / 5;
     expect(avg(10)).toBeGreaterThan(avg(1));
     expect(avg(20)).toBeGreaterThan(avg(10));
   });

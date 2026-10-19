@@ -88,10 +88,7 @@ export function homeScreen(): Screen {
         h('button', { class: 'btn big block', onclick: openDaily }, t('play.continue')),
       );
     } else {
-      dailyCard.append(
-        h('p', { class: 'muted' }, t('home.daily.pitch')),
-        h('button', { class: 'btn big block', onclick: openDaily }, t('home.daily.play')),
-      );
+      dailyCard.append(h('p', { class: 'muted' }, t('home.daily.pitch')), h('button', { class: 'btn big block', onclick: openDaily }, t('home.daily.play')));
     }
     tick();
   }

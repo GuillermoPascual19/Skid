@@ -85,8 +85,7 @@ export function dailyScreen(record: DailyRecord): Screen {
     ui.setStat('time', formatTime(finished && result?.overPar != null ? result.timeMs : elapsed()));
   };
 
-  const persist = () =>
-    saveDaily({ ...(loadDaily(day) ?? record), day, startedAt: record.startedAt, log: encodeRun(events), result, pendingSubmit });
+  const persist = () => saveDaily({ ...(loadDaily(day) ?? record), day, startedAt: record.startedAt, log: encodeRun(events), result, pendingSubmit });
 
   const hooks: BoardHooks = {
     onMove(dir) {
@@ -243,7 +242,8 @@ export function dailyScreen(record: DailyRecord): Screen {
       mounted = m;
       m.scene.setBoard(board, state);
       wearHat(m);
-      if (pendingSubmit) void submit(); // Terminado pero sin enviar (p. ej. se cerró la página).
+      if (pendingSubmit)
+        void submit(); // Terminado pero sin enviar (p. ej. se cerró la página).
       else if (!finished) ui.setStuck(solve(board, state) === null); // Al reanudar, por si se quedó atascado.
     },
     dispose() {

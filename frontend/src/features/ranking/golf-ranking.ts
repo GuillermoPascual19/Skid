@@ -57,7 +57,13 @@ export async function openGolfRanking(opts: {
   const list = h('ul', { class: 'ranking level-ranking' }, h('li', { class: 'empty' }, t('common.loading')));
   const summary = h('p', { class: 'muted' });
   const modal = openModal(
-    [h('p', { class: 'eyebrow' }, opts.eyebrow), h('h2', null, opts.title), summary, list, h('button', { class: 'btn block', onclick: () => modal.close() }, t('common.close'))],
+    [
+      h('p', { class: 'eyebrow' }, opts.eyebrow),
+      h('h2', null, opts.title),
+      summary,
+      list,
+      h('button', { class: 'btn block', onclick: () => modal.close() }, t('common.close')),
+    ],
     { dismissable: true },
   );
   try {

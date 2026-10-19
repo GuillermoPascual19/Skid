@@ -38,8 +38,20 @@ export function friendsScreen(add?: string): Screen {
     h(
       'section',
       { class: 'card list-card' },
-      h('button', { class: 'list-row', onclick: () => go({ name: 'ranking' }) }, h('span', { 'aria-hidden': 'true' }, '🏆'), h('span', null, t('friends.leagues')), h('span', { class: 'chevron' }, '›')),
-      h('button', { class: 'list-row', onclick: () => go({ name: 'global' }) }, h('span', { 'aria-hidden': 'true' }, '🌍'), h('span', null, t('global.title')), h('span', { class: 'chevron' }, '›')),
+      h(
+        'button',
+        { class: 'list-row', onclick: () => go({ name: 'ranking' }) },
+        h('span', { 'aria-hidden': 'true' }, '🏆'),
+        h('span', null, t('friends.leagues')),
+        h('span', { class: 'chevron' }, '›'),
+      ),
+      h(
+        'button',
+        { class: 'list-row', onclick: () => go({ name: 'global' }) },
+        h('span', { 'aria-hidden': 'true' }, '🌍'),
+        h('span', null, t('global.title')),
+        h('span', { class: 'chevron' }, '›'),
+      ),
     ),
     body,
   );
@@ -58,7 +70,14 @@ export function friendsScreen(add?: string): Screen {
       if (!disposed) render();
     } catch (err) {
       if (disposed) return;
-      body.replaceChildren(h('section', { class: 'card empty' }, h('p', { class: 'error' }, (err as Error).message), h('button', { class: 'btn', onclick: () => void load() }, t('common.retry'))));
+      body.replaceChildren(
+        h(
+          'section',
+          { class: 'card empty' },
+          h('p', { class: 'error' }, (err as Error).message),
+          h('button', { class: 'btn', onclick: () => void load() }, t('common.retry')),
+        ),
+      );
     }
   }
 
@@ -89,18 +108,17 @@ export function friendsScreen(add?: string): Screen {
                 { class: 'friend-row' },
                 avatar(p.hat),
                 h('strong', null, playerName(p.name)),
-                h('button', { class: 'btn small', onclick: () => void act(() => acceptFriend(p.id), t('friends.nowFriends', { name: playerName(p.name) })) }, t('friends.accept')),
+                h(
+                  'button',
+                  { class: 'btn small', onclick: () => void act(() => acceptFriend(p.id), t('friends.nowFriends', { name: playerName(p.name) })) },
+                  t('friends.accept'),
+                ),
                 h('button', { class: 'btn small ghost', onclick: () => void act(() => dropFriendRequest(p.id)) }, t('friends.decline')),
               ),
             ),
           )
         : null,
-      h(
-        'section',
-        { class: 'card' },
-        h('h2', null, t('friends.list')),
-        ...(friends.length ? friends.map(friendRow) : [h('p', { class: 'muted' }, t('friends.empty'))]),
-      ),
+      h('section', { class: 'card' }, h('h2', null, t('friends.list')), ...(friends.length ? friends.map(friendRow) : [h('p', { class: 'muted' }, t('friends.empty'))])),
       outgoing.length
         ? h(
             'section',
@@ -122,13 +140,14 @@ export function friendsScreen(add?: string): Screen {
   }
 
   function addCard(): HTMLElement {
-    const input = h('input', { class: 'field', placeholder: t('friends.namePlaceholder'), 'aria-label': t('friends.namePlaceholder'), maxLength: 30, autocomplete: 'off' });
-    const form = h(
-      'form',
-      { class: 'friend-add' },
-      input,
-      h('button', { class: 'btn small', type: 'submit' }, t('friends.send')),
-    );
+    const input = h('input', {
+      class: 'field',
+      placeholder: t('friends.namePlaceholder'),
+      'aria-label': t('friends.namePlaceholder'),
+      maxLength: 30,
+      autocomplete: 'off',
+    });
+    const form = h('form', { class: 'friend-add' }, input, h('button', { class: 'btn small', type: 'submit' }, t('friends.send')));
     form.addEventListener('submit', (e) => {
       e.preventDefault();
       const name = input.value.trim();
@@ -169,7 +188,12 @@ export function friendsScreen(add?: string): Screen {
     return h(
       'div',
       { class: 'friend-row' },
-      h('button', { class: 'friend-open', onclick: () => go({ name: 'player', id: f.id }) }, avatar(f.hat), h('span', { class: 'friend-name' }, h('strong', null, playerName(f.name)), today)),
+      h(
+        'button',
+        { class: 'friend-open', onclick: () => go({ name: 'player', id: f.id }) },
+        avatar(f.hat),
+        h('span', { class: 'friend-name' }, h('strong', null, playerName(f.name)), today),
+      ),
       h('button', { class: 'btn small secondary', 'aria-label': t('friends.challenge', { name: playerName(f.name) }), onclick: () => void challenge(f) }, '⚔️'),
       h('button', { class: 'icon-btn small', 'aria-label': t('friends.remove', { name: playerName(f.name) }), onclick: () => confirmRemove(f) }, '✕'),
     );

@@ -3,7 +3,19 @@
 // casillas está en tiles.ts y los efectos de partículas en effects.ts.
 
 import Phaser from 'phaser';
-import { DIRECTION_DELTA, crackIndex, doorOpen, nextPiece, samePos, type Board, type Cell, type Direction, type GameState, type Piece, type Pos } from '../../../common/logic/engine/board';
+import {
+  DIRECTION_DELTA,
+  crackIndex,
+  doorOpen,
+  nextPiece,
+  samePos,
+  type Board,
+  type Cell,
+  type Direction,
+  type GameState,
+  type Piece,
+  type Pos,
+} from '../../../common/logic/engine/board';
 import { slideDurationMs } from '../../../common/logic/daily/daily';
 import { traceMove, type MoveTrace } from '../../../common/logic/engine/move';
 import { HAT_BOX, hatSvg, type HatId } from '../../../common/art/hats';

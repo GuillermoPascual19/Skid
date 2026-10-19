@@ -1,13 +1,5 @@
 import { beforeEach, describe, expect, it } from 'vitest';
-import {
-  adminClearReports,
-  adminDeleteLevel,
-  adminLevels,
-  adminPlayers,
-  adminResetName,
-  adminSummary,
-  isAdmin,
-} from '../../backend/src/routes/admin';
+import { adminClearReports, adminDeleteLevel, adminLevels, adminPlayers, adminResetName, adminSummary, isAdmin } from '../../backend/src/routes/admin';
 import { addPlayer, createTestDb, type TestDb } from './d1';
 
 let t: TestDb;

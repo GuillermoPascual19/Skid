@@ -240,9 +240,7 @@ export async function dailyWins(env: Env, playerId: string, day: string) {
 }
 
 export async function requireMember(env: Env, playerId: string, leagueId: string): Promise<void> {
-  const member = await env.DB.prepare('SELECT 1 FROM league_members WHERE league_id = ? AND player_id = ?')
-    .bind(leagueId, playerId)
-    .first();
+  const member = await env.DB.prepare('SELECT 1 FROM league_members WHERE league_id = ? AND player_id = ?').bind(leagueId, playerId).first();
   if (!member) throw new HttpError(403, 'notLeagueMember');
 }
 

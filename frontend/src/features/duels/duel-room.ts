@@ -9,17 +9,7 @@ import { h, svg, toast } from '../../shared/dom';
 import { go, type Screen } from '../../shared/router';
 import { ensureName } from '../profile/profile';
 import { type Duel, type DuelInvite, type DuelSide, acceptDuel, duelHere, getDuel, setDuelReady } from './api';
-import {
-  clearDuelUrl,
-  confirmDecline,
-  difficultyLabel,
-  duelResultContent,
-  keepDuelInUrl,
-  rivalName,
-  shareDuel,
-  timeLeft,
-  waitingForRival,
-} from './duels';
+import { clearDuelUrl, confirmDecline, difficultyLabel, duelResultContent, keepDuelInUrl, rivalName, shareDuel, timeLeft, waitingForRival } from './duels';
 import { playerName, t } from '../../i18n/i18n';
 import { duelNotifyHint } from '../notifications/notifications';
 

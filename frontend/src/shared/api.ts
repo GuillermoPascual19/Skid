@@ -157,7 +157,14 @@ async function send(paths: string[], batch: Map<string, Waiter[]>): Promise<void
   } catch (err) {
     // Sin conexión: todas fallan igual. Otro fallo del lote: cada una por su cuenta.
     if ((err as Error).message === t('common.offline')) return paths.forEach((p) => settle(p, (w) => w.reject(err as Error)));
-    await Promise.all(paths.map((p) => direct('GET', p).then((data) => settle(p, (w) => w.resolve(data)), (e: Error) => settle(p, (w) => w.reject(e)))));
+    await Promise.all(
+      paths.map((p) =>
+        direct('GET', p).then(
+          (data) => settle(p, (w) => w.resolve(data)),
+          (e: Error) => settle(p, (w) => w.reject(e)),
+        ),
+      ),
+    );
     return;
   }
   for (const path of paths) {

@@ -105,14 +105,25 @@ export function meTab(): Screen {
     if (me.email) {
       account.replaceChildren(
         who,
-        h('p', { class: 'player-line small' }, `🔗 ${t('home.account.googleAccount', { email: me.email })} · `, h('button', { class: 'link-btn', onclick: confirmSignOut }, t('home.account.signOut'))),
+        h(
+          'p',
+          { class: 'player-line small' },
+          `🔗 ${t('home.account.googleAccount', { email: me.email })} · `,
+          h('button', { class: 'link-btn', onclick: confirmSignOut }, t('home.account.signOut')),
+        ),
         privacy,
       );
       return;
     }
 
     const slot = h('div', { class: 'google-slot' });
-    const card = h('section', { class: 'card account-card', hidden: true }, h('p', { class: 'eyebrow' }, t('home.account.devicesEyebrow')), h('p', { class: 'muted' }, t('home.account.devicesText')), slot);
+    const card = h(
+      'section',
+      { class: 'card account-card', hidden: true },
+      h('p', { class: 'eyebrow' }, t('home.account.devicesEyebrow')),
+      h('p', { class: 'muted' }, t('home.account.devicesText')),
+      slot,
+    );
     account.replaceChildren(who, card, privacy);
     void renderGoogleButton(slot, (result) => {
       if (result.switched) {

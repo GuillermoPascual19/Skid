@@ -20,7 +20,12 @@ import { t } from '../i18n/i18n';
 export function showNoHints(text: string): void {
   sfx.bump();
   const modal = openModal(
-    [h('div', { class: 'modal-icon', 'aria-hidden': 'true' }, '💡'), h('h2', null, t('play.noHints.title')), h('p', { class: 'lead' }, text), h('button', { class: 'btn block', onclick: () => modal.close() }, t('common.close'))],
+    [
+      h('div', { class: 'modal-icon', 'aria-hidden': 'true' }, '💡'),
+      h('h2', null, t('play.noHints.title')),
+      h('p', { class: 'lead' }, text),
+      h('button', { class: 'btn block', onclick: () => modal.close() }, t('common.close')),
+    ],
     { dismissable: true },
   );
 }
@@ -82,7 +87,9 @@ export function playLayout(opts: {
   );
 
   const hintBadge = h('span', { class: 'badge', hidden: true });
-  const hintButton = opts.onHint ? h('button', { class: 'icon-btn hint-btn', 'aria-label': t('play.hint'), title: t('play.hint'), onclick: opts.onHint }, '💡', hintBadge) : null;
+  const hintButton = opts.onHint
+    ? h('button', { class: 'icon-btn hint-btn', 'aria-label': t('play.hint'), title: t('play.hint'), onclick: opts.onHint }, '💡', hintBadge)
+    : null;
 
   const boardWrap = h('div', { class: 'board-wrap' });
   const el = h(

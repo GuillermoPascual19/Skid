@@ -65,7 +65,14 @@ async function enable(wanted: PushPrefs): Promise<void> {
   let sub = await reg.pushManager.getSubscription();
   // Una suscripción con otra clave (si el servidor la cambió) no sirve: se rehace.
   const key = sub?.options.applicationServerKey;
-  if (sub && key && btoa(String.fromCharCode(...new Uint8Array(key))).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '') !== publicKey) {
+  if (
+    sub &&
+    key &&
+    btoa(String.fromCharCode(...new Uint8Array(key)))
+      .replace(/\+/g, '-')
+      .replace(/\//g, '_')
+      .replace(/=+$/, '') !== publicKey
+  ) {
     await sub.unsubscribe();
     sub = null;
   }

@@ -30,9 +30,14 @@ export async function settleSeasons(env: Env, playerId: string): Promise<void> {
       statements.push(
         env.DB.prepare('INSERT OR IGNORE INTO league_seasons (league_id, season, settled_at) VALUES (?, ?, ?)').bind(league.id, season, Date.now()),
         ...podium.map((p) =>
-          env.DB.prepare(
-            'INSERT OR IGNORE INTO season_results (league_id, league_name, season, player_id, position, points) VALUES (?, ?, ?, ?, ?, ?)',
-          ).bind(league.id, league.name, season, p.playerId, p.position, p.points),
+          env.DB.prepare('INSERT OR IGNORE INTO season_results (league_id, league_name, season, player_id, position, points) VALUES (?, ?, ?, ?, ?, ?)').bind(
+            league.id,
+            league.name,
+            season,
+            p.playerId,
+            p.position,
+            p.points,
+          ),
         ),
       );
     }
