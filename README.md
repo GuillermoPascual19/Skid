@@ -29,6 +29,10 @@ y niveles creados por los jugadores.
 - **Ligas**: ranking del día y de la semana con tus amigos, y temporadas mensuales cuyo campeón se
   lleva el gorro de ese mes; reacciones con emojis a los retos de tus amigos; logros del reto
   diario, duelos, contrarreloj, reto semanal y niveles de la comunidad que desbloquean más gorros.
+  Quien crea una liga la gestiona: puede expulsar a alguien y cambiar el código.
+- **Ranking global**: todos los jugadores por los puntos del reto diario, del mes y desde siempre (quien
+  no quiera salir lo desactiva en la pestaña Tú). Cada mes, los tres primeros se llevan el laurel mundial
+  de oro, plata o bronce.
 - **Niveles de jugadores**: editor, publicar (hay que superarlo antes), valorar, ❤️ me gusta y 🔖 guardar
   (con sus filtros), ranking por nivel, compartir y denunciar. El administrador elige un nivel destacado,
   que sale en la pestaña Jugar.
@@ -39,6 +43,8 @@ y niveles creados por los jugadores.
 - En siete idiomas: español, inglés, alemán, francés, portugués, italiano y ruso. Usa el del
   navegador y se cambia desde el inicio.
 - Compartir por WhatsApp o Telegram, copiar el enlace o el mensaje, o el menú del sistema.
+- **Portada para buscadores**: una página estática por idioma (`/es/`, `/en/`…) con capturas, qué tiene,
+  cómo se juega y preguntas frecuentes, generada al compilar (`frontend/landing/`) y en el sitemap.
 
 ## Tecnologías
 
@@ -87,6 +93,8 @@ frontend/                  el juego en el navegador (Vite)
     theme-init.js          aplica el tema antes de pintar
     sw.js                  service worker: muestra las notificaciones
     manifest.webmanifest   app instalable (con sus iconos)
+    landing/, landing.css  capturas y estilos de la portada para buscadores
+  landing/                 portada para buscadores: textos de cada idioma y su HTML (se genera al compilar)
   src/
     main.ts                arranque y rutas
     style.css              estilos (tema claro y oscuro con variables)
@@ -97,12 +105,16 @@ frontend/                  el juego en el navegador (Vite)
       weekly/              reto semanal
       timeattack/          contrarreloj: partida, tarjeta y ranking
       duels/               duelos: retar, sala de espera, partida en directo, resultado y revancha
-      ranking/             ligas, temporadas, reacciones y ranking por movimientos (niveles,
-                           reto semanal)
+      ranking/             ligas (y gestionarlas), temporadas, reacciones, ranking global con su
+                           premio y ranking por movimientos (niveles, reto semanal)
       achievements/        logros y gorros
       community/           niveles de jugadores: listado, editor, partida, valorar, denunciar
       profile/             nombre, login con Google, perfil de otros jugadores y cuenta
       guide/               guía «Cómo se juega» y aviso de novedades
+      tabs/                pestañas Jugar y Tú
+      friends/             amigos: lista, solicitudes y enlace de amigo
+      notifications/       activar las notificaciones y elegir cuáles
+      admin/               panel de administración
     play/                  partida común a todos los modos (pausa, gestos, teclas) y la
                            partida «al mejor intento» (reto semanal y duelos)
     i18n/                  t() para los textos y un diccionario por idioma (locales/)
@@ -113,14 +125,17 @@ backend/                   el Worker de Cloudflare: sirve el juego (dist/) y la 
   src/
     index.ts               solo enruta
     http.ts                errores, respuestas y validación de la entrada
-    session.ts             sesiones, login con Google, cerrar sesión y borrar la cuenta
+    session.ts             sesiones (en cookie HttpOnly), login con Google, cerrar sesión y borrar la cuenta
+    turnstile.ts           comprobar que es una persona al crear una cuenta
+    seal.ts                cifrado del email
     google.ts              verificación de los tokens de Google
     i18n.ts                idioma de cada petición para los mensajes de error
     push.ts                notificaciones: a quién, en qué idioma y sin repetir
     webpush.ts             cifrado y firma VAPID de las notificaciones (sin librerías)
     routes/                un archivo por apartado: daily, weekly, timeattack, duels, leagues,
-                           seasons, reactions, levels, players, stats, achievements
-  migrations/              esquema de la base de datos D1 (0001 a 0017)
+                           seasons, global, reactions, levels, players, friends, stats, achievements,
+                           push, errors, admin, health
+  migrations/              esquema de la base de datos D1 (0001 a 0023)
 common/                    lo que usan los dos; sin APIs del navegador ni imports de fuera
   logic/                   reglas puras: el servidor reproduce las partidas con este mismo código
     engine/                tablero, movimiento, solver, generador, elementos, aleatorio
@@ -129,14 +144,15 @@ common/                    lo que usan los dos; sin APIs del navegador ni import
     timeattack/            contrarreloj: tableros de la semana y puntos
     duels/                 duelos: dificultades, tiempos y quién gana
     achievements/          logros
-    leagues/               temporadas (fechas, podio y el gorro de cada mes) y reacciones
+    leagues/               temporadas (fechas, podio y el gorro de cada mes), podio del ranking global
+                           y reacciones
     community/             validación de niveles creados por jugadores
-    players/               reglas de los nombres
+    players/               reglas de los nombres y filtro de insultos
   i18n/                    idiomas, mensajes de error y textos de las notificaciones
   art/                     dibujos SVG (pingüino, gorros, elementos)
 tests/                     backend/ y common/, con el mismo árbol que el código; worker/ prueba las
                            rutas con su SQL real sobre una SQLite en memoria (node:sqlite) con las migraciones
-.github/workflows/         despliegue automático
+.github/workflows/         comprobación de cada PR, despliegue automático y copia de seguridad semanal
 wrangler.jsonc             configuración del Worker: D1, límites de peticiones, assets
 vite.config.ts             Vite y Vitest
 pnpm-workspace.yaml        ajustes de seguridad de pnpm
@@ -266,7 +282,9 @@ fuera) y compila el juego a `dist/`.
   los dispositivos, y cualquiera puede borrar su cuenta con todos sus datos (sus ligas pasan a otro miembro).
 - Nombres: solo alfabeto latino (con tildes y ñ), números y . _ ' -; y no puede haber dos con la misma
   clave (sin tildes, mayúsculas ni separadores), para que nadie se haga pasar por otro
-  (`common/logic/players/names.ts`).
+  (`common/logic/players/names.ts`). Los nombres de jugador, nivel y liga pasan además un filtro de
+  insultos y palabrotas en los siete idiomas que ve a través de los trucos habituales (`pu7a`, `f.u.c.k`,
+  letras repetidas), sin bloquear palabras inocentes como «computadora» (`common/logic/players/offensive.ts`).
 - Trampas: el servidor reproduce cada partida y rechaza las imposibles o enviadas sin jugar, pero no
   puede saber si alguien ha calculado la solución por su cuenta (el juego entero corre en el navegador).
 - El email de las cuentas de Google se guarda cifrado (AES-GCM con el secreto `EMAIL_KEY`,
@@ -363,3 +381,17 @@ Restaurar una copia semanal (sin tocar la base actual hasta el final):
    sube el cambio: el despliegue apunta el juego a ella. La base vieja queda intacta por si hiciera falta.
 
 El archivo `skid.sql` descifrado tiene datos de los jugadores: bórralo al terminar.
+
+## Avisos si se cae
+
+`GET /api/health` (sin sesión) responde 200 si el Worker y la base de datos contestan, y 503 si la base
+de datos falla (`backend/src/routes/health.ts`). Repite la última respuesta durante 30 segundos, así que
+llamarla a menudo no gasta base de datos.
+
+Para recibir un correo cuando el juego se cae (y otro cuando vuelve), un servicio externo gratuito como
+[UptimeRobot](https://uptimerobot.com) la consulta cada 5 minutos:
+
+1. *New monitor → HTTP(s)*, URL `https://skid.<tu-subdominio>.workers.dev/api/health`, cada 5 minutos.
+2. Otro igual con la portada (`https://skid.<tu-subdominio>.workers.dev/`), para saber si los archivos del
+   juego cargan.
+3. En *Alert contacts*, tu correo (o la app del móvil, con avisos al momento).
