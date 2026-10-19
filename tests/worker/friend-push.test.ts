@@ -2,7 +2,7 @@
 // y el límite de uno por hora. El cifrado y la red se sustituyen: lo que se
 // «envía» es el mensaje tal cual.
 import { afterEach, beforeEach, expect, it, vi } from 'vitest';
-import { acceptFriend, addByLink, requestFriend } from '../../backend/src/routes/friends';
+import { acceptFriend, addByLink, friendCode, requestFriend } from '../../backend/src/routes/friends';
 import { addPlayer, createTestDb, type TestDb } from './d1';
 
 vi.mock('../../backend/src/webpush', async (importOriginal) => ({
@@ -69,11 +69,11 @@ it('al aceptar se avisa a quien la mandó', async () => {
 });
 
 it('con el enlace se avisa al dueño, solo la primera vez', async () => {
-  await addByLink(t.env, 'ana', 'bruno');
+  await addByLink(t.env, 'ana', await friendCode(t.env, 'bruno'));
   await flush();
   expect(sent.map((s) => s.title)).toEqual(['👥 Ana ya es tu amigo', '👥 Ana is now your friend']);
   sent = [];
-  await addByLink(t.env, 'ana', 'bruno');
+  await addByLink(t.env, 'ana', await friendCode(t.env, 'bruno'));
   await flush();
   expect(sent).toEqual([]);
 });

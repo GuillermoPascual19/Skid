@@ -267,12 +267,16 @@ fuera) y compila el juego a `dist/`.
 - Sesiones: token aleatorio de 256 bits en una cookie `HttpOnly`, `Secure` y `SameSite=Strict` (con el
   prefijo `__Host-`): el código de la página no puede leerla, así que un script inyectado no puede robar
   la sesión, y no viaja en peticiones desde otras webs. En la base de datos solo se guarda su hash. Los
-  juegos de antes, que guardaban el token en `localStorage`, lo mandan una vez y pasan a la cookie.
+  juegos de antes, que guardaban el token en `localStorage`, lo mandan una vez y pasan a la cookie (el
+  token en la cabecera solo se acepta hasta el 1 de enero de 2027).
   Google se verifica con su firma, emisor, destinatario y caducidad (`backend/src/google.ts`).
 - Lo que cambia algo (todo salvo las lecturas) solo se acepta si viene del propio juego (cabecera
   `Origin`), además de `SameSite`.
 - Cuentas nuevas: como mucho 3 por minuto y 20 al día desde la misma IP y, si Turnstile está activado,
-  solo tras comprobar que es una persona (`backend/src/turnstile.ts`): un script no puede crearlas en masa.
+  solo tras comprobar que es una persona (`backend/src/turnstile.ts`; la respuesta tiene que ser de este
+  dominio y para crear una sesión): un script no puede crearlas en masa.
+- Enlace de amigo: lleva un código secreto de cada jugador, no su id (que sale en rankings y niveles). Con
+  el código se es amigo al momento; con un id (los enlaces de antes) solo se manda una solicitud.
 - Ligas: como mucho 50 miembros. Quien crea una liga puede expulsar a alguien (no puede volver con el
   código) y cambiar el código, por si se comparte donde no debía.
 - Todas las consultas SQL van con parámetros. Lo de otros jugadores (nombres, niveles, ligas) se pinta

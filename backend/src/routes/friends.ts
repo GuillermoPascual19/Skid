@@ -14,6 +14,10 @@ export const MAX_FRIENDS = 100;
 /** Solicitudes enviadas sin contestar como mucho. */
 const MAX_PENDING = 20;
 
+/** Letras del código del enlace de amigo (sin 0/o ni 1/l, que se confunden). */
+const LINK_ALPHABET = 'abcdefghijkmnpqrstuvwxyz23456789';
+const LINK_LENGTH = 12;
+
 /**
  * Tu círculo: quienes comparten alguna liga contigo y tus amigos directos (sin
  * ti). Es una subconsulta con tu id en ?1, para los rankings y la lista de amigos.
@@ -100,8 +104,9 @@ export async function friendsOverview(env: Env, playerId: string) {
   type FriendRow = PlayerRow & { finished_at: number | null; started_at: number | null; over_par: number | null; score: number | null };
   const optimal = dailyLevel(today).solution.length;
   return {
-    /** Para tu enlace de amigo. */
     me: playerId,
+    /** El código secreto de tu enlace de amigo. */
+    link: await friendCode(env, playerId),
     day: today,
     friends: (friends.results as FriendRow[]).map((f) => ({
       ...publicPlayer(f),
@@ -121,6 +126,11 @@ export async function requestFriend(env: Env, playerId: string, name: unknown) {
   if (typeof name !== 'string' || !name.trim()) throw new HttpError(400, 'playerNotFound');
   const target = await env.DB.prepare('SELECT id, name FROM players WHERE name_key = ?').bind(nameKey(name.trim())).first<{ id: string; name: string }>();
   if (!target) throw new HttpError(404, 'playerNotFound');
+  return sendRequest(env, playerId, target);
+}
+
+/** Solicitud de amistad a `target` (o amigos ya, si él te la había mandado a ti). */
+async function sendRequest(env: Env, playerId: string, target: { id: string; name: string }) {
   if (target.id === playerId) throw new HttpError(400, 'cantFriendYourself');
   if (await directFriends(env, playerId, target.id)) throw new HttpError(409, 'alreadyFriends');
 
@@ -157,21 +167,51 @@ export async function removeFriend(env: Env, playerId: string, otherId: string) 
   return { ok: true };
 }
 
-/** Quién hay detrás de un enlace de amigo (para confirmar antes de añadirlo). */
-export async function friendLink(env: Env, playerId: string, targetId: string) {
-  const target = await env.DB.prepare('SELECT id, name, hat FROM players WHERE id = ? AND name IS NOT NULL').bind(targetId).first<PlayerRow>();
-  if (!target) throw new HttpError(404, 'playerNotFound');
-  return { ...publicPlayer(target), isMe: target.id === playerId, already: target.id !== playerId && (await directFriends(env, playerId, target.id)) };
+/** El código secreto del enlace de amigo del jugador; se crea la primera vez. */
+export async function friendCode(env: Env, playerId: string): Promise<string> {
+  for (let attempt = 0; attempt < 5; attempt++) {
+    const row = await env.DB.prepare('SELECT friend_code FROM players WHERE id = ?').bind(playerId).first<{ friend_code: string | null }>();
+    if (row?.friend_code) return row.friend_code;
+    const bytes = crypto.getRandomValues(new Uint8Array(LINK_LENGTH));
+    const code = [...bytes].map((b) => LINK_ALPHABET[b % LINK_ALPHABET.length]).join('');
+    try {
+      // Si otra petición lo crea a la vez, gana la primera y la vuelta siguiente lo lee.
+      await env.DB.prepare('UPDATE players SET friend_code = ? WHERE id = ? AND friend_code IS NULL').bind(code, playerId).run();
+    } catch (err) {
+      if (!String(err).includes('UNIQUE')) throw err; // Código repetido: se prueba otro.
+    }
+  }
+  throw new HttpError(500, 'internal');
 }
 
-/** Con el enlace de amigo no hace falta solicitud: quien lo comparte ya ha dado su permiso. */
-export async function addByLink(env: Env, playerId: string, targetId: string) {
+/**
+ * Quién hay detrás de un enlace de amigo. Con su código secreto, quien lo compartió
+ * ya ha dado permiso (`direct`). Los enlaces de antes llevaban el id del jugador, que
+ * sale en rankings y niveles: con esos solo se manda una solicitud.
+ */
+async function linkTarget(env: Env, value: string): Promise<PlayerRow & { name: string; direct: boolean }> {
+  const byCode = await env.DB.prepare('SELECT id, name, hat FROM players WHERE friend_code = ? AND name IS NOT NULL').bind(value).first<PlayerRow & { name: string }>();
+  if (byCode) return { ...byCode, direct: true };
+  const byId = await env.DB.prepare('SELECT id, name, hat FROM players WHERE id = ? AND name IS NOT NULL').bind(value).first<PlayerRow & { name: string }>();
+  if (!byId) throw new HttpError(404, 'playerNotFound');
+  return { ...byId, direct: false };
+}
+
+/** Quién hay detrás de un enlace de amigo (para confirmar antes de añadirlo). */
+export async function friendLink(env: Env, playerId: string, value: string) {
+  const target = await linkTarget(env, value);
+  const isMe = target.id === playerId;
+  return { ...publicPlayer(target), isMe, already: !isMe && (await directFriends(env, playerId, target.id)), direct: target.direct };
+}
+
+/** Con el código del enlace no hace falta solicitud: quien lo comparte ya ha dado su permiso. */
+export async function addByLink(env: Env, playerId: string, value: string) {
   await requireName(env, playerId);
-  const target = await env.DB.prepare('SELECT id, name FROM players WHERE id = ? AND name IS NOT NULL').bind(targetId).first<{ id: string; name: string }>();
-  if (!target) throw new HttpError(404, 'playerNotFound');
+  const target = await linkTarget(env, value);
+  if (!target.direct) return sendRequest(env, playerId, target);
   if (target.id === playerId) throw new HttpError(400, 'cantFriendYourself');
   const already = await directFriends(env, playerId, target.id);
   await befriend(env, playerId, target.id);
   if (!already) notifyFriend(env, target.id, playerId, 'friendAccepted');
-  return { name: target.name };
+  return { status: 'friends' as const, name: target.name };
 }

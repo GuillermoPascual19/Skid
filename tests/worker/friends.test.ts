@@ -6,6 +6,7 @@ import {
   addByLink,
   areFriends,
   dropRequest,
+  friendCode,
   friendLink,
   friendsOverview,
   removeFriend,
@@ -88,28 +89,48 @@ describe('solicitudes por nombre', () => {
 });
 
 describe('enlace de amigo', () => {
-  it('dice quién es, y añadirse no necesita solicitud', async () => {
-    expect(await friendLink(t.env, 'bruno', 'ana')).toEqual({ id: 'ana', name: 'Ana', hat: null, isMe: false, already: false });
-    expect(await addByLink(t.env, 'bruno', 'ana')).toEqual({ name: 'Ana' });
+  it('cada uno tiene su código secreto, que no cambia y sale en sus amigos', async () => {
+    const code = await friendCode(t.env, 'ana');
+    expect(code).toMatch(/^[a-z2-9]{12}$/);
+    expect(await friendCode(t.env, 'ana')).toBe(code);
+    expect(await friendCode(t.env, 'bruno')).not.toBe(code);
+    expect((await friendsOverview(t.env, 'ana')).link).toBe(code);
+  });
+
+  it('con el código: dice quién es, y añadirse no necesita solicitud', async () => {
+    const code = await friendCode(t.env, 'ana');
+    expect(await friendLink(t.env, 'bruno', code)).toEqual({ id: 'ana', name: 'Ana', hat: null, isMe: false, already: false, direct: true });
+    expect(await addByLink(t.env, 'bruno', code)).toEqual({ status: 'friends', name: 'Ana' });
     expect(await areFriends(t.env, 'ana', 'bruno')).toBe(true);
-    expect(await friendLink(t.env, 'bruno', 'ana')).toMatchObject({ already: true });
-    expect(await friendLink(t.env, 'ana', 'ana')).toMatchObject({ isMe: true, already: false });
+    expect(await friendLink(t.env, 'bruno', code)).toMatchObject({ already: true });
+    expect(await friendLink(t.env, 'ana', code)).toMatchObject({ isMe: true, already: false });
+  });
+
+  it('con el id (enlaces de antes, o el id que sale en un ranking) solo va una solicitud', async () => {
+    expect(await friendLink(t.env, 'bruno', 'ana')).toMatchObject({ id: 'ana', direct: false });
+    expect(await addByLink(t.env, 'bruno', 'ana')).toEqual({ status: 'sent', name: 'Ana' });
+    expect(await areFriends(t.env, 'ana', 'bruno')).toBe(false);
+    expect(names((await friendsOverview(t.env, 'ana')).incoming)).toEqual(['Bruno']);
+    await acceptFriend(t.env, 'ana', 'bruno');
+    expect(await areFriends(t.env, 'ana', 'bruno')).toBe(true);
   });
 
   it('añadirse otra vez no duplica nada y borra las solicitudes pendientes entre los dos', async () => {
+    const code = await friendCode(t.env, 'ana');
     await requestFriend(t.env, 'ana', 'Bruno');
-    await addByLink(t.env, 'bruno', 'ana');
-    await addByLink(t.env, 'bruno', 'ana');
+    await addByLink(t.env, 'bruno', code);
+    await addByLink(t.env, 'bruno', code);
     expect(t.rows('SELECT * FROM friendships')).toHaveLength(1);
     expect(t.rows('SELECT * FROM friend_requests')).toEqual([]);
   });
 
   it('no vale con uno mismo, con quien no existe ni con quien aún no tiene nombre', async () => {
-    await rejects(addByLink(t.env, 'ana', 'ana'), 400, 'cantFriendYourself');
+    await rejects(addByLink(t.env, 'ana', await friendCode(t.env, 'ana')), 400, 'cantFriendYourself');
     await rejects(addByLink(t.env, 'ana', 'nadie'), 404, 'playerNotFound');
     addPlayer(t, 'anon');
-    await rejects(friendLink(t.env, 'ana', 'anon'), 404, 'playerNotFound');
-    await rejects(addByLink(t.env, 'ana', 'anon'), 404, 'playerNotFound');
+    const anon = await friendCode(t.env, 'anon');
+    await rejects(friendLink(t.env, 'ana', anon), 404, 'playerNotFound');
+    await rejects(addByLink(t.env, 'ana', anon), 404, 'playerNotFound');
   });
 
   it(`como mucho ${MAX_FRIENDS} amigos`, async () => {
@@ -117,13 +138,13 @@ describe('enlace de amigo', () => {
       addPlayer(t, `f${i}`, `Amigo${i}`);
       t.db.prepare('INSERT INTO friendships (player_a, player_b, created_at) VALUES (?, ?, 0)').run('ana', `f${i}`);
     }
-    await rejects(addByLink(t.env, 'bruno', 'ana'), 409, 'tooManyFriends');
+    await rejects(addByLink(t.env, 'bruno', await friendCode(t.env, 'ana')), 409, 'tooManyFriends');
     expect(await areFriends(t.env, 'ana', 'bruno')).toBe(false);
   });
 });
 
 describe('ser amigos', () => {
-  const befriend = async (a: string, b: string) => addByLink(t.env, a, b);
+  const befriend = async (a: string, b: string) => addByLink(t.env, a, await friendCode(t.env, b));
 
   it('quitar a un amigo deja de serlo para los dos', async () => {
     await befriend('ana', 'bruno');

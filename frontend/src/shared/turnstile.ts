@@ -54,7 +54,7 @@ export async function humanCheck(siteKey: string): Promise<string> {
       sitekey: siteKey,
       // Solo se ve si hace falta que la persona pulse algo.
       appearance: 'interaction-only',
-      action: 'session',
+      action: 'session', // El servidor comprueba que sea esta.
       callback: (token: string) => done(() => resolve(token)),
       'error-callback': () => done(() => reject(new Error(t('common.humanCheck')))),
       'timeout-callback': () => done(() => reject(new Error(t('common.humanCheck')))),

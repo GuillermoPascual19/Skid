@@ -270,12 +270,16 @@ anything from outside) and builds the game to `dist/`.
 - Sessions: a random 256-bit token in an `HttpOnly`, `Secure`, `SameSite=Strict` cookie (with the
   `__Host-` prefix): the page's code can't read it, so an injected script can't steal the session, and it
   isn't sent on requests from other sites. The database only keeps its hash. Older versions of the game,
-  which kept the token in `localStorage`, send it once and move to the cookie.
+  which kept the token in `localStorage`, send it once and move to the cookie (the token in the header
+  is only accepted until 1 January 2027).
   Google tokens are checked for signature, issuer, audience and expiry (`backend/src/google.ts`).
 - Anything that changes data (everything except reads) is only accepted from the game itself (`Origin`
   header), on top of `SameSite`.
 - New accounts: at most 3 per minute and 20 per day from the same IP and, with Turnstile on, only after
-  checking it's a person (`backend/src/turnstile.ts`): a script can't create them in bulk.
+  checking it's a person (`backend/src/turnstile.ts`; the answer must be for this domain and for creating
+  a session): a script can't create them in bulk.
+- Friend links: they carry each player's secret code, not their id (which shows up in rankings and levels).
+  With the code you're friends right away; with an id (older links) only a request is sent.
 - Leagues: 50 members at most. Whoever creates a league can remove someone (they can't come back with
   the code) and change the code, in case it gets shared where it shouldn't.
 - Every SQL query is parameterized. Anything from other players (names, levels, leagues) is always

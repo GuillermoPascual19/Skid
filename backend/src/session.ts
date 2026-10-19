@@ -11,6 +11,13 @@ import { forgetAll } from './memo';
 /** Cuentas nuevas por IP y día (alto a propósito: en una universidad muchos comparten IP). */
 const MAX_SESSIONS_PER_IP_PER_DAY = 20;
 
+/**
+ * Hasta cuándo se acepta el token en la cabecera (los juegos de antes lo guardaban en
+ * el navegador): basta con abrir el juego una vez para pasar a la cookie. Después,
+ * un token antiguo robado ya no sirve.
+ */
+export const LEGACY_TOKEN_UNTIL = Date.parse('2027-01-01T00:00:00Z');
+
 /** Una sesión que lleva un año sin usarse caduca: un token olvidado o robado no sirve para siempre. */
 const SESSION_MAX_IDLE_MS = 365 * 86_400_000;
 /** El último uso se apunta como mucho una vez al día (para no escribir en cada petición). */
@@ -65,7 +72,7 @@ export async function createSession(req: Request, env: Env, turnstile: unknown):
   const { success } = await env.SESSION_RATE_LIMITER.limit({ key: ipHash });
   if (!success) throw new HttpError(429, 'tooManyNewAccounts');
   // Que sea una persona y no un script (antes de gastar nada en la base de datos).
-  await verifyTurnstile(env, turnstile, ip);
+  await verifyTurnstile(env, turnstile, ip, new URL(req.url).hostname);
 
   // Total diario, en D1. Los días anteriores se borran sobre la marcha.
   const [, counter] = await env.DB.batch([
@@ -95,7 +102,8 @@ export async function authenticate(req: Request, url: URL, env: Env): Promise<Se
   // La cookie; o, de los juegos de antes, la cabecera con el token que guardaban en el navegador
   // (la respuesta les pone la cookie y el juego lo borra de allí).
   const fromCookie = cookieToken(req, url);
-  const token = fromCookie ?? req.headers.get('Authorization')?.match(/^Bearer (.+)$/)?.[1];
+  const legacy = Date.now() < LEGACY_TOKEN_UNTIL ? req.headers.get('Authorization')?.match(/^Bearer (.+)$/)?.[1] : undefined;
+  const token = fromCookie ?? legacy;
   if (!token) throw new HttpError(401, 'noSession');
   const tokenHash = await sha256(token);
   const row = await env.DB.prepare('SELECT player_id, last_used_at FROM sessions WHERE token_hash = ?')
