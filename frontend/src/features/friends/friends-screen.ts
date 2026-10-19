@@ -172,7 +172,7 @@ export function friendsScreen(add?: string): Screen {
           class: 'btn secondary block',
           onclick: async () => {
             if (!(await ensureName())) return;
-            share(`👥 ${t('friends.linkText')}\n${friendLink(data!.me)}`);
+            share(`👥 ${t('friends.linkText')}\n${friendLink(data!.link)}`);
           },
         },
         `🔗 ${t('friends.shareLink')}`,
@@ -230,7 +230,7 @@ export function friendsScreen(add?: string): Screen {
         [
           h('div', { class: 'friend-link-penguin', 'aria-hidden': 'true' }, svg(penguinSvg(p.hat))),
           h('h2', null, t('friends.linkTitle', { name: playerName(p.name) })),
-          h('p', { class: 'lead' }, t('friends.linkQuestion')),
+          h('p', { class: 'lead' }, t(p.direct ? 'friends.linkQuestion' : 'friends.linkRequest')),
           h(
             'div',
             { class: 'row' },
@@ -242,10 +242,13 @@ export function friendsScreen(add?: string): Screen {
                 onclick: async () => {
                   modal.close();
                   if (!(await ensureName())) return;
-                  await act(() => addFriendByLink(id), t('friends.nowFriends', { name: playerName(p.name) }));
+                  await act(async () => {
+                    const r = await addFriendByLink(id);
+                    toast(r.status === 'friends' ? t('friends.nowFriends', { name: r.name }) : t('friends.sent', { name: r.name }));
+                  });
                 },
               },
-              t('friends.addButton'),
+              p.direct ? t('friends.addButton') : t('friends.send'),
             ),
           ),
         ],

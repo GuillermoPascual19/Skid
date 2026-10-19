@@ -123,3 +123,45 @@ it('con Turnstile configurado, no se crean cuentas sin pasar la comprobación', 
     verify.mockRestore();
   }
 });
+
+it('Turnstile en producción: la respuesta tiene que ser de este dominio y para crear una sesión', async () => {
+  Object.assign(t.env, { TURNSTILE_SITE_KEY: 'clave-publica', TURNSTILE_SECRET: 'clave-secreta' });
+  let outcome: Record<string, unknown> = {};
+  const verify = vi.spyOn(globalThis, 'fetch').mockImplementation(async () => Response.json(outcome));
+  const create = () =>
+    worker.fetch(
+      new Request('https://skid.example/api/session', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ turnstile: 'token' }),
+      }) as Parameters<typeof worker.fetch>[0],
+      t.env,
+      ctx,
+    );
+  try {
+    outcome = { success: true, hostname: 'otra-web.example', action: 'session' };
+    expect((await create()).status).toBe(403);
+    outcome = { success: true, hostname: 'skid.example', action: 'otra' };
+    expect((await create()).status).toBe(403);
+    outcome = { success: true, hostname: 'skid.example', action: 'session' };
+    expect((await create()).status).toBe(200);
+  } finally {
+    verify.mockRestore();
+  }
+});
+
+it('el token en la cabecera solo vale hasta el 1 de enero de 2027', async () => {
+  const cookie = await newSession();
+  const token = cookie.split('=')[1];
+  vi.useFakeTimers({ toFake: ['Date'] });
+  try {
+    vi.setSystemTime(new Date('2026-12-31T23:00:00Z'));
+    expect((await call('/me', { headers: { Authorization: `Bearer ${token}` } })).status).toBe(200);
+    vi.setSystemTime(new Date('2027-01-01T00:00:01Z'));
+    expect((await call('/me', { headers: { Authorization: `Bearer ${token}` } })).status).toBe(401);
+    // Con la cookie, igual que siempre.
+    expect((await call('/me', { headers: { Cookie: cookie } })).status).toBe(200);
+  } finally {
+    vi.useRealTimers();
+  }
+});

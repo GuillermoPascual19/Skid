@@ -970,6 +970,7 @@ export const messages: Messages = {
     alreadyFriend: 'Já és amigo de {name}',
     linkTitle: 'Adicionar {name} como amigo?',
     linkQuestion: 'Vão aparecer nos rankings um do outro, ver os vossos jogos e desafiar-se em duelos.',
+    linkRequest: 'Este link é de uma versão anterior: vamos enviar um pedido de amizade e serão amigos quando for aceite.',
     addButton: 'Adicionar',
     requests: 'Pedidos de amizade: {n}',
     leagues: 'Ligas e ranking',

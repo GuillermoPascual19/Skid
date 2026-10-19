@@ -15,8 +15,9 @@ export interface Friend extends FriendPlayer {
 }
 
 export interface FriendsOverview {
-  /** Tu id, para tu enlace de amigo. */
   me: string;
+  /** El código secreto de tu enlace de amigo. */
+  link: string;
   friends: Friend[];
   incoming: FriendPlayer[];
   outgoing: FriendPlayer[];
@@ -44,15 +45,16 @@ export function removeFriend(id: string): Promise<void> {
   return api('DELETE', `/friends/${encodeURIComponent(id)}`);
 }
 
-export function getFriendLink(id: string): Promise<FriendPlayer & { isMe: boolean; already: boolean }> {
-  return api('GET', `/friends/link/${encodeURIComponent(id)}`);
+/** Quién hay detrás de un enlace de amigo. `direct`: con su código (amigos al momento); si no, es un enlace antiguo y va solicitud. */
+export function getFriendLink(link: string): Promise<FriendPlayer & { isMe: boolean; already: boolean; direct: boolean }> {
+  return api('GET', `/friends/link/${encodeURIComponent(link)}`);
 }
 
-export function addFriendByLink(id: string): Promise<{ name: string }> {
-  return api('POST', `/friends/link/${encodeURIComponent(id)}`);
+export function addFriendByLink(link: string): Promise<{ status: 'sent' | 'friends'; name: string }> {
+  return api('POST', `/friends/link/${encodeURIComponent(link)}`);
 }
 
-/** Tu enlace de amigo: quien lo abre te añade (tras confirmarlo). */
-export function friendLink(me: string): string {
-  return `${location.origin}${location.pathname}?amigo=${encodeURIComponent(me)}`;
+/** Tu enlace de amigo (con tu código secreto): quien lo abre te añade, tras confirmarlo. */
+export function friendLink(code: string): string {
+  return `${location.origin}${location.pathname}?amigo=${encodeURIComponent(code)}`;
 }

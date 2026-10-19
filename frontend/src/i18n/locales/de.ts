@@ -970,6 +970,7 @@ export const messages: Messages = {
     alreadyFriend: 'Du bist schon mit {name} befreundet',
     linkTitle: '{name} als Freund hinzufügen?',
     linkQuestion: 'Ihr erscheint in den Ranglisten des anderen, seht eure Partien und könnt euch duellieren.',
+    linkRequest: 'Dieser Link stammt aus einer älteren Version: Wir schicken eine Freundschaftsanfrage, und ihr seid Freunde, sobald sie angenommen wird.',
     addButton: 'Hinzufügen',
     requests: 'Freundschaftsanfragen: {n}',
     leagues: 'Ligen und Rangliste',
