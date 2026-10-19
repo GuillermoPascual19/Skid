@@ -6,6 +6,7 @@ import { BoardError, parseBoard } from '../../../common/logic/engine/board';
 import { checkCustomLevel, CUSTOM_LIMITS, decodeRows, encodeRows, movesToFinish } from '../../../common/logic/community/community';
 import { isOffensive } from '../../../common/logic/players/offensive';
 import { type Env, HttpError, cleanText } from '../http';
+import { forget, memo } from '../memo';
 import { requireName } from './players';
 
 /** Niveles de la comunidad que puede tener publicados cada jugador. */
@@ -86,6 +87,14 @@ function customLevelResponse(row: CustomLevelRow, playerId: string) {
   };
 }
 
+/** El orden de «Mejores» y «Nuevos» es el mismo para todos: se calcula como mucho una vez por minuto. */
+const LEVELS_ORDER_TTL_MS = 60_000;
+
+/** Un nivel nuevo o borrado cambia las listas: se vuelven a ordenar. */
+export function forgetLevelLists(): void {
+  forget('levels:');
+}
+
 export async function listCustomLevels(env: Env, playerId: string, sort: string, offset: number) {
   const order = {
     // Media "suavizada" (como si tuviera 2 votos de 3 estrellas): un 5 con un solo voto no gana a un 4,6 con veinte.
@@ -99,13 +108,38 @@ export async function listCustomLevels(env: Env, playerId: string, sort: string,
   // Los ocultos por denuncias solo los ve su autor (en "Mis niveles").
   const visible = `reports < ${REPORTS_TO_HIDE}`;
   const where = { mine: 'author_id = ?1', liked: `my_like = 1 AND ${visible}`, saved: `my_save = 1 AND ${visible}` }[sort] ?? visible;
-  const { results } = await env.DB.prepare(`SELECT * FROM (${CUSTOM_LEVEL_SELECT}) WHERE ${where} ORDER BY ${order} LIMIT ?2 OFFSET ?3`)
+  let results: CustomLevelRow[];
+  if (sort === 'top' || sort === 'new') {
+    // Ordenar exige mirar todos los niveles (notas, partidas, denuncias): se guarda qué niveles
+    // van en la página y luego solo se piden esos, con lo de cada jugador (su me gusta, su marca…).
+    const ids = await memo(`levels:${sort}:${offset}`, LEVELS_ORDER_TTL_MS, async () => {
+      const { results } = await env.DB.prepare(`SELECT id FROM (${CUSTOM_LEVEL_SELECT}) WHERE ${visible} ORDER BY ${order} LIMIT ?2 OFFSET ?3`)
+        .bind(null, CUSTOM_PAGE_SIZE + 1, offset)
+        .all<{ id: string }>();
+      return results.map((r) => r.id);
+    });
+    results = await levelsById(env, playerId, ids);
+    // Si entretanto alguno se ha ocultado o borrado, la página sale con uno menos.
+    results = results.filter((r) => r.reports < REPORTS_TO_HIDE);
+    return { levels: results.slice(0, CUSTOM_PAGE_SIZE).map((r) => customLevelResponse(r, playerId)), more: ids.length > CUSTOM_PAGE_SIZE };
+  }
+  ({ results } = await env.DB.prepare(`SELECT * FROM (${CUSTOM_LEVEL_SELECT}) WHERE ${where} ORDER BY ${order} LIMIT ?2 OFFSET ?3`)
     .bind(playerId, CUSTOM_PAGE_SIZE + 1, offset)
-    .all<CustomLevelRow>();
+    .all<CustomLevelRow>());
   return {
     levels: results.slice(0, CUSTOM_PAGE_SIZE).map((r) => customLevelResponse(r, playerId)),
     more: results.length > CUSTOM_PAGE_SIZE,
   };
+}
+
+/** Esos niveles, en ese orden, con lo de quien los mira. */
+async function levelsById(env: Env, playerId: string, ids: string[]): Promise<CustomLevelRow[]> {
+  if (ids.length === 0) return [];
+  const { results } = await env.DB.prepare(`${CUSTOM_LEVEL_SELECT} WHERE l.id IN (${ids.map((_, i) => `?${i + 2}`).join(', ')})`)
+    .bind(playerId, ...ids)
+    .all<CustomLevelRow>();
+  const byId = new Map(results.map((r) => [r.id, r]));
+  return ids.flatMap((id) => byId.get(id) ?? []);
 }
 
 /** Me gusta (`on`) o lo quita. Cualquiera puede, sin haberlo superado. */
@@ -190,6 +224,7 @@ export async function createCustomLevel(env: Env, playerId: string, input: { nam
     ),
     env.DB.prepare('INSERT INTO custom_level_runs (level_id, player_id, best_moves, finished_at, best_at) VALUES (?1, ?2, ?3, ?4, ?4)').bind(id, playerId, moves, now),
   ]);
+  forgetLevelLists();
   return getCustomLevel(env, playerId, id);
 }
 
@@ -275,6 +310,7 @@ export async function rateCustomLevel(env: Env, playerId: string, id: string, st
 
 export async function deleteCustomLevel(env: Env, playerId: string, id: string) {
   // D1 cuenta también las partidas que se borran en cascada: basta con que cambie algo.
+  forgetLevelLists();
   const result = await env.DB.prepare('DELETE FROM custom_levels WHERE id = ? AND author_id = ?').bind(id, playerId).run();
   if (!result.meta.changes) throw new HttpError(404, 'noSuchOwnLevel');
   return { ok: true };

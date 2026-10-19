@@ -128,6 +128,7 @@ backend/                   el Worker de Cloudflare: sirve el juego (dist/) y la 
     session.ts             sesiones (en cookie HttpOnly), login con Google, cerrar sesión y borrar la cuenta
     turnstile.ts           comprobar que es una persona al crear una cuenta
     seal.ts                cifrado del email
+    memo.ts                caché en memoria del ranking global y del orden de los niveles (un minuto)
     google.ts              verificación de los tokens de Google
     i18n.ts                idioma de cada petición para los mensajes de error
     push.ts                notificaciones: a quién, en qué idioma y sin repetir
@@ -273,6 +274,9 @@ fuera) y compila el juego a `dist/`.
 - Lecturas agrupadas: las que el juego hace a la vez (las de la portada al abrirla) van juntas en una
   sola petición, `GET /api/batch?p=…` (hasta 12), con la sesión comprobada una vez y cada lectura por su
   ruta de siempre (`frontend/src/shared/api.ts`, `backend/src/index.ts`).
+- Caché: el ranking global y el orden de «Mejores» y «Nuevos» en los niveles son iguales para todos y
+  caros de calcular: se guardan un minuto en la memoria del Worker y se borran en cuanto algo los cambia
+  (`backend/src/memo.ts`). Lo de cada jugador (su puesto, sus me gusta…) se consulta siempre al día.
 - Límites: 120 peticiones por minuto y jugador a toda la API, cuerpos de 32 KB como mucho, y límites
   propios para crear cuentas, unirse a ligas y publicar niveles (`wrangler.jsonc`).
 - Cabeceras: CSP estricta y el resto de cabeceras de seguridad en `frontend/public/_headers`; la API

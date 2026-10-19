@@ -6,6 +6,8 @@
 import { dayKey } from '../../../common/logic/daily/daily';
 import { decodeRows } from '../../../common/logic/community/community';
 import { type Env, HttpError } from '../http';
+import { forgetGlobalRanking } from './global';
+import { forgetLevelLists } from './levels';
 
 /** Filas por página en los listados. */
 const PAGE = 30;
@@ -137,6 +139,7 @@ export async function adminDeleteLevel(env: Env, playerId: string, levelId: stri
   if (!level) throw new HttpError(404, 'levelNotFound');
   // Las partidas, valoraciones y denuncias se borran en cascada.
   await env.DB.prepare('DELETE FROM custom_levels WHERE id = ?').bind(levelId).run();
+  forgetLevelLists();
   audit(playerId, 'deleteLevel', levelId, { name: level.name, author: level.author_id });
   return { ok: true };
 }
@@ -205,6 +208,7 @@ export async function adminResetName(env: Env, playerId: string, targetId: strin
   const player = await env.DB.prepare('SELECT name FROM players WHERE id = ?').bind(targetId).first<{ name: string | null }>();
   if (!player) throw new HttpError(404, 'playerNotFound');
   await env.DB.prepare('UPDATE players SET name = NULL, name_key = NULL WHERE id = ?').bind(targetId).run();
+  forgetGlobalRanking();
   audit(playerId, 'resetName', targetId, { name: player.name });
   return { ok: true };
 }

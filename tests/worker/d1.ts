@@ -3,6 +3,7 @@
 // migraciones de backend/migrations aplicadas y las claves foráneas activadas
 // (como en D1). Así se prueba el SQL de verdad de las rutas.
 
+import { forgetAll } from '../../backend/src/memo';
 import { DatabaseSync, type StatementSync } from 'node:sqlite';
 import { readdirSync, readFileSync } from 'node:fs';
 import type { Env } from '../../backend/src/http';
@@ -73,6 +74,7 @@ export interface TestDb {
 
 /** Base de datos nueva con todas las migraciones y un Env de pruebas (limitadores siempre a favor). */
 export function createTestDb(): TestDb {
+  forgetAll(); // La caché en memoria del Worker no pasa de una prueba a otra.
   const db = new DatabaseSync(':memory:');
   db.exec('PRAGMA foreign_keys = ON');
   for (const file of readdirSync(filePath(MIGRATIONS))
