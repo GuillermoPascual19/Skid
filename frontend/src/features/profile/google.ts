@@ -62,10 +62,7 @@ const G_LOGO = `<svg viewBox="0 0 48 48" width="20" height="20" aria-hidden="tru
  * Pinta el botón «Continuar con Google» en `container`. Devuelve false (y no
  * pinta nada) si el login con Google no está configurado.
  */
-export async function renderGoogleButton(
-  container: HTMLElement,
-  onSignedIn: (result: online.GoogleLogin) => void,
-): Promise<boolean> {
+export async function renderGoogleButton(container: HTMLElement, onSignedIn: (result: online.GoogleLogin) => void): Promise<boolean> {
   let clientId: string | null;
   try {
     clientId = await online.googleClientId();

@@ -5,11 +5,7 @@ type Child = Node | string | number | null | undefined | false;
 type Props = Record<string, unknown>;
 
 /** Crea un elemento: h('button', { class: 'btn', onclick: fn }, 'Texto'). */
-export function h<K extends keyof HTMLElementTagNameMap>(
-  tag: K,
-  props: Props | null = null,
-  ...children: Child[]
-): HTMLElementTagNameMap[K] {
+export function h<K extends keyof HTMLElementTagNameMap>(tag: K, props: Props | null = null, ...children: Child[]): HTMLElementTagNameMap[K] {
   const el = document.createElement(tag);
   for (const [key, value] of Object.entries(props ?? {})) {
     if (value === undefined || value === null || value === false) continue;
@@ -211,9 +207,7 @@ export function formatTime(ms: number): string {
 
 /** "2026-10-06" -> "lunes, 6 de octubre" (en el idioma del jugador). */
 export function formatDay(day: string): string {
-  return new Intl.DateTimeFormat(intlLocale(), { weekday: 'long', day: 'numeric', month: 'long', timeZone: 'UTC' }).format(
-    new Date(`${day}T12:00:00Z`),
-  );
+  return new Intl.DateTimeFormat(intlLocale(), { weekday: 'long', day: 'numeric', month: 'long', timeZone: 'UTC' }).format(new Date(`${day}T12:00:00Z`));
 }
 
 /** Día anterior a "YYYY-MM-DD". */

@@ -225,10 +225,11 @@ function play(fn: (c: AudioContext, out: AudioNode, t: number) => void): void {
 export const sfx = {
   slide: (durationMs: number) => play((c, o, t) => synth.slide(c, o, t, durationMs / 1000)),
   land: () => play((c, o, t) => synth.thud(c, o, t, 1)),
-  bump: () => play((c, o, t) => {
-    synth.thud(c, o, t, 0.55);
-    synth.squawk(c, o, t + 0.02);
-  }),
+  bump: () =>
+    play((c, o, t) => {
+      synth.thud(c, o, t, 0.55);
+      synth.squawk(c, o, t + 0.02);
+    }),
   collect: (index: number) => play((c, o, t) => synth.collect(c, o, t, index)),
   win: () => {
     duckMusic(synth.WIN_S);

@@ -162,7 +162,9 @@ async function toggleMark(env: Env, playerId: string, id: string, on: unknown, t
 
 /** El nivel destacado (el último que eligió el administrador), si lo hay y se puede ver. */
 export async function featuredCustomLevel(env: Env, playerId: string) {
-  const row = await env.DB.prepare(`SELECT * FROM (${CUSTOM_LEVEL_SELECT}) WHERE featured_at IS NOT NULL AND reports < ${REPORTS_TO_HIDE} ORDER BY featured_at DESC LIMIT 1`)
+  const row = await env.DB.prepare(
+    `SELECT * FROM (${CUSTOM_LEVEL_SELECT}) WHERE featured_at IS NOT NULL AND reports < ${REPORTS_TO_HIDE} ORDER BY featured_at DESC LIMIT 1`,
+  )
     .bind(playerId)
     .first<CustomLevelRow>();
   return { level: row ? customLevelResponse(row, playerId) : null };

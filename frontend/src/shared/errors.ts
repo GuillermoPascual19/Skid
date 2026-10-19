@@ -52,7 +52,7 @@ function report(error: Omit<ClientError, 'route' | 'build'>): void {
 function describe(reason: unknown): { message: string; stack: string | null } {
   if (reason instanceof Error) return { message: `${reason.name}: ${reason.message}`, stack: reason.stack ?? null };
   try {
-    return { message: typeof reason === 'string' ? reason : JSON.stringify(reason) ?? String(reason), stack: null };
+    return { message: typeof reason === 'string' ? reason : (JSON.stringify(reason) ?? String(reason)), stack: null };
   } catch {
     return { message: String(reason), stack: null };
   }

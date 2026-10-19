@@ -198,7 +198,10 @@ p {
   background: var(--bg);
   box-shadow: 0 5px 0 var(--bg-dark);
   cursor: pointer;
-  transition: transform 0.08s, box-shadow 0.08s, filter 0.15s;
+  transition:
+    transform 0.08s,
+    box-shadow 0.08s,
+    filter 0.15s;
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -327,7 +330,9 @@ p {
   font-weight: 800;
   letter-spacing: -0.02em;
   color: #fff;
-  text-shadow: 0 4px 0 var(--secondary-dark), 0 10px 20px rgba(21, 50, 79, 0.25);
+  text-shadow:
+    0 4px 0 var(--secondary-dark),
+    0 10px 20px rgba(21, 50, 79, 0.25);
 }
 
 .logo p {
@@ -645,7 +650,9 @@ p {
 
 .board-wrap canvas {
   border-radius: 20px;
-  box-shadow: 0 0 0 5px var(--board-frame), 0 18px 40px rgba(21, 50, 79, 0.28);
+  box-shadow:
+    0 0 0 5px var(--board-frame),
+    0 18px 40px rgba(21, 50, 79, 0.28);
 }
 
 .hint {
@@ -1036,7 +1043,9 @@ p {
   border: 4px solid var(--surface);
   border-radius: 50%;
   box-shadow: 0 10px 24px rgba(228, 143, 12, 0.45);
-  animation: icon-in 0.8s 0.15s cubic-bezier(0.18, 0.89, 0.32, 1.5) both, wobble 2.6s 1s ease-in-out infinite;
+  animation:
+    icon-in 0.8s 0.15s cubic-bezier(0.18, 0.89, 0.32, 1.5) both,
+    wobble 2.6s 1s ease-in-out infinite;
 }
 
 .celebrate-icon.svg {
@@ -1139,7 +1148,9 @@ p {
 
   .board-wrap canvas {
     border-radius: 16px;
-    box-shadow: 0 0 0 4px var(--board-frame), 0 12px 28px rgba(21, 50, 79, 0.25);
+    box-shadow:
+      0 0 0 4px var(--board-frame),
+      0 12px 28px rgba(21, 50, 79, 0.25);
   }
 
   .logo {
@@ -2210,7 +2221,9 @@ input.switch:focus-visible {
   padding: 6px;
   background: var(--snow);
   border-radius: 16px;
-  box-shadow: 0 0 0 4px var(--board-frame), var(--shadow);
+  box-shadow:
+    0 0 0 4px var(--board-frame),
+    var(--shadow);
   touch-action: none;
   user-select: none;
 }
@@ -2336,7 +2349,9 @@ input.switch:focus-visible {
 
 .tool-swatch.wall {
   background: var(--snow);
-  box-shadow: inset 0 -4px 0 var(--snow-front), 0 0 0 1px var(--line);
+  box-shadow:
+    inset 0 -4px 0 var(--snow-front),
+    0 0 0 1px var(--line);
 }
 
 .tool-swatch.ice {
@@ -3347,7 +3362,9 @@ input.switch:focus-visible {
   height: auto;
   opacity: 0.45;
   filter: grayscale(0.6);
-  transition: opacity 0.3s, filter 0.3s;
+  transition:
+    opacity 0.3s,
+    filter 0.3s;
 }
 
 .duel-seat.here .duel-seat-penguin svg {
@@ -3584,7 +3601,9 @@ input.switch:focus-visible {
   font-size: 110px;
   font-weight: 800;
   color: var(--secondary);
-  text-shadow: 0 4px 0 var(--card-solid), 0 10px 30px rgba(21, 50, 79, 0.25);
+  text-shadow:
+    0 4px 0 var(--card-solid),
+    0 10px 30px rgba(21, 50, 79, 0.25);
   pointer-events: none;
 }
 

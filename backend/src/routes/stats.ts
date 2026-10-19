@@ -34,9 +34,7 @@ export async function wonDays(env: Env, playerId: string): Promise<Set<string>> 
 
 /** Estadísticas personales del reto diario: rachas, totales y los últimos 30 días. */
 export async function playerStats(env: Env, playerId: string) {
-  const { results: runs } = await env.DB.prepare(
-    'SELECT day, over_par FROM daily_runs WHERE player_id = ? AND finished_at IS NOT NULL ORDER BY day',
-  )
+  const { results: runs } = await env.DB.prepare('SELECT day, over_par FROM daily_runs WHERE player_id = ? AND finished_at IS NOT NULL ORDER BY day')
     .bind(playerId)
     .all<{ day: string; over_par: number | null }>();
   const wins = await wonDays(env, playerId);

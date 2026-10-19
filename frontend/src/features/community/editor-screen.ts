@@ -256,9 +256,7 @@ export function editorScreen(): Screen {
       const { solution } = checkCustomLevel(rows());
       valid = true;
       status.className = 'editor-status ok';
-      status.textContent = proven()
-        ? `✓ ${t('editor.status.proven', { n: solution.length })}`
-        : `✓ ${t('editor.status.solvable', { n: solution.length })}`;
+      status.textContent = proven() ? `✓ ${t('editor.status.proven', { n: solution.length })}` : `✓ ${t('editor.status.solvable', { n: solution.length })}`;
     } catch (err) {
       status.className = 'editor-status error';
       status.textContent = boardProblem(err);
@@ -367,9 +365,17 @@ export function editorScreen(): Screen {
     h(
       'div',
       { class: 'editor-size' },
-      stepper(t('editor.width'), () => resize(width() - 1, height()), () => resize(width() + 1, height())),
+      stepper(
+        t('editor.width'),
+        () => resize(width() - 1, height()),
+        () => resize(width() + 1, height()),
+      ),
       sizeLabel,
-      stepper(t('editor.height'), () => resize(width(), height() - 1), () => resize(width(), height() + 1)),
+      stepper(
+        t('editor.height'),
+        () => resize(width(), height() - 1),
+        () => resize(width(), height() + 1),
+      ),
     ),
     board,
     status,

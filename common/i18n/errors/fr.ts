@@ -6,7 +6,7 @@ export const errors: ErrorMessages = {
   sessionExpired: 'Session expirée',
   googleNotConfigured: "La connexion avec Google n'est pas configurée",
   invalidCredential: 'Identifiants non valides',
-  googleUnverified: "Impossible de vérifier ton compte Google",
+  googleUnverified: 'Impossible de vérifier ton compte Google',
   linkGoogleFirst: "Associe d'abord ton compte Google, sinon tu ne pourrais plus te reconnecter",
   missingConfirmation: 'Confirmation manquante',
   unknownHat: 'Chapeau inconnu',
@@ -62,16 +62,16 @@ export const errors: ErrorMessages = {
 
   alreadyFriends: 'Vous êtes déjà amis',
 
-  requestNotFound: 'Cette demande n\'existe plus',
+  requestNotFound: "Cette demande n'existe plus",
 
   adminOnly: 'Réservé aux administrateurs',
   onlyLeagueProfiles: 'Tu ne peux voir que le profil de tes amis et des joueurs de tes ligues',
   onlyLeagueGames: 'Tu ne peux voir que les parties de tes amis et des joueurs de tes ligues',
   leagueNameLength: 'Le nom de la ligue doit contenir entre {min} et {max} caractères',
   leagueNotFound: "Aucune ligue n'a ce code",
-  notLeagueMember: "Tu ne fais pas partie de cette ligue",
+  notLeagueMember: 'Tu ne fais pas partie de cette ligue',
   maxLeagues: 'Tu as déjà créé {n} ligues, le maximum',
-  leagueCreateFailed: "Impossible de créer la ligue",
+  leagueCreateFailed: 'Impossible de créer la ligue',
 
   invalidSort: 'Tri non valide',
   levelNameLength: 'Le nom du niveau doit contenir entre {min} et {max} caractères',
@@ -80,7 +80,7 @@ export const errors: ErrorMessages = {
   noSuchOwnLevel: "Tu n'as aucun niveau avec cet identifiant",
   maxLevels: 'Tu as déjà publié {n} niveaux, le maximum. Supprimes-en un pour en publier un autre.',
   duplicateLevel: 'Un niveau identique a déjà été publié',
-  beatItFirst: "Tu dois réussir le niveau toi-même avant de le publier",
+  beatItFirst: 'Tu dois réussir le niveau toi-même avant de le publier',
   invalidReason: 'Motif non valide',
   cantReportOwn: 'Tu ne peux pas signaler tes propres niveaux',
   ratingRange: 'La note va de 1 à 5',

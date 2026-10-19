@@ -74,7 +74,14 @@ pnpm install
 pnpm run dev     # juego (Vite, http://localhost:5173) + API con D1 local (Wrangler, :8787)
 pnpm test        # tests (Vitest)
 pnpm run build   # comprueba tipos y compila a dist/
+pnpm lint        # estilo y errores comunes (Biome)
+pnpm format      # arregla el formato y lo que Biome sabe arreglar solo
 ```
+
+El estilo lo marca [Biome](https://biomejs.dev/) (`biome.json`): formato al estilo de Prettier
+(comillas simples, 170 caracteres por línea) y reglas para errores comunes. Se usa Biome y no
+ESLint porque TypeScript 7 ya no trae la API de JavaScript que necesita `typescript-eslint`. Cada PR
+lo comprueba.
 
 `pnpm run dev:web` arranca solo el juego; el ranking dará error de conexión hasta que la API
 esté en marcha. Con `VITE_API_BASE=` vacía en `.env.local` el juego funciona sin ranking online
@@ -156,6 +163,7 @@ tests/                     backend/ y common/, con el mismo árbol que el códig
 .github/workflows/         comprobación de cada PR, despliegue automático y copia de seguridad semanal
 wrangler.jsonc             configuración del Worker: D1, límites de peticiones, assets
 vite.config.ts             Vite y Vitest
+biome.json                 estilo y reglas del código (Biome)
 pnpm-workspace.yaml        ajustes de seguridad de pnpm
 ```
 
@@ -325,7 +333,7 @@ Primera vez:
 3. Publica: `pnpm run deploy`. Aplica las migraciones y despliega; al terminar muestra la URL
    (`https://skid.<tu-subdominio>.workers.dev`).
 
-Comprobación de cada PR (`.github/workflows/ci.yml`): tipos, tests y compilación, con ✅ o ❌ en el PR
+Comprobación de cada PR (`.github/workflows/ci.yml`): estilo, tipos, tests y compilación, con ✅ o ❌ en el PR
 antes de fusionarlo.
 
 Despliegue automático en cada push a `main` (`.github/workflows/deploy.yml`, pasa los tests antes):

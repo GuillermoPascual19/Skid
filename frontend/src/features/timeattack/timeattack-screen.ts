@@ -194,7 +194,9 @@ export function timeAttackScreen(start: TimeAttackStart, previousBest: number | 
           result.run.skipped ? h('span', { class: 'chip' }, `⏭ ${result.run.skipped}`) : null,
         ),
         ...(result.best && !record ? [h('p', { class: 'muted' }, t('timeattack.weekBest', { points: formatPoints(result.best.score) }))] : []),
-        ...(result.position !== null && result.total > 1 ? [h('p', { class: 'level-place' }, t('weekly.place', { position: result.position, total: result.total }))] : []),
+        ...(result.position !== null && result.total > 1
+          ? [h('p', { class: 'level-place' }, t('weekly.place', { position: result.position, total: result.total }))]
+          : []),
         h(
           'div',
           { class: 'row' },
@@ -203,9 +205,20 @@ export function timeAttackScreen(start: TimeAttackStart, previousBest: number | 
         ),
         h('button', { class: 'link-btn', onclick: () => go({ name: 'home' }) }, t('common.backHome')),
       );
-      if (record && previousBest !== null) void celebrate({ icon: '⏱', eyebrow: t('timeattack.title'), title: t('timeattack.record'), text: t('timeattack.recordText', { points: formatPoints(result.run.score) }), button: t('common.great') });
+      if (record && previousBest !== null)
+        void celebrate({
+          icon: '⏱',
+          eyebrow: t('timeattack.title'),
+          title: t('timeattack.record'),
+          text: t('timeattack.recordText', { points: formatPoints(result.run.score) }),
+          button: t('common.great'),
+        });
     } catch (err) {
-      modal.el.replaceChildren(h('h2', null, t('timeattack.over')), h('p', { class: 'error' }, (err as Error).message), h('button', { class: 'btn', onclick: () => go({ name: 'home' }) }, t('common.backHome')));
+      modal.el.replaceChildren(
+        h('h2', null, t('timeattack.over')),
+        h('p', { class: 'error' }, (err as Error).message),
+        h('button', { class: 'btn', onclick: () => go({ name: 'home' }) }, t('common.backHome')),
+      );
     }
   }
 

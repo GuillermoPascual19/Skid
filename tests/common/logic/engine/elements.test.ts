@@ -12,7 +12,12 @@ describe('parseBoard con elementos', () => {
     const board = parseBoard(['#######', '#@*^a1#', '#Ov<>a#', '#######']);
     expect(board.cells[1].slice(2, 5)).toEqual(['snow', 'arrow-up', 'portal']);
     expect(board.cells[2].slice(1, 6)).toEqual(['hole', 'arrow-down', 'arrow-left', 'arrow-right', 'portal']);
-    expect(board.portals).toEqual([[{ x: 4, y: 1 }, { x: 5, y: 2 }]]);
+    expect(board.portals).toEqual([
+      [
+        { x: 4, y: 1 },
+        { x: 5, y: 2 },
+      ],
+    ]);
   });
 
   it('un teletransporte sin pareja es un error', () => {
@@ -90,7 +95,10 @@ describe('hielo frágil', () => {
 
   it('cada casilla lleva su bit', () => {
     const board = parseBoard(['@x.x.1']);
-    expect(board.cracks).toEqual([{ x: 1, y: 0 }, { x: 3, y: 0 }]);
+    expect(board.cracks).toEqual([
+      { x: 1, y: 0 },
+      { x: 3, y: 0 },
+    ]);
     expect(applyMove(board, initialState(board), 'right')).toEqual({ player: { x: 5, y: 0 }, collected: 1, broken: 3, flipped: false, blocks: [] });
   });
 
@@ -233,30 +241,38 @@ describe('generador con elementos', () => {
   const SLOW = 30_000;
 
   for (const level of levels) {
-    it(`nivel ${level}: resoluble, sin callejones ni bucles, y usa los elementos`, () => {
-      for (const seed of seeds) {
-        const { board, solution, rows } = generateLevel(level, seed);
-        expect(rows.join('')).not.toMatch(/[^#.@1-9*^v<>a-eOxmnUDLRSGgK]/);
-        // Con bloques se permiten los atascos (ver generateLevel).
-        if (board.blocks.length === 0) expect(countDeadEnds(board)).toBe(0);
-        expect(hasLoops(board)).toBe(false);
-        expect(solve(board)?.length).toBe(solution.length);
+    it(
+      `nivel ${level}: resoluble, sin callejones ni bucles, y usa los elementos`,
+      () => {
+        for (const seed of seeds) {
+          const { board, solution, rows } = generateLevel(level, seed);
+          expect(rows.join('')).not.toMatch(/[^#.@1-9*^v<>a-eOxmnUDLRSGgK]/);
+          // Con bloques se permiten los atascos (ver generateLevel).
+          if (board.blocks.length === 0) expect(countDeadEnds(board)).toBe(0);
+          expect(hasLoops(board)).toBe(false);
+          expect(solve(board)?.length).toBe(solution.length);
 
-        let state = initialState(board);
-        for (const dir of solution) state = applyMove(board, state, dir)!;
-        expect(isComplete(board, state)).toBe(true);
+          let state = initialState(board);
+          for (const dir of solution) state = applyMove(board, state, dir)!;
+          expect(isComplete(board, state)).toBe(true);
 
-        const fresh = ELEMENTS.find((e) => e.level === level);
-        const used = elementsUsed(board, solution);
-        if (fresh) expect(used.has(fresh.id)).toBe(true);
-        else expect(used.size).toBeGreaterThan(0);
-      }
-    }, SLOW);
+          const fresh = ELEMENTS.find((e) => e.level === level);
+          const used = elementsUsed(board, solution);
+          if (fresh) expect(used.has(fresh.id)).toBe(true);
+          else expect(used.size).toBeGreaterThan(0);
+        }
+      },
+      SLOW,
+    );
   }
 
-  it('genera rápido (lo hace el navegador al pasar de nivel)', () => {
-    const t = performance.now();
-    for (const level of [45, 60, 90]) generateLevel(level, 7);
-    expect((performance.now() - t) / 3).toBeLessThan(1500);
-  }, SLOW);
+  it(
+    'genera rápido (lo hace el navegador al pasar de nivel)',
+    () => {
+      const t = performance.now();
+      for (const level of [45, 60, 90]) generateLevel(level, 7);
+      expect((performance.now() - t) / 3).toBeLessThan(1500);
+    },
+    SLOW,
+  );
 });

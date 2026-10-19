@@ -79,11 +79,7 @@ export function playerScreen(id: string): Screen {
         ),
       ),
       ...(p.headToHead ? [headToHead(p.headToHead, playerName(p.name))] : []),
-      h(
-        'div',
-        { class: 'tiles' },
-        ...movesTiles(s),
-      ),
+      h('div', { class: 'tiles' }, ...movesTiles(s)),
       h(
         'section',
         { class: 'card' },
@@ -93,9 +89,7 @@ export function playerScreen(id: string): Screen {
           : h(
               'div',
               { class: 'hat-shelf' },
-              ...hats.map((item) =>
-                h('div', { class: 'hat-item', title: item.title }, svg(penguinSvg(item.hat)), h('small', null, t(`hats.${item.hat}`))),
-              ),
+              ...hats.map((item) => h('div', { class: 'hat-item', title: item.title }, svg(penguinSvg(item.hat)), h('small', null, t(`hats.${item.hat}`)))),
             ),
       ),
       h('section', { class: 'card chart-card' }, h('h2', null, t('stats.screen.last30')), overChart(s.history)),

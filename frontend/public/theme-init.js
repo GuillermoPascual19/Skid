@@ -3,4 +3,4 @@
 try {
   var theme = JSON.parse(localStorage.getItem('skid.theme.v1'));
   if (theme === 'dark' || theme === 'light') document.documentElement.dataset.theme = theme;
-} catch (e) {}
+} catch {}

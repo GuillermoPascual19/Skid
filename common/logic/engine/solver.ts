@@ -115,7 +115,12 @@ export function hasLoops(board: Board): boolean {
  * bloques ocupan las mismas casillas (da igual cuál es cuál).
  */
 function stateKey(state: GameState): string {
-  const blocks = state.blocks.length ? `|${state.blocks.map((b) => `${b.x}.${b.y}`).sort().join(';')}` : '';
+  const blocks = state.blocks.length
+    ? `|${state.blocks
+        .map((b) => `${b.x}.${b.y}`)
+        .sort()
+        .join(';')}`
+    : '';
   return `${state.player.x},${state.player.y},${state.collected},${state.broken},${state.flipped ? 1 : 0}${blocks}`;
 }
 

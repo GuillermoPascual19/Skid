@@ -30,9 +30,7 @@ export async function playerProfile(env: Env, viewerId: string, targetId: string
     .all<{ name: string }>();
   if (!isMe && shared.length === 0 && !(await areFriends(env, viewerId, targetId))) throw new HttpError(403, 'onlyLeagueProfiles');
 
-  const player = await env.DB.prepare('SELECT name, hat FROM players WHERE id = ?')
-    .bind(targetId)
-    .first<{ name: string | null; hat: string | null }>();
+  const player = await env.DB.prepare('SELECT name, hat FROM players WHERE id = ?').bind(targetId).first<{ name: string | null; hat: string | null }>();
   if (!player) throw new HttpError(404, 'playerNotFound');
 
   const [stats, achievements, seasons, global, headToHead] = await Promise.all([

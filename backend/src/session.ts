@@ -23,7 +23,10 @@ async function sha256(text: string): Promise<string> {
 
 function randomToken(): string {
   const bytes = crypto.getRandomValues(new Uint8Array(32));
-  return btoa(String.fromCharCode(...bytes)).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+  return btoa(String.fromCharCode(...bytes))
+    .replace(/\+/g, '-')
+    .replace(/\//g, '_')
+    .replace(/=+$/, '');
 }
 
 /**
@@ -158,9 +161,7 @@ export async function googleLogin(env: Env, session: Session, credential: unknow
   // En la base de datos va cifrado; sin clave, no se guarda (nunca en claro).
   const storedEmail = email && env.EMAIL_KEY ? await seal(env.EMAIL_KEY, email) : null;
 
-  const linked = await env.DB.prepare('SELECT id, name FROM players WHERE google_sub = ?')
-    .bind(claims.sub)
-    .first<{ id: string; name: string | null }>();
+  const linked = await env.DB.prepare('SELECT id, name FROM players WHERE google_sub = ?').bind(claims.sub).first<{ id: string; name: string | null }>();
 
   if (linked?.id === session.playerId) {
     await env.DB.prepare('UPDATE players SET email = ? WHERE id = ?').bind(storedEmail, linked.id).run();
@@ -186,9 +187,7 @@ export async function googleLogin(env: Env, session: Session, credential: unknow
   }
 
   // Primera vez con esta cuenta: se vincula al jugador actual.
-  await env.DB.prepare('UPDATE players SET google_sub = ?, email = ? WHERE id = ? AND google_sub IS NULL')
-    .bind(claims.sub, storedEmail, session.playerId)
-    .run();
+  await env.DB.prepare('UPDATE players SET google_sub = ?, email = ? WHERE id = ? AND google_sub IS NULL').bind(claims.sub, storedEmail, session.playerId).run();
   return { token: null, switched: false, name: current?.name ?? null, email };
 }
 
@@ -248,8 +247,10 @@ export async function deleteAccount(env: Env, session: Session): Promise<{ ok: t
  */
 export async function sealLegacyEmails(env: Env): Promise<number> {
   if (!env.EMAIL_KEY) return 0;
-  const { results } = await env.DB.prepare("SELECT id, email FROM players WHERE email IS NOT NULL AND email NOT LIKE 'enc1:%' LIMIT 500")
-    .all<{ id: string; email: string }>();
+  const { results } = await env.DB.prepare("SELECT id, email FROM players WHERE email IS NOT NULL AND email NOT LIKE 'enc1:%' LIMIT 500").all<{
+    id: string;
+    email: string;
+  }>();
   const pending = results.filter((r) => !isSealed(r.email));
   if (pending.length === 0) return 0;
   const key = env.EMAIL_KEY;

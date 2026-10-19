@@ -1,16 +1,4 @@
-import {
-  DIRECTION_DELTA,
-  cellAt,
-  crackIndex,
-  doorOpen,
-  portalExit,
-  samePos,
-  type Board,
-  type Cell,
-  type Direction,
-  type GameState,
-  type Pos,
-} from './board.ts';
+import { DIRECTION_DELTA, cellAt, crackIndex, doorOpen, portalExit, samePos, type Board, type Cell, type Direction, type GameState, type Pos } from './board.ts';
 
 /** Un paso del recorrido de un deslizamiento (para animarlo). */
 export interface Step {

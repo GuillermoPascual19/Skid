@@ -23,7 +23,9 @@
   line-height: 1;
   font-weight: 800;
   color: #fff;
-  text-shadow: 0 4px 0 #1c6aa5, 0 10px 20px rgba(21, 50, 79, 0.25);
+  text-shadow:
+    0 4px 0 #1c6aa5,
+    0 10px 20px rgba(21, 50, 79, 0.25);
 }
 
 .hero h1 {

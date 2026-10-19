@@ -41,9 +41,7 @@ function runResponse(row: RunRow | null) {
 }
 
 function selectRun(env: Env, playerId: string, day: string): Promise<RunRow | null> {
-  return env.DB.prepare(
-    'SELECT started_at, finished_at, moves, retries, hints, time_ms, score, over_par, log FROM daily_runs WHERE player_id = ? AND day = ?',
-  )
+  return env.DB.prepare('SELECT started_at, finished_at, moves, retries, hints, time_ms, score, over_par, log FROM daily_runs WHERE player_id = ? AND day = ?')
     .bind(playerId, day)
     .first<RunRow>();
 }
@@ -55,9 +53,7 @@ export async function getRun(env: Env, playerId: string, day: string) {
 /** Empieza el reto de hoy; el cronómetro arranca aquí. Si ya existía, lo devuelve tal cual. */
 export async function startRun(env: Env, playerId: string, day: string) {
   if (day !== dayKey(new Date())) throw new HttpError(400, 'onlyToday');
-  await env.DB.prepare('INSERT OR IGNORE INTO daily_runs (player_id, day, started_at) VALUES (?, ?, ?)')
-    .bind(playerId, day, Date.now())
-    .run();
+  await env.DB.prepare('INSERT OR IGNORE INTO daily_runs (player_id, day, started_at) VALUES (?, ?, ?)').bind(playerId, day, Date.now()).run();
   return { run: runResponse(await selectRun(env, playerId, day)) };
 }
 
@@ -82,7 +78,7 @@ export async function finishRun(env: Env, playerId: string, day: string, log: un
   let replay;
   try {
     replay = replayRun(level.board, decodeRun(log));
-  } catch (err) {
+  } catch {
     throw new HttpError(400, 'invalidLog');
   }
   if (!replay.best) throw new HttpError(400, 'logIncomplete');
@@ -110,27 +106,9 @@ export async function finishRun(env: Env, playerId: string, day: string, log: un
         `UPDATE daily_runs SET finished_at = COALESCE(finished_at, ?1), moves = ?2, retries = ?3, hints = ?4, time_ms = ?5,
            score = ?6, over_par = ?7, log = ?8
          WHERE player_id = ?9 AND day = ?10 AND ${improving ? 'log = ?11' : 'finished_at IS NULL'}`,
-      ).bind(
-        finishedAt,
-        attempt.moves,
-        replay.retries,
-        attempt.hints,
-        timeMs,
-        golfPoints(bestOverPar),
-        bestOverPar,
-        log,
-        playerId,
-        day,
-        ...(improving ? [run.log] : []),
-      )
+      ).bind(finishedAt, attempt.moves, replay.retries, attempt.hints, timeMs, golfPoints(bestOverPar), bestOverPar, log, playerId, day, ...(improving ? [run.log] : []))
     : // Sin mejora: solo se guarda el registro, para que el siguiente intento lo continúe.
-      env.DB.prepare('UPDATE daily_runs SET retries = ?, log = ? WHERE player_id = ? AND day = ? AND log = ?').bind(
-        replay.retries,
-        log,
-        playerId,
-        day,
-        run.log,
-      );
+      env.DB.prepare('UPDATE daily_runs SET retries = ?, log = ? WHERE player_id = ? AND day = ? AND log = ?').bind(replay.retries, log, playerId, day, run.log);
   const updated = (await update.run()).meta.changes > 0;
   // Los puntos nuevos cuentan ya en el ranking global.
   if (updated && improved) forgetGlobalRanking();
@@ -138,9 +116,7 @@ export async function finishRun(env: Env, playerId: string, day: string, log: un
     throw new HttpError(409, improving ? 'dailyChangedElsewhere' : 'dailyAlreadyDone');
   }
 
-  const { results: played } = await env.DB.prepare('SELECT day FROM daily_runs WHERE player_id = ? AND finished_at IS NOT NULL')
-    .bind(playerId)
-    .all<{ day: string }>();
+  const { results: played } = await env.DB.prepare('SELECT day FROM daily_runs WHERE player_id = ? AND finished_at IS NOT NULL').bind(playerId).all<{ day: string }>();
   const streak = streaks(
     played.map((r) => r.day),
     day,

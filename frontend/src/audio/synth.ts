@@ -273,7 +273,10 @@ export function hint(ctx: Ctx, out: AudioNode, t: number): void {
 function honk(ctx: Ctx, out: AudioNode, t: number, from: number, peakAt: number, to: number, dur: number, peak: number): void {
   const voice = ctx.createGain();
   voice.gain.value = 0.5;
-  for (const [type, detune] of [['sawtooth', 0], ['square', 8]] as const) {
+  for (const [type, detune] of [
+    ['sawtooth', 0],
+    ['square', 8],
+  ] as const) {
     const osc = ctx.createOscillator();
     osc.type = type;
     osc.detune.value = detune;

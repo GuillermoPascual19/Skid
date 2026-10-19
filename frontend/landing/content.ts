@@ -38,7 +38,11 @@ export const LANDING: Record<Locale, LandingText> = {
       'Desliza al pingüino por el hielo: no se para hasta chocar con algo. Recoge los números en orden en los menos movimientos posibles. Un reto nuevo cada día, el mismo para todos, y niveles sin fin. Gratis, sin registro y sin anuncios.',
     play: 'Jugar gratis',
     howLink: 'Cómo se juega',
-    shots: ['Un tablero de Skid con espejos, puertas y un interruptor', 'La portada de Skid con el reto diario, el semanal y la contrarreloj', 'La pestaña Jugar con el modo libre y los niveles de jugadores'],
+    shots: [
+      'Un tablero de Skid con espejos, puertas y un interruptor',
+      'La portada de Skid con el reto diario, el semanal y la contrarreloj',
+      'La pestaña Jugar con el modo libre y los niveles de jugadores',
+    ],
     featuresTitle: 'Qué tiene',
     features: [
       ['📅', 'Reto diario', 'Un tablero nuevo cada día, el mismo para todos. Gana quien lo haga en menos movimientos.'],
@@ -61,7 +65,10 @@ export const LANDING: Record<Locale, LandingText> = {
       ['¿Es gratis?', 'Sí, del todo. Y no tiene anuncios.'],
       ['¿Hace falta registrarse?', 'No. Juegas al momento; si quieres usar tu cuenta en varios dispositivos, puedes entrar con Google.'],
       ['¿Funciona en el móvil y en el ordenador?', 'Sí, en cualquier navegador moderno. Además se puede instalar como app desde el menú del navegador.'],
-      ['¿Se puede jugar sin internet?', 'Sí: una vez abierto con conexión, el modo libre y el tutorial funcionan sin red. El reto diario, los duelos y los rankings necesitan conexión.'],
+      [
+        '¿Se puede jugar sin internet?',
+        'Sí: una vez abierto con conexión, el modo libre y el tutorial funcionan sin red. El reto diario, los duelos y los rankings necesitan conexión.',
+      ],
       ['¿Cómo juego con mis amigos?', 'Mándales tu enlace de amigo o crea una liga: veréis vuestros resultados del día y podréis retaros a duelos.'],
     ],
     finalTitle: '¿Te atreves con el reto de hoy?',
@@ -78,7 +85,11 @@ export const LANDING: Record<Locale, LandingText> = {
       "Slide the penguin across the ice: it doesn't stop until it hits something. Collect the numbers in order in as few moves as you can. A new challenge every day, the same for everyone, and endless levels. Free, no sign-up and no ads.",
     play: 'Play for free',
     howLink: 'How to play',
-    shots: ['A Skid board with mirrors, doors and a switch', "Skid's home screen with the daily, weekly and time attack challenges", 'The Play tab with free play and player levels'],
+    shots: [
+      'A Skid board with mirrors, doors and a switch',
+      "Skid's home screen with the daily, weekly and time attack challenges",
+      'The Play tab with free play and player levels',
+    ],
     featuresTitle: 'Features',
     features: [
       ['📅', 'Daily challenge', 'A new board every day, the same for everyone. The fewest moves wins.'],
@@ -118,7 +129,11 @@ export const LANDING: Record<Locale, LandingText> = {
       'Lass den Pinguin übers Eis rutschen: Er hält erst an, wenn er gegen etwas stößt. Sammle die Zahlen der Reihe nach mit möglichst wenigen Zügen. Jeden Tag eine neue Aufgabe, für alle gleich, und endlose Level. Kostenlos, ohne Anmeldung und ohne Werbung.',
     play: 'Kostenlos spielen',
     howLink: 'So wird gespielt',
-    shots: ['Ein Skid-Brett mit Spiegeln, Türen und einem Schalter', 'Die Startseite von Skid mit Tages-, Wochen- und Zeitrennen-Aufgabe', 'Der Tab „Spielen“ mit freiem Modus und Spieler-Leveln'],
+    shots: [
+      'Ein Skid-Brett mit Spiegeln, Türen und einem Schalter',
+      'Die Startseite von Skid mit Tages-, Wochen- und Zeitrennen-Aufgabe',
+      'Der Tab „Spielen“ mit freiem Modus und Spieler-Leveln',
+    ],
     featuresTitle: 'Was es bietet',
     features: [
       ['📅', 'Tagesaufgabe', 'Jeden Tag ein neues Brett, für alle gleich. Wer die wenigsten Züge braucht, gewinnt.'],
@@ -141,7 +156,10 @@ export const LANDING: Record<Locale, LandingText> = {
       ['Ist es kostenlos?', 'Ja, komplett. Und ohne Werbung.'],
       ['Muss ich mich anmelden?', 'Nein. Du spielst sofort; wenn du dein Konto auf mehreren Geräten nutzen willst, kannst du dich mit Google anmelden.'],
       ['Läuft es auf Handy und Computer?', 'Ja, in jedem modernen Browser. Außerdem lässt es sich über das Browsermenü als App installieren.'],
-      ['Kann ich offline spielen?', 'Ja: Einmal online geöffnet, funktionieren freier Modus und Tutorial ohne Netz. Tagesaufgabe, Duelle und Ranglisten brauchen Verbindung.'],
+      [
+        'Kann ich offline spielen?',
+        'Ja: Einmal online geöffnet, funktionieren freier Modus und Tutorial ohne Netz. Tagesaufgabe, Duelle und Ranglisten brauchen Verbindung.',
+      ],
       ['Wie spiele ich mit Freunden?', 'Schick ihnen deinen Freundeslink oder gründe eine Liga: Ihr seht eure Tagesergebnisse und könnt euch zu Duellen herausfordern.'],
     ],
     finalTitle: 'Traust du dich an die heutige Aufgabe?',
@@ -158,7 +176,11 @@ export const LANDING: Record<Locale, LandingText> = {
       'Fais glisser le pingouin sur la glace : il ne s’arrête qu’en heurtant quelque chose. Ramasse les nombres dans l’ordre en un minimum de coups. Un nouveau défi chaque jour, le même pour tous, et des niveaux sans fin. Gratuit, sans inscription et sans publicité.',
     play: 'Jouer gratuitement',
     howLink: 'Comment jouer',
-    shots: ['Un plateau de Skid avec des miroirs, des portes et un interrupteur', 'L’accueil de Skid avec le défi du jour, de la semaine et le contre-la-montre', 'L’onglet Jouer avec le mode libre et les niveaux des joueurs'],
+    shots: [
+      'Un plateau de Skid avec des miroirs, des portes et un interrupteur',
+      'L’accueil de Skid avec le défi du jour, de la semaine et le contre-la-montre',
+      'L’onglet Jouer avec le mode libre et les niveaux des joueurs',
+    ],
     featuresTitle: 'Ce qu’il propose',
     features: [
       ['📅', 'Défi du jour', 'Un nouveau plateau chaque jour, le même pour tous. Celui qui fait le moins de coups gagne.'],
@@ -181,7 +203,10 @@ export const LANDING: Record<Locale, LandingText> = {
       ['C’est gratuit ?', 'Oui, entièrement. Et sans publicité.'],
       ['Faut-il s’inscrire ?', 'Non. Tu joues tout de suite ; pour utiliser ton compte sur plusieurs appareils, tu peux te connecter avec Google.'],
       ['Ça marche sur téléphone et ordinateur ?', 'Oui, dans n’importe quel navigateur récent. Tu peux aussi l’installer comme une appli depuis le menu du navigateur.'],
-      ['Peut-on jouer hors ligne ?', 'Oui : une fois ouvert avec une connexion, le mode libre et le tutoriel marchent sans réseau. Le défi du jour, les duels et les classements ont besoin de connexion.'],
+      [
+        'Peut-on jouer hors ligne ?',
+        'Oui : une fois ouvert avec une connexion, le mode libre et le tutoriel marchent sans réseau. Le défi du jour, les duels et les classements ont besoin de connexion.',
+      ],
       ['Comment jouer avec mes amis ?', 'Envoie-leur ton lien d’ami ou crée une ligue : vous verrez vos résultats du jour et pourrez vous défier en duel.'],
     ],
     finalTitle: 'Tu relèves le défi du jour ?',
@@ -198,7 +223,11 @@ export const LANDING: Record<Locale, LandingText> = {
       'Faz o pinguim deslizar no gelo: só para quando bate em algo. Apanha os números por ordem com o menor número de movimentos. Um desafio novo todos os dias, igual para todos, e níveis sem fim. Grátis, sem registo e sem anúncios.',
     play: 'Jogar grátis',
     howLink: 'Como se joga',
-    shots: ['Um tabuleiro de Skid com espelhos, portas e um interruptor', 'O início de Skid com o desafio diário, o semanal e o contrarrelógio', 'O separador Jogar com o modo livre e os níveis dos jogadores'],
+    shots: [
+      'Um tabuleiro de Skid com espelhos, portas e um interruptor',
+      'O início de Skid com o desafio diário, o semanal e o contrarrelógio',
+      'O separador Jogar com o modo livre e os níveis dos jogadores',
+    ],
     featuresTitle: 'O que tem',
     features: [
       ['📅', 'Desafio diário', 'Um tabuleiro novo todos os dias, igual para todos. Ganha quem fizer menos movimentos.'],
@@ -221,8 +250,14 @@ export const LANDING: Record<Locale, LandingText> = {
       ['É grátis?', 'Sim, totalmente. E não tem anúncios.'],
       ['É preciso registar-me?', 'Não. Jogas logo; se quiseres usar a tua conta em vários dispositivos, podes entrar com o Google.'],
       ['Funciona no telemóvel e no computador?', 'Sim, em qualquer navegador moderno. Também se pode instalar como app a partir do menu do navegador.'],
-      ['Dá para jogar sem internet?', 'Sim: depois de aberto com ligação, o modo livre e o tutorial funcionam sem rede. O desafio diário, os duelos e os rankings precisam de ligação.'],
-      ['Como jogo com os meus amigos?', 'Envia-lhes a tua ligação de amigo ou cria uma liga: vão ver os resultados do dia uns dos outros e podem desafiar-se para duelos.'],
+      [
+        'Dá para jogar sem internet?',
+        'Sim: depois de aberto com ligação, o modo livre e o tutorial funcionam sem rede. O desafio diário, os duelos e os rankings precisam de ligação.',
+      ],
+      [
+        'Como jogo com os meus amigos?',
+        'Envia-lhes a tua ligação de amigo ou cria uma liga: vão ver os resultados do dia uns dos outros e podem desafiar-se para duelos.',
+      ],
     ],
     finalTitle: 'Aceitas o desafio de hoje?',
     finalText: 'O tutorial ensina-te a jogar num minuto.',
@@ -238,7 +273,11 @@ export const LANDING: Record<Locale, LandingText> = {
       'Fai scivolare il pinguino sul ghiaccio: si ferma solo quando sbatte contro qualcosa. Raccogli i numeri in ordine con meno mosse possibile. Una sfida nuova ogni giorno, uguale per tutti, e livelli infiniti. Gratis, senza registrazione e senza pubblicità.',
     play: 'Gioca gratis',
     howLink: 'Come si gioca',
-    shots: ['Una tavola di Skid con specchi, porte e un interruttore', 'La home di Skid con la sfida del giorno, quella settimanale e la cronometro', 'La scheda Gioca con la modalità libera e i livelli dei giocatori'],
+    shots: [
+      'Una tavola di Skid con specchi, porte e un interruttore',
+      'La home di Skid con la sfida del giorno, quella settimanale e la cronometro',
+      'La scheda Gioca con la modalità libera e i livelli dei giocatori',
+    ],
     featuresTitle: 'Cosa offre',
     features: [
       ['📅', 'Sfida del giorno', 'Una tavola nuova ogni giorno, uguale per tutti. Vince chi usa meno mosse.'],
@@ -261,7 +300,10 @@ export const LANDING: Record<Locale, LandingText> = {
       ['È gratis?', 'Sì, del tutto. E senza pubblicità.'],
       ['Serve registrarsi?', 'No. Giochi subito; se vuoi usare il tuo account su più dispositivi, puoi accedere con Google.'],
       ['Funziona su telefono e computer?', 'Sì, in qualsiasi browser moderno. Puoi anche installarlo come app dal menu del browser.'],
-      ['Si può giocare offline?', 'Sì: una volta aperto con la connessione, la modalità libera e il tutorial funzionano senza rete. La sfida del giorno, i duelli e le classifiche richiedono la connessione.'],
+      [
+        'Si può giocare offline?',
+        'Sì: una volta aperto con la connessione, la modalità libera e il tutorial funzionano senza rete. La sfida del giorno, i duelli e le classifiche richiedono la connessione.',
+      ],
       ['Come gioco con i miei amici?', 'Mandagli il tuo link amico o crea una lega: vedrete i risultati del giorno e potrete sfidarvi a duello.'],
     ],
     finalTitle: 'Accetti la sfida di oggi?',
@@ -278,7 +320,11 @@ export const LANDING: Record<Locale, LandingText> = {
       'Веди пингвина по льду: он не остановится, пока во что-нибудь не упрётся. Собирай числа по порядку за как можно меньшее число ходов. Каждый день новое испытание, одно на всех, и бесконечные уровни. Бесплатно, без регистрации и без рекламы.',
     play: 'Играть бесплатно',
     howLink: 'Как играть',
-    shots: ['Поле Skid с зеркалами, дверями и переключателем', 'Главный экран Skid с ежедневным, недельным испытанием и заездом на время', 'Вкладка «Играть» со свободным режимом и уровнями игроков'],
+    shots: [
+      'Поле Skid с зеркалами, дверями и переключателем',
+      'Главный экран Skid с ежедневным, недельным испытанием и заездом на время',
+      'Вкладка «Играть» со свободным режимом и уровнями игроков',
+    ],
     featuresTitle: 'Что есть в игре',
     features: [
       ['📅', 'Ежедневное испытание', 'Каждый день новое поле, одно на всех. Побеждает тот, кто сделает меньше ходов.'],
@@ -301,7 +347,10 @@ export const LANDING: Record<Locale, LandingText> = {
       ['Это бесплатно?', 'Да, полностью. И без рекламы.'],
       ['Нужно регистрироваться?', 'Нет. Играешь сразу; чтобы использовать аккаунт на нескольких устройствах, можно войти через Google.'],
       ['Работает на телефоне и компьютере?', 'Да, в любом современном браузере. Ещё её можно установить как приложение через меню браузера.'],
-      ['Можно играть без интернета?', 'Да: после первого открытия с сетью свободный режим и обучение работают офлайн. Ежедневное испытание, дуэли и рейтинги требуют соединения.'],
+      [
+        'Можно играть без интернета?',
+        'Да: после первого открытия с сетью свободный режим и обучение работают офлайн. Ежедневное испытание, дуэли и рейтинги требуют соединения.',
+      ],
       ['Как играть с друзьями?', 'Отправь им свою ссылку для друзей или создай лигу: вы увидите результаты друг друга за день и сможете вызывать друг друга на дуэли.'],
     ],
     finalTitle: 'Возьмёшься за сегодняшнее испытание?',

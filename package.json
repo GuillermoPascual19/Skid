@@ -15,12 +15,15 @@
     "preview": "vite preview",
     "test": "vitest run",
     "test:watch": "vitest",
+    "lint": "biome check .",
+    "format": "biome check --write .",
     "deploy": "pnpm run build && wrangler d1 migrations apply skid --remote && wrangler deploy"
   },
   "dependencies": {
     "phaser": "^4.2.1"
   },
   "devDependencies": {
+    "@biomejs/biome": "2.5.15",
     "@cloudflare/workers-types": "^5.20261010.1",
     "concurrently": "^9.2.5",
     "typescript": "^7.0.2",

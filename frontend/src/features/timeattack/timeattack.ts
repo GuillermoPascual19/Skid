@@ -127,7 +127,12 @@ export function timeAttackCard(): { el: HTMLElement; load(): Promise<void> } {
     async load() {
       const week = currentWeek();
       // Sin conexión (y sin nada guardado): se queda la invitación a jugar.
-      await cached(`timeattack:${week}`, () => getTimeAttack(week), render, () => {});
+      await cached(
+        `timeattack:${week}`,
+        () => getTimeAttack(week),
+        render,
+        () => {},
+      );
     },
   };
 }

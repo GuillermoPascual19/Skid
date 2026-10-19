@@ -31,16 +31,12 @@ async function weeklyBoard(env: Env, week: string): Promise<{ rows: string[]; op
   if (saved) return { rows: decodeRows(saved.rows), optimal: saved.optimal };
   const level = weeklyLevel(week);
   const rows = [...level.rows];
-  await env.DB.prepare('INSERT OR IGNORE INTO weekly_boards (week, rows, optimal) VALUES (?, ?, ?)')
-    .bind(week, encodeRows(rows), level.solution.length)
-    .run();
+  await env.DB.prepare('INSERT OR IGNORE INTO weekly_boards (week, rows, optimal) VALUES (?, ?, ?)').bind(week, encodeRows(rows), level.solution.length).run();
   return { rows, optimal: level.solution.length };
 }
 
 function selectRun(env: Env, playerId: string, week: string): Promise<WeeklyRunRow | null> {
-  return env.DB.prepare('SELECT started_at, best_moves, best_at, attempts FROM weekly_runs WHERE player_id = ? AND week = ?')
-    .bind(playerId, week)
-    .first<WeeklyRunRow>();
+  return env.DB.prepare('SELECT started_at, best_moves, best_at, attempts FROM weekly_runs WHERE player_id = ? AND week = ?').bind(playerId, week).first<WeeklyRunRow>();
 }
 
 function runResponse(row: WeeklyRunRow | null, optimal: number) {
@@ -76,9 +72,7 @@ const FRIENDS_RANKED = `
 
 /** Tu puesto entre tus amigos y cuántos lo han terminado. */
 async function myPlace(env: Env, playerId: string, week: string) {
-  const row = await env.DB.prepare(
-    `SELECT (SELECT pos FROM (${FRIENDS_RANKED}) WHERE player_id = ?1) AS position, (SELECT COUNT(*) FROM (${FRIENDS_RANKED})) AS total`,
-  )
+  const row = await env.DB.prepare(`SELECT (SELECT pos FROM (${FRIENDS_RANKED}) WHERE player_id = ?1) AS position, (SELECT COUNT(*) FROM (${FRIENDS_RANKED})) AS total`)
     .bind(playerId, week)
     .first<{ position: number | null; total: number }>();
   return { position: row?.position ?? null, total: row?.total ?? 0 };
@@ -95,9 +89,7 @@ export async function getWeekly(env: Env, playerId: string, week: string) {
 export async function startWeekly(env: Env, playerId: string, week: string) {
   checkWeek(week);
   if (week !== weekKey(dayKey(new Date()))) throw new HttpError(400, 'weekOver');
-  await env.DB.prepare('INSERT OR IGNORE INTO weekly_runs (player_id, week, started_at) VALUES (?, ?, ?)')
-    .bind(playerId, week, Date.now())
-    .run();
+  await env.DB.prepare('INSERT OR IGNORE INTO weekly_runs (player_id, week, started_at) VALUES (?, ?, ?)').bind(playerId, week, Date.now()).run();
   return getWeekly(env, playerId, week);
 }
 
@@ -119,7 +111,7 @@ export async function finishWeekly(env: Env, playerId: string, week: string, log
   let replay;
   try {
     replay = replayRun(parseBoard(board.rows), decodeRun(log));
-  } catch (err) {
+  } catch {
     throw new HttpError(400, 'invalidLog');
   }
   if (!replay.completed) throw new HttpError(400, 'logIncomplete');
@@ -153,9 +145,7 @@ export async function finishWeekly(env: Env, playerId: string, week: string, log
 export async function weeklyRanking(env: Env, playerId: string, week: string) {
   checkWeek(week);
   const board = await weeklyBoard(env, week);
-  const { results } = await env.DB.prepare(`${FRIENDS_RANKED} ORDER BY pos, p.name LIMIT ?3`)
-    .bind(playerId, week, WEEKLY_RANKING_SIZE)
-    .all<RankingRow>();
+  const { results } = await env.DB.prepare(`${FRIENDS_RANKED} ORDER BY pos, p.name LIMIT ?3`).bind(playerId, week, WEEKLY_RANKING_SIZE).all<RankingRow>();
   return {
     optimal: board.optimal,
     total: results.length,

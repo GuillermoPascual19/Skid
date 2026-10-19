@@ -153,13 +153,7 @@ export function ghostScreen(source: GhostSource): Screen {
     sfx.win();
     mounted?.scene.time.delayedCall(600, () => {
       if (!friend) return;
-      const line = (who: string, r: GhostRun) =>
-        h(
-          'div',
-          null,
-          h('span', null, who),
-          h('span', null, `${resultLabel(r)} · ⏱ ${formatTime(r.timeMs ?? 0)}`),
-        );
+      const line = (who: string, r: GhostRun) => h('div', null, h('span', null, who), h('span', null, `${resultLabel(r)} · ⏱ ${formatTime(r.timeMs ?? 0)}`));
       const modal = openModal(
         [
           h('p', { class: 'eyebrow' }, source.subtitle),

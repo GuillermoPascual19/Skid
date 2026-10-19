@@ -8,21 +8,21 @@ let t: TestDb;
 const FUTURE = Date.now() + 1e9;
 
 function duel(id: string, challenger: string, opponent: string, opts: { expires?: number; declined?: boolean } = {}) {
-  t.db.prepare("INSERT INTO duels (id, challenger_id, opponent_id, difficulty, rows, optimal, created_at, expires_at, declined_at) VALUES (?, ?, ?, 'easy', 'x', 5, 0, ?, ?)").run(
-    id,
-    challenger,
-    opponent,
-    opts.expires ?? FUTURE,
-    opts.declined ? 1 : null,
-  );
+  t.db
+    .prepare(
+      "INSERT INTO duels (id, challenger_id, opponent_id, difficulty, rows, optimal, created_at, expires_at, declined_at) VALUES (?, ?, ?, 'easy', 'x', 5, 0, ?, ?)",
+    )
+    .run(id, challenger, opponent, opts.expires ?? FUTURE, opts.declined ? 1 : null);
 }
 function duelRun(id: string, player: string, moves: number, timeMs: number, done = true) {
-  t.db.prepare('INSERT INTO duel_runs (duel_id, player_id, started_at, best_moves, best_time_ms, done_at) VALUES (?, ?, 0, ?, ?, ?)').run(id, player, moves, timeMs, done ? 1 : null);
+  t.db
+    .prepare('INSERT INTO duel_runs (duel_id, player_id, started_at, best_moves, best_time_ms, done_at) VALUES (?, ?, 0, ?, ?, ?)')
+    .run(id, player, moves, timeMs, done ? 1 : null);
 }
 
 beforeEach(() => {
   t = createTestDb();
-  for (const id of ['yo', 'b', 'c', 'd']) addPlayer(t, id, id.toUpperCase() + 'Jugador');
+  for (const id of ['yo', 'b', 'c', 'd']) addPlayer(t, id, `${id.toUpperCase()}Jugador`);
 });
 
 const progress = async () => Object.fromEntries((await playerAchievements(t.env, 'yo')).map((p) => [p.id, p.current]));

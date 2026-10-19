@@ -29,7 +29,10 @@ export type KeyProvider = () => Promise<Jwk[]>;
 export class InvalidTokenError extends Error {}
 
 function base64UrlDecode(part: string): Uint8Array<ArrayBuffer> {
-  const base64 = part.replace(/-/g, '+').replace(/_/g, '/').padEnd(Math.ceil(part.length / 4) * 4, '=');
+  const base64 = part
+    .replace(/-/g, '+')
+    .replace(/_/g, '/')
+    .padEnd(Math.ceil(part.length / 4) * 4, '=');
   const binary = atob(base64);
   const bytes = new Uint8Array(binary.length);
   for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
@@ -48,12 +51,7 @@ function decodeJson<T>(part: string): T {
  * Comprueba firma, emisor, destinatario (`aud` = el ID de cliente de la app) y
  * caducidad. Devuelve los datos de la cuenta o lanza InvalidTokenError.
  */
-export async function verifyGoogleIdToken(
-  token: string,
-  clientId: string,
-  keys: KeyProvider,
-  nowS: number = Date.now() / 1000,
-): Promise<GoogleClaims> {
+export async function verifyGoogleIdToken(token: string, clientId: string, keys: KeyProvider, nowS: number = Date.now() / 1000): Promise<GoogleClaims> {
   const parts = token.split('.');
   if (parts.length !== 3) throw new InvalidTokenError('Token mal formado');
   const [headerPart, payloadPart, signaturePart] = parts;
@@ -63,19 +61,10 @@ export async function verifyGoogleIdToken(
 
   const jwk = (await keys()).find((k) => k.kid === header.kid);
   if (!jwk) throw new InvalidTokenError('Clave de firma desconocida');
-  const key = await crypto.subtle.importKey(
-    'jwk',
-    { kty: jwk.kty, n: jwk.n, e: jwk.e, alg: 'RS256', ext: true },
-    { name: 'RSASSA-PKCS1-v1_5', hash: 'SHA-256' },
-    false,
-    ['verify'],
-  );
-  const valid = await crypto.subtle.verify(
-    'RSASSA-PKCS1-v1_5',
-    key,
-    base64UrlDecode(signaturePart),
-    new TextEncoder().encode(`${headerPart}.${payloadPart}`),
-  );
+  const key = await crypto.subtle.importKey('jwk', { kty: jwk.kty, n: jwk.n, e: jwk.e, alg: 'RS256', ext: true }, { name: 'RSASSA-PKCS1-v1_5', hash: 'SHA-256' }, false, [
+    'verify',
+  ]);
+  const valid = await crypto.subtle.verify('RSASSA-PKCS1-v1_5', key, base64UrlDecode(signaturePart), new TextEncoder().encode(`${headerPart}.${payloadPart}`));
   if (!valid) throw new InvalidTokenError('Firma no válida');
 
   const claims = decodeJson<GoogleClaims & { iss?: string; aud?: string; exp?: number; iat?: number }>(payloadPart);

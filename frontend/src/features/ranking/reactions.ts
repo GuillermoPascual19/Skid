@@ -118,14 +118,16 @@ export function reactionsCard(): { el: HTMLElement; load: () => Promise<void> } 
       h(
         'ul',
         { class: 'reaction-list' },
-        ...items.slice(0, CARD_LINES).map((r) =>
-          h(
-            'li',
-            null,
-            h('span', { class: 'avatar' }, svg(penguinSvg(r.hat))),
-            h('span', null, t('reactions.home.line', { name: playerName(r.name), emoji: REACTIONS[r.reaction], when: when(r.day) })),
+        ...items
+          .slice(0, CARD_LINES)
+          .map((r) =>
+            h(
+              'li',
+              null,
+              h('span', { class: 'avatar' }, svg(penguinSvg(r.hat))),
+              h('span', null, t('reactions.home.line', { name: playerName(r.name), emoji: REACTIONS[r.reaction], when: when(r.day) })),
+            ),
           ),
-        ),
       ),
       ...(rest > 0 ? [h('p', { class: 'muted' }, tn('reactions.home.more', rest))] : []),
       h('button', { class: 'link-btn', onclick: () => go({ name: 'ranking' }) }, t('reactions.home.see')),

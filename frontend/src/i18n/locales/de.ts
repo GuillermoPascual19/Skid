@@ -235,7 +235,7 @@ export const messages: Messages = {
     },
     news: {
       eyebrow: 'Neu',
-      howItWorks: 'So funktioniert\'s',
+      howItWorks: "So funktioniert's",
     },
     tagline: 'Gleite übers Eis. Sammle der Reihe nach.',
     free: {
@@ -302,7 +302,8 @@ export const messages: Messages = {
     disable: 'Auf diesem Gerät deaktivieren',
     disabled: 'Benachrichtigungen deaktiviert',
     unsupported: 'Dieser Browser unterstützt keine Benachrichtigungen.',
-    iosInstall: 'Füge Skid auf dem iPhone zuerst zum Home-Bildschirm hinzu: Tippe auf Teilen und dann auf „Zum Home-Bildschirm“. Öffne es von dort und aktiviere sie hier.',
+    iosInstall:
+      'Füge Skid auf dem iPhone zuerst zum Home-Bildschirm hinzu: Tippe auf Teilen und dann auf „Zum Home-Bildschirm“. Öffne es von dort und aktiviere sie hier.',
     denied: 'Benachrichtigungen von Skid sind blockiert. Du kannst sie in den Browsereinstellungen erlauben.',
     unavailable: 'Benachrichtigungen sind gerade nicht verfügbar.',
     duelHint: 'Benachrichtige mich, sobald es losgehen kann',
@@ -328,7 +329,7 @@ export const messages: Messages = {
       title: '{n} Tage in Folge!',
       long: 'Du bist beständig wie ein Gletscher. Nur wenige Pinguine kommen so weit.',
       short: 'Komm morgen wieder, damit sie weiterwächst. Alle 7 Tage bekommst du einen Serienschutz 🛡️.',
-      button: 'Weiter geht\'s!',
+      button: "Weiter geht's!",
     },
     solution: {
       confirmTitle: 'Lösung ansehen?',
@@ -1191,6 +1192,6 @@ export const messages: Messages = {
     },
     back: 'Zurück',
     eyebrow: 'So wird gespielt · {n}/{total}',
-    letsPlay: 'Los geht\'s!',
+    letsPlay: "Los geht's!",
   },
 };

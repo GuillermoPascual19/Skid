@@ -100,7 +100,15 @@ it('el laurel ganado se puede llevar; el de otro puesto, no', async () => {
   t.db.prepare("UPDATE players SET name = 'Fran', name_key = 'fran' WHERE id = ?").run(id);
   run(id, '2026-10-06', 5000);
   const wear = (hat: string) =>
-    worker.fetch(new Request('http://localhost/api/me/hat', { method: 'PUT', headers: { Cookie: cookie, 'Content-Type': 'application/json' }, body: JSON.stringify({ hat }) }) as never, t.env, ctx);
+    worker.fetch(
+      new Request('http://localhost/api/me/hat', {
+        method: 'PUT',
+        headers: { Cookie: cookie, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ hat }),
+      }) as never,
+      t.env,
+      ctx,
+    );
   await globalRanking(t.env, id, 'month');
   expect((await wear('worldgold')).status).toBe(200);
   expect((await wear('worldsilver')).status).toBe(403);

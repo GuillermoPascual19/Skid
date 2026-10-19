@@ -39,7 +39,9 @@ beforeEach(() => {
 afterEach(() => vi.unstubAllGlobals());
 
 function subscribe(player: string, endpoint: string, lang: string, friends = 1) {
-  t.db.prepare("INSERT INTO push_subscriptions (endpoint, player_id, p256dh, auth, lang, friends, created_at) VALUES (?, ?, 'k', 'a', ?, ?, 0)").run(endpoint, player, lang, friends);
+  t.db
+    .prepare("INSERT INTO push_subscriptions (endpoint, player_id, p256dh, auth, lang, friends, created_at) VALUES (?, ?, 'k', 'a', ?, ?, 0)")
+    .run(endpoint, player, lang, friends);
 }
 
 /** Espera a los avisos que se mandan en segundo plano. */

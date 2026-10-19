@@ -84,7 +84,13 @@ export async function body<T>(req: Request): Promise<T> {
 
 /** Texto sin caracteres de control y con espacios normalizados; si no mide entre min y max, lanza `lengthError` (con min y max). */
 export function cleanText(value: unknown, min: number, max: number, lengthError: ErrorKey): string {
-  const text = typeof value === 'string' ? value.replace(/[\p{Cc}\p{Cf}]/gu, '').replace(/\s+/g, ' ').trim() : '';
+  const text =
+    typeof value === 'string'
+      ? value
+          .replace(/[\p{Cc}\p{Cf}]/gu, '')
+          .replace(/\s+/g, ' ')
+          .trim()
+      : '';
   if (text.length < min || text.length > max) throw new HttpError(400, lengthError, { min, max });
   return text;
 }

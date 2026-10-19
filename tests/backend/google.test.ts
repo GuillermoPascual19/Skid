@@ -9,7 +9,10 @@ let publicJwk: JsonWebKey & { kid: string };
 
 const b64url = (data: Uint8Array | string) => {
   const bytes = typeof data === 'string' ? new TextEncoder().encode(data) : data;
-  return btoa(String.fromCharCode(...bytes)).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+  return btoa(String.fromCharCode(...bytes))
+    .replace(/\+/g, '-')
+    .replace(/\//g, '_')
+    .replace(/=+$/, '');
 };
 
 async function sign(payload: Record<string, unknown>, header: Record<string, unknown> = { alg: 'RS256', kid: 'k1' }) {
@@ -32,11 +35,10 @@ const keys = async () => [publicJwk as never];
 const verify = (token: string) => verifyGoogleIdToken(token, CLIENT_ID, keys, NOW);
 
 beforeAll(async () => {
-  const pair = (await crypto.subtle.generateKey(
-    { name: 'RSASSA-PKCS1-v1_5', modulusLength: 2048, publicExponent: new Uint8Array([1, 0, 1]), hash: 'SHA-256' },
-    true,
-    ['sign', 'verify'],
-  )) as CryptoKeyPair;
+  const pair = (await crypto.subtle.generateKey({ name: 'RSASSA-PKCS1-v1_5', modulusLength: 2048, publicExponent: new Uint8Array([1, 0, 1]), hash: 'SHA-256' }, true, [
+    'sign',
+    'verify',
+  ])) as CryptoKeyPair;
   privateKey = pair.privateKey;
   publicJwk = { ...(await crypto.subtle.exportKey('jwk', pair.publicKey)), kid: 'k1' };
 });

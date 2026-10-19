@@ -282,13 +282,4 @@ const SPECIAL_CHARS: Readonly<Record<string, Cell>> = {
 export const PORTAL_CHARS = ['a', 'b', 'c', 'd', 'e'] as const;
 
 /** Tablero de ejemplo (óptimo: 11 movimientos). */
-export const EXAMPLE_BOARD: readonly string[] = [
-  '#########',
-  '#@..#...#',
-  '#.....2.#',
-  '#..1....#',
-  '#.#...#.#',
-  '#....3..#',
-  '#4......#',
-  '#########',
-];
+export const EXAMPLE_BOARD: readonly string[] = ['#########', '#@..#...#', '#.....2.#', '#..1....#', '#.#...#.#', '#....3..#', '#4......#', '#########'];

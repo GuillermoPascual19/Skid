@@ -87,10 +87,22 @@ describe('logros de los demás modos', () => {
 describe('duelWins', () => {
   const r = (moves: number, timeMs = 1000) => ({ moves, timeMs });
   it('cuenta las victorias por movimientos o por tiempo', () => {
-    expect(duelWins([{ mine: r(5), theirs: r(6) }, { mine: r(5, 900), theirs: r(5, 1000) }])).toBe(2);
+    expect(
+      duelWins([
+        { mine: r(5), theirs: r(6) },
+        { mine: r(5, 900), theirs: r(5, 1000) },
+      ]),
+    ).toBe(2);
   });
   it('no cuenta derrotas, empates ni victorias porque el rival no jugó', () => {
-    expect(duelWins([{ mine: r(6), theirs: r(5) }, { mine: r(5), theirs: r(5) }, { mine: r(5), theirs: null }, { mine: null, theirs: null }])).toBe(0);
+    expect(
+      duelWins([
+        { mine: r(6), theirs: r(5) },
+        { mine: r(5), theirs: r(5) },
+        { mine: r(5), theirs: null },
+        { mine: null, theirs: null },
+      ]),
+    ).toBe(0);
   });
 });
 
@@ -115,9 +127,12 @@ describe('weekTitles', () => {
 
   it('cuenta por liga y por semana, y los empates en cabeza cuentan', () => {
     const runs = [
-      lr('L1', 'ana', '2026-09-28', 900), lr('L1', 'bea', '2026-09-28', 900), // empate
-      lr('L2', 'ana', '2026-09-21', 800), lr('L2', 'cris', '2026-09-21', 700),
-      lr('L2', 'ana', '2026-09-28', 100), lr('L2', 'cris', '2026-09-28', 700),
+      lr('L1', 'ana', '2026-09-28', 900),
+      lr('L1', 'bea', '2026-09-28', 900), // empate
+      lr('L2', 'ana', '2026-09-21', 800),
+      lr('L2', 'cris', '2026-09-21', 700),
+      lr('L2', 'ana', '2026-09-28', 100),
+      lr('L2', 'cris', '2026-09-28', 700),
     ];
     expect(weekTitles(runs, 'ana', today)).toBe(2);
   });

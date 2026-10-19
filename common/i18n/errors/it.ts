@@ -44,7 +44,7 @@ export const errors: ErrorMessages = {
   improveOnlyToday: 'Puoi migliorare solo la sfida di oggi',
   dailyNotStarted: 'Non hai iniziato la sfida di quel giorno',
   dailyAlreadyDone: 'Hai già completato questa sfida',
-  dailyChangedElsewhere: "La tua partita è cambiata su un altro dispositivo; riapri la sfida",
+  dailyChangedElsewhere: 'La tua partita è cambiata su un altro dispositivo; riapri la sfida',
   finishTodayFirst: 'Completa la sfida di oggi per vedere le partite dei tuoi amici',
   friendNotFinished: 'Quel giocatore non ha completato questa sfida',
   noGhost: 'Non ci sono partite da vedere di quel giocatore',

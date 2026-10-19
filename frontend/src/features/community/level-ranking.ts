@@ -1,7 +1,6 @@
 // Ranking de un nivel de la comunidad, al estilo golf: menos movimientos y, a
 // igualdad, quien lo consiguió antes.
 
-import {  } from '../../shared/dom';
 import { openGolfRanking } from '../ranking/golf-ranking';
 import { getLevelRanking } from './api';
 import { t, tn } from '../../i18n/i18n';

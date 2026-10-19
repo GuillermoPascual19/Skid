@@ -116,7 +116,12 @@ function resultImage(day: string, r: DailyResult): ShareImage {
   return {
     name: `skid-${day}.png`,
     make: async () => {
-      const [{ dailyCard }, hat] = await Promise.all([import('./share-card'), currentMe().then((me) => me.hat).catch(() => null)]);
+      const [{ dailyCard }, hat] = await Promise.all([
+        import('./share-card'),
+        currentMe()
+          .then((me) => me.hat)
+          .catch(() => null),
+      ]);
       return dailyCard(day, r, hat);
     },
   };

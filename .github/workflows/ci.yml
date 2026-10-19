@@ -1,6 +1,6 @@
 name: Tests
 
-# En cada PR: tipos, tests y compilación, lo mismo que el despliegue antes de
+# En cada PR: estilo, tipos, tests y compilación, lo mismo que el despliegue antes de
 # publicar. Así se ve ✅ o ❌ en el PR antes de fusionarlo, y un fallo no llega a main.
 on:
   pull_request:
@@ -27,6 +27,8 @@ jobs:
           node-version: 24
           cache: pnpm
       - run: pnpm install --frozen-lockfile
+      # Estilo y errores comunes (Biome, biome.json). Para arreglarlo en local: pnpm format.
+      - run: pnpm lint
       - run: pnpm test
       # Comprueba los tipos (juego, Worker y common) y compila.
       - run: pnpm run build

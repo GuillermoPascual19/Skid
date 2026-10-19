@@ -1,7 +1,7 @@
 // Efectos de partículas del tablero: destellos al recoger una pieza, polvo de
 // nieve al arrancar y salpicaduras al caer al agua. Se crean y se destruyen solos.
 
-import Phaser from 'phaser';
+import type Phaser from 'phaser';
 import { DIRECTION_DELTA, type Direction } from '../../../common/logic/engine/board';
 import { C, TILE } from './palette';
 
@@ -27,14 +27,7 @@ export function sparkle(scene: Phaser.Scene, layer: Phaser.GameObjects.Container
 }
 
 /** Polvo de nieve al arrancar a deslizarse (por debajo de `below`, el pingüino). */
-export function puff(
-  scene: Phaser.Scene,
-  layer: Phaser.GameObjects.Container,
-  below: Phaser.GameObjects.GameObject,
-  x: number,
-  y: number,
-  dir: Direction,
-): void {
+export function puff(scene: Phaser.Scene, layer: Phaser.GameObjects.Container, below: Phaser.GameObjects.GameObject, x: number, y: number, dir: Direction): void {
   const delta = DIRECTION_DELTA[dir];
   for (let i = 0; i < 4; i++) {
     const p = scene.add.circle(x - delta.x * TILE * 0.2, y + TILE * 0.2, TILE * (0.06 + Math.random() * 0.05), 0xffffff, 0.9);

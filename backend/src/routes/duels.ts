@@ -8,15 +8,7 @@ import { isHatId } from '../../../common/art/hats';
 import { parseBoard } from '../../../common/logic/engine/board';
 import { decodeRows, encodeRows } from '../../../common/logic/community/community';
 import { decodeRun, minPlayTimeMs, replayRun } from '../../../common/logic/daily/daily';
-import {
-  DUEL_COUNTDOWN_MS,
-  DUEL_DURATION_MS,
-  DUEL_LIVE_MS,
-  DUEL_PRESENCE_MS,
-  duelLevel,
-  duelVerdict,
-  isDuelDifficulty,
-} from '../../../common/logic/duels/duels';
+import { DUEL_COUNTDOWN_MS, DUEL_DURATION_MS, DUEL_LIVE_MS, DUEL_PRESENCE_MS, duelLevel, duelVerdict, isDuelDifficulty } from '../../../common/logic/duels/duels';
 import { type Env, HttpError } from '../http';
 import { background, notify } from '../push';
 import { requireName } from './players';
@@ -111,9 +103,7 @@ const present = (seenAt: number | null, now: number) => seenAt !== null && now -
 async function duelResponse(env: Env, duel: DuelRow, playerId: string) {
   const now = Date.now();
   const [{ results: runs }, { results: players }] = await Promise.all([
-    env.DB.prepare('SELECT player_id, started_at, best_moves, best_time_ms, best_log, attempts, done_at FROM duel_runs WHERE duel_id = ?')
-      .bind(duel.id)
-      .all<RunRow>(),
+    env.DB.prepare('SELECT player_id, started_at, best_moves, best_time_ms, best_log, attempts, done_at FROM duel_runs WHERE duel_id = ?').bind(duel.id).all<RunRow>(),
     env.DB.prepare('SELECT id, name, hat FROM players WHERE id IN (?, ?)')
       .bind(duel.challenger_id, duel.opponent_id ?? duel.challenger_id)
       .all<PlayerRow>(),
@@ -204,9 +194,7 @@ export async function createDuel(env: Env, playerId: string, input: { difficulty
     if (!(await areFriends(env, playerId, opponentId))) throw new HttpError(403, 'onlyLeagueRivals');
   }
   const now = Date.now();
-  const active = await env.DB.prepare(
-    'SELECT COUNT(*) AS n FROM duels WHERE challenger_id = ? AND expires_at > ? AND declined_at IS NULL',
-  )
+  const active = await env.DB.prepare('SELECT COUNT(*) AS n FROM duels WHERE challenger_id = ? AND expires_at > ? AND declined_at IS NULL')
     .bind(playerId, now)
     .first<{ n: number }>();
   if ((active?.n ?? 0) >= MAX_ACTIVE_DUELS) throw new HttpError(429, 'maxDuels', { n: MAX_ACTIVE_DUELS });
@@ -227,9 +215,7 @@ export async function createDuel(env: Env, playerId: string, input: { difficulty
 
 /** Tus duelos: los que siguen en marcha y los terminados de las dos últimas semanas. */
 export async function listDuels(env: Env, playerId: string) {
-  const { results } = await env.DB.prepare(
-    `SELECT * FROM duels WHERE (challenger_id = ?1 OR opponent_id = ?1) AND expires_at > ?2 ORDER BY created_at DESC LIMIT 50`,
-  )
+  const { results } = await env.DB.prepare(`SELECT * FROM duels WHERE (challenger_id = ?1 OR opponent_id = ?1) AND expires_at > ?2 ORDER BY created_at DESC LIMIT 50`)
     .bind(playerId, Date.now() - LIST_DAYS_MS)
     .all<DuelRow>();
   return Promise.all(results.map((d) => duelResponse(env, d, playerId)));
@@ -261,9 +247,7 @@ export async function acceptDuel(env: Env, playerId: string, id: string) {
   const duel = await loadDuel(env, id);
   if (duel.challenger_id === playerId) throw new HttpError(400, 'ownDuel');
   if (duel.expires_at <= Date.now()) throw new HttpError(409, 'duelOver');
-  const update = await env.DB.prepare('UPDATE duels SET opponent_id = ?, opponent_seen_at = ? WHERE id = ? AND opponent_id IS NULL')
-    .bind(playerId, Date.now(), id)
-    .run();
+  const update = await env.DB.prepare('UPDATE duels SET opponent_id = ?, opponent_seen_at = ? WHERE id = ? AND opponent_id IS NULL').bind(playerId, Date.now(), id).run();
   if (!update.meta.changes && duel.opponent_id !== playerId) throw new HttpError(409, 'duelHasRival');
   if (update.meta.changes) notifyDuel(env, duel.challenger_id, playerId, id, 'duelAccepted');
   return here(env, playerId, id);

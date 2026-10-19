@@ -10,7 +10,10 @@ describe('logClientError', () => {
 
   it('deja el aviso en los logs y responde 204', async () => {
     const log = vi.spyOn(console, 'error').mockImplementation(() => {});
-    const res = await logClientError(post(JSON.stringify({ kind: 'rejection', message: 'TypeError: x is undefined', source: '/assets/index.js:1:2', route: 'home', build: 'abc', stack: 'at a\nat b' })), env());
+    const res = await logClientError(
+      post(JSON.stringify({ kind: 'rejection', message: 'TypeError: x is undefined', source: '/assets/index.js:1:2', route: 'home', build: 'abc', stack: 'at a\nat b' })),
+      env(),
+    );
     expect(res.status).toBe(204);
     expect(log).toHaveBeenCalledWith({
       event: 'clientError',
