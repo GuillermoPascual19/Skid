@@ -29,6 +29,10 @@ friends, and levels made by the players.
 - **Leagues**: daily and weekly rankings with your friends, and monthly seasons whose champion
   wins that month's hat; emoji reactions to your friends' challenges; achievements in the daily
   challenge, duels, time attack, weekly challenge and community levels unlock more hats.
+  Whoever creates a league manages it: they can remove someone and change the code.
+- **Global ranking**: every player by their daily challenge points, this month and all time (anyone who
+  doesn't want to appear turns it off in the You tab). Every month, the top three win the gold, silver
+  or bronze world laurel.
 - **Player levels**: level editor, publishing (you must beat your level first), ratings, ❤️ likes and
   🔖 saves (with their filters), per-level ranking, sharing and reporting. The admin picks a featured
   level, shown in the Play tab.
@@ -39,6 +43,8 @@ friends, and levels made by the players.
 - In seven languages: Spanish, English, German, French, Portuguese, Italian and Russian. It picks
   the browser's language and can be changed from the home screen.
 - Share on WhatsApp or Telegram, copy the link or the message, or use the system share menu.
+- **Search engine landing pages**: a static page per language (`/es/`, `/en/`…) with screenshots, what's
+  in it, how to play and FAQs, built at compile time (`frontend/landing/`) and listed in the sitemap.
 
 ## Tech stack
 
@@ -87,6 +93,8 @@ frontend/                  the game in the browser (Vite)
     theme-init.js          applies the theme before the first paint
     sw.js                  service worker: shows the notifications
     manifest.webmanifest   installable app (with its icons)
+    landing/, landing.css  screenshots and styles for the search engine landing pages
+  landing/                 search engine landing pages: each language's texts and their HTML (built at compile time)
   src/
     main.ts                startup and routes
     style.css              styles (light and dark theme with CSS variables)
@@ -97,12 +105,16 @@ frontend/                  the game in the browser (Vite)
       weekly/              weekly challenge
       timeattack/          time attack: game, card and ranking
       duels/               duels: challenge, waiting room, live game, result and rematch
-      ranking/             leagues, seasons, reactions and move-based rankings (levels,
-                           weekly challenge)
+      ranking/             leagues (and managing them), seasons, reactions, the global ranking
+                           with its prize and move-based rankings (levels, weekly challenge)
       achievements/        achievements and hats
       community/           player levels: list, editor, play, rate, report
       profile/             name, Google sign-in, other players' profiles and account
       guide/               "How to play" guide and what's-new notice
+      tabs/                Play and You tabs
+      friends/             friends: list, requests and friend link
+      notifications/       turning notifications on and choosing which
+      admin/               admin panel
     play/                  the game screen shared by every mode (pause, gestures, keys) and the
                            "best attempt" game (weekly challenge and duels)
     i18n/                  t() for texts and one dictionary per language (locales/)
@@ -113,14 +125,17 @@ backend/                   the Cloudflare Worker: serves the game (dist/) and th
   src/
     index.ts               routing only
     http.ts                errors, responses and input validation
-    session.ts             sessions, Google sign-in, signing out and deleting the account
+    session.ts             sessions (in an HttpOnly cookie), Google sign-in, signing out and deleting the account
+    turnstile.ts           checking it's a person when creating an account
+    seal.ts                email encryption
     google.ts              Google token verification
     i18n.ts                each request's language for error messages
     push.ts                notifications: who, in which language and without repeats
     webpush.ts             notification encryption and VAPID signing (no libraries)
     routes/                one file per feature: daily, weekly, timeattack, duels, leagues,
-                           seasons, reactions, levels, players, stats, achievements
-  migrations/              D1 database schema (0001 to 0017)
+                           seasons, global, reactions, levels, players, friends, stats, achievements,
+                           push, errors, admin, health
+  migrations/              D1 database schema (0001 to 0023)
 common/                    used by both; no browser APIs and no imports from outside
   logic/                   pure rules: the server replays games with this very same code
     engine/                board, movement, solver, generator, elements, randomness
@@ -129,14 +144,15 @@ common/                    used by both; no browser APIs and no imports from out
     timeattack/            time attack: the week's boards and points
     duels/                 duels: difficulties, timings and who wins
     achievements/          achievements
-    leagues/               seasons (dates, podium and each month's hat) and reactions
+    leagues/               seasons (dates, podium and each month's hat), the global ranking podium
+                           and reactions
     community/             validation of player-made levels
-    players/               player name rules
+    players/               player name rules and the offensive words filter
   i18n/                    languages, error messages and notification texts
   art/                     SVG drawings (penguin, hats, elements)
 tests/                     backend/ and common/, mirroring the code tree; worker/ tests the routes with
                            their real SQL on an in-memory SQLite (node:sqlite) with the migrations
-.github/workflows/         automatic deployment
+.github/workflows/         checks on every PR, automatic deployment and the weekly backup
 wrangler.jsonc             Worker config: D1, rate limits, assets
 vite.config.ts             Vite and Vitest
 pnpm-workspace.yaml        pnpm security settings
@@ -270,7 +286,9 @@ anything from outside) and builds the game to `dist/`.
   and anyone can delete their account with all its data (their leagues pass to another member).
 - Names: Latin alphabet only (with accents and ñ), digits and . _ ' -; and no two names can share the
   same key (ignoring accents, case and separators), so nobody can impersonate someone else
-  (`common/logic/players/names.ts`).
+  (`common/logic/players/names.ts`). Player, level and league names also go through a filter of insults
+  and swear words in the seven languages that sees through the usual tricks (`pu7a`, `f.u.c.k`, repeated
+  letters) without blocking innocent words like "Scunthorpe" (`common/logic/players/offensive.ts`).
 - Cheating: the server replays every game and rejects impossible ones or ones sent without playing,
   but it can't know whether someone worked out the solution on their own (the whole game runs in the
   browser).
