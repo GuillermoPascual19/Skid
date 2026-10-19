@@ -303,6 +303,9 @@ Primera vez:
 3. Publica: `pnpm run deploy`. Aplica las migraciones y despliega; al terminar muestra la URL
    (`https://skid.<tu-subdominio>.workers.dev`).
 
+Comprobación de cada PR (`.github/workflows/ci.yml`): tipos, tests y compilación, con ✅ o ❌ en el PR
+antes de fusionarlo.
+
 Despliegue automático en cada push a `main` (`.github/workflows/deploy.yml`, pasa los tests antes):
 añade en GitHub, en *Settings → Secrets and variables → Actions*, los secrets
 `CLOUDFLARE_API_TOKEN` (créalo en el panel con la plantilla *Edit Cloudflare Workers* y permiso
