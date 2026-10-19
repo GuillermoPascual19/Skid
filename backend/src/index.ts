@@ -43,6 +43,7 @@ import { newReactions, react } from './routes/reactions';
 import { deleteSubscription, pushKey, saveSubscription, streakReminders, testPush } from './routes/push';
 import { playerStats } from './routes/stats';
 import { logClientError } from './routes/errors';
+import { health } from './routes/health';
 import { acceptFriend, addByLink, dropRequest, friendLink, friendsOverview, removeFriend, requestFriend } from './routes/friends';
 import { adminClearReports, adminDeleteLevel, adminFeatureLevel, adminLevels, adminPlayers, adminResetName, adminSummary, isAdmin } from './routes/admin';
 import { authenticate, createSession, deleteAccount, googleLogin, logoutEverywhere, sealLegacyEmails, sessionCookie } from './session';
@@ -155,6 +156,7 @@ async function handleApi(req: Request, url: URL, env: Env): Promise<Response> {
     return withSession(json({ ok: true }), url, token);
   }
   if (route === 'POST /errors') return logClientError(req, env);
+  if (route === 'GET /health') return health(env);
   if (route === 'GET /config') {
     return json({ googleClientId: env.GOOGLE_CLIENT_ID || null, analyticsToken: env.CF_ANALYTICS_TOKEN || null, turnstileSiteKey: turnstileSiteKey(env) });
   }

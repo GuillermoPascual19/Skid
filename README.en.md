@@ -368,3 +368,17 @@ Restoring a weekly backup (without touching the current database until the end):
    push the change: the deploy points the game at it. The old database stays untouched just in case.
 
 The decrypted `skid.sql` file holds player data: delete it when you're done.
+
+## Downtime alerts
+
+`GET /api/health` (no session) answers 200 if the Worker and the database respond, and 503 if the
+database fails (`backend/src/routes/health.ts`). It repeats the last answer for 30 seconds, so calling it
+often doesn't spend database reads.
+
+To get an email when the game goes down (and another when it's back), a free external service such as
+[UptimeRobot](https://uptimerobot.com) checks it every 5 minutes:
+
+1. *New monitor → HTTP(s)*, URL `https://skid.<your-subdomain>.workers.dev/api/health`, every 5 minutes.
+2. Another one with the home page (`https://skid.<your-subdomain>.workers.dev/`), to know the game's files
+   load.
+3. Under *Alert contacts*, your email (or the mobile app, for instant alerts).

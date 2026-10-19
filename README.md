@@ -363,3 +363,17 @@ Restaurar una copia semanal (sin tocar la base actual hasta el final):
    sube el cambio: el despliegue apunta el juego a ella. La base vieja queda intacta por si hiciera falta.
 
 El archivo `skid.sql` descifrado tiene datos de los jugadores: bórralo al terminar.
+
+## Avisos si se cae
+
+`GET /api/health` (sin sesión) responde 200 si el Worker y la base de datos contestan, y 503 si la base
+de datos falla (`backend/src/routes/health.ts`). Repite la última respuesta durante 30 segundos, así que
+llamarla a menudo no gasta base de datos.
+
+Para recibir un correo cuando el juego se cae (y otro cuando vuelve), un servicio externo gratuito como
+[UptimeRobot](https://uptimerobot.com) la consulta cada 5 minutos:
+
+1. *New monitor → HTTP(s)*, URL `https://skid.<tu-subdominio>.workers.dev/api/health`, cada 5 minutos.
+2. Otro igual con la portada (`https://skid.<tu-subdominio>.workers.dev/`), para saber si los archivos del
+   juego cargan.
+3. En *Alert contacts*, tu correo (o la app del móvil, con avisos al momento).
