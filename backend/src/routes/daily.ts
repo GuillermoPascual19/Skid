@@ -8,6 +8,7 @@ import { dailyLevel, dayKey, decodeRun, encodeRun, minPlayTimeMs, replayRun } fr
 import { streaks } from '../../../common/logic/daily/streaks';
 import { golfPoints, overPar } from '../../../common/logic/daily/score';
 import { type Env, HttpError } from '../http';
+import { forgetGlobalRanking } from './global';
 
 const MAX_LOG_LENGTH = 5000;
 
@@ -130,7 +131,10 @@ export async function finishRun(env: Env, playerId: string, day: string, log: un
         day,
         run.log,
       );
-  if (!(await update.run()).meta.changes) {
+  const updated = (await update.run()).meta.changes > 0;
+  // Los puntos nuevos cuentan ya en el ranking global.
+  if (updated && improved) forgetGlobalRanking();
+  if (!updated) {
     throw new HttpError(409, improving ? 'dailyChangedElsewhere' : 'dailyAlreadyDone');
   }
 

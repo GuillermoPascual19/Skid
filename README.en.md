@@ -128,6 +128,7 @@ backend/                   the Cloudflare Worker: serves the game (dist/) and th
     session.ts             sessions (in an HttpOnly cookie), Google sign-in, signing out and deleting the account
     turnstile.ts           checking it's a person when creating an account
     seal.ts                email encryption
+    memo.ts                in-memory cache for the global ranking and the level lists' order (one minute)
     google.ts              Google token verification
     i18n.ts                each request's language for error messages
     push.ts                notifications: who, in which language and without repeats
@@ -276,6 +277,9 @@ anything from outside) and builds the game to `dist/`.
 - Batched reads: the ones the game makes at the same time (the home screen's when it opens) go together
   in a single request, `GET /api/batch?p=…` (up to 12), checking the session once and sending each read
   through its usual route (`frontend/src/shared/api.ts`, `backend/src/index.ts`).
+- Cache: the global ranking and the order of "Top" and "New" levels are the same for everyone and
+  expensive to compute: they're kept for a minute in the Worker's memory and dropped as soon as something
+  changes them (`backend/src/memo.ts`). Each player's own data (their rank, their likes…) is always fresh.
 - Limits: 120 requests per minute per player across the whole API, request bodies of 32 KB at most,
   and specific limits for creating accounts, joining leagues and publishing levels (`wrangler.jsonc`).
 - Headers: a strict CSP and the other security headers in `frontend/public/_headers`; the API sets its

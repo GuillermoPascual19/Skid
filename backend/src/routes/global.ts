@@ -15,11 +15,22 @@ import {
   shiftSeason,
 } from '../../../common/logic/leagues/seasons';
 import { type Env, HttpError } from '../http';
+import { forget, memo } from '../memo';
 
 export type GlobalPeriod = 'month' | 'all';
 
 /** Cuántos se muestran (y, si no estás entre ellos, tu puesto aparte). */
 export const GLOBAL_RANKING_SIZE = 50;
+
+/** El ranking es el mismo para todos: se calcula como mucho una vez por minuto (backend/src/memo.ts). */
+const RANKING_TTL_MS = 60_000;
+/** Cerrar los meses terminados: basta con mirarlo de vez en cuando. */
+const SETTLE_TTL_MS = 10 * 60_000;
+
+/** Algo cambia el ranking (un reto terminado, un nombre, alguien que se oculta…): se vuelve a calcular. */
+export function forgetGlobalRanking(): void {
+  forget('global:');
+}
 
 interface GlobalRow {
   player_id: string;
@@ -49,10 +60,12 @@ export async function globalRanking(env: Env, playerId: string, period: string) 
   await settleGlobalSeasons(env);
   const today = dayKey(new Date());
   const { from, to } = period === 'month' ? seasonRange(seasonOf(today)) : { from: '0000-01-01', to: today };
-  const [{ results }, me] = await Promise.all([
-    env.DB.prepare(`SELECT * FROM (${RANKED}) WHERE pos <= ?4 OR player_id = ?1 ORDER BY pos, days, name`)
-      .bind(playerId, from, to, GLOBAL_RANKING_SIZE)
-      .all<GlobalRow>(),
+  const [results, me] = await Promise.all([
+    // Todos, ya ordenados (de ahí salen los primeros y tu puesto), guardados un minuto.
+    memo(`global:ranking:${from}:${to}`, RANKING_TTL_MS, async () => {
+      const { results } = await env.DB.prepare(`SELECT * FROM (${RANKED}) ORDER BY pos, days, name`).bind(null, from, to).all<GlobalRow>();
+      return results;
+    }),
     env.DB.prepare('SELECT name, hide_global FROM players WHERE id = ?').bind(playerId).first<{ name: string | null; hide_global: number }>(),
   ]);
   const entry = (r: GlobalRow) => ({
@@ -75,7 +88,7 @@ export async function globalRanking(env: Env, playerId: string, period: string) 
     ends: seasonRange(season).to,
     prizes: GLOBAL_HATS,
     previous: period === 'month' ? await previousPodium(env, playerId, shiftSeason(season, -1)) : null,
-    total: results[0]?.total ?? 0,
+    total: results.length,
     top,
     me: mine && mine.pos > GLOBAL_RANKING_SIZE ? entry(mine) : null,
     /** Te has ocultado del ranking: no sales aunque tengas puntos. */
@@ -89,12 +102,18 @@ export async function globalRanking(env: Env, playerId: string, period: string) 
 export async function setGlobalVisible(env: Env, playerId: string, visible: unknown) {
   if (typeof visible !== 'boolean') throw new HttpError(400, 'invalidBody');
   await env.DB.prepare('UPDATE players SET hide_global = ? WHERE id = ?').bind(visible ? 0 : 1, playerId).run();
+  forgetGlobalRanking();
   return { visible };
 }
 
 /** Cierra los meses ya terminados que aún no tienen podio. Si dos peticiones lo hacen a la vez, calculan lo mismo. */
-export async function settleGlobalSeasons(env: Env): Promise<void> {
+export function settleGlobalSeasons(env: Env): Promise<void> {
   const today = dayKey(new Date());
+  // Una vez cada rato por mes en curso: al cambiar de mes, la clave cambia y se cierra enseguida.
+  return memo(`global:settle:${seasonOf(today)}`, SETTLE_TTL_MS, () => settle(env, today));
+}
+
+async function settle(env: Env, today: string): Promise<void> {
   const { results } = await env.DB.prepare('SELECT season FROM global_seasons').all<{ season: string }>();
   const settled = new Set(results.map((r) => r.season));
   const statements: D1PreparedStatement[] = [];
@@ -123,6 +142,11 @@ export async function settleGlobalSeasons(env: Env): Promise<void> {
 
 /** El podio de un mes ya cerrado (null si aún no se ha cerrado o no contaba). */
 async function previousPodium(env: Env, playerId: string, season: string) {
+  const podium = await memo(`global:podium:${season}`, RANKING_TTL_MS, () => closedPodium(env, season));
+  return podium && { season, podium: podium.map((p) => ({ ...p, isMe: p.id === playerId })) };
+}
+
+async function closedPodium(env: Env, season: string) {
   const [closed, { results }] = await Promise.all([
     env.DB.prepare('SELECT 1 FROM global_seasons WHERE season = ?').bind(season).first(),
     env.DB.prepare(
@@ -136,10 +160,7 @@ async function previousPodium(env: Env, playerId: string, season: string) {
       .all<{ id: string; name: string | null; position: number; points: number }>(),
   ]);
   if (!closed) return null;
-  return {
-    season,
-    podium: results.map((r) => ({ id: r.id, name: r.name, position: r.position, points: r.points, hat: globalHat(r.position), isMe: r.id === playerId })),
-  };
+  return results.map((r) => ({ id: r.id, name: r.name, position: r.position, points: r.points, hat: globalHat(r.position) }));
 }
 
 export interface GlobalTitle {

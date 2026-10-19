@@ -37,7 +37,7 @@ import {
   reportCustomLevel,
 } from './routes/levels';
 import { playerProfile } from './routes/players';
-import { globalRanking, globalTitles, setGlobalVisible, settleGlobalSeasons } from './routes/global';
+import { forgetGlobalRanking, globalRanking, globalTitles, setGlobalVisible, settleGlobalSeasons } from './routes/global';
 import { leagueSeason, seasonHats, seasonTitles, settleSeasons } from './routes/seasons';
 import { newReactions, react } from './routes/reactions';
 import { deleteSubscription, pushKey, saveSubscription, streakReminders, testPush } from './routes/push';
@@ -234,6 +234,7 @@ async function authedApi(req: Request, url: URL, env: Env, session: Session): Pr
       if (!owned) throw new HttpError(403, 'hatLocked');
     }
     await env.DB.prepare('UPDATE players SET hat = ? WHERE id = ?').bind(hat, playerId).run();
+    forgetGlobalRanking(); // Se ve en el ranking global.
     return json({ hat });
   }
   if (route === 'PUT /me/global') {
@@ -252,6 +253,7 @@ async function authedApi(req: Request, url: URL, env: Env, session: Session): Pr
     const taken = await env.DB.prepare('SELECT 1 FROM players WHERE name_key = ? AND id <> ?').bind(key, playerId).first();
     if (taken) throw new HttpError(409, 'nameTaken');
     await env.DB.prepare('UPDATE players SET name = ?, name_key = ? WHERE id = ?').bind(clean, key, playerId).run();
+    forgetGlobalRanking();
     return json({ name: clean });
   }
 

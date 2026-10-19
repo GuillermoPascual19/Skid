@@ -6,6 +6,7 @@ import { isSealed, seal } from './seal';
 import { GOOGLE_CERTS_URL, googleKeyProvider, InvalidTokenError, verifyGoogleIdToken } from './google';
 import { type Env, HttpError, type Session } from './http';
 import { verifyTurnstile } from './turnstile';
+import { forgetAll } from './memo';
 
 /** Cuentas nuevas por IP y día (alto a propósito: en una universidad muchos comparten IP). */
 const MAX_SESSIONS_PER_IP_PER_DAY = 20;
@@ -237,6 +238,7 @@ export async function deleteAccount(env: Env, session: Session): Promise<{ ok: t
     env.DB.prepare('DELETE FROM players WHERE id = ?').bind(id),
     env.DB.prepare('DELETE FROM leagues WHERE NOT EXISTS (SELECT 1 FROM league_members m WHERE m.league_id = leagues.id)'),
   ]);
+  forgetAll(); // Sus puntos y sus niveles desaparecen de los rankings y las listas.
   return { ok: true };
 }
 
