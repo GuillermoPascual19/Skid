@@ -1,0 +1,32 @@
+name: Tests
+
+# En cada PR: tipos, tests y compilación, lo mismo que el despliegue antes de
+# publicar. Así se ve ✅ o ❌ en el PR antes de fusionarlo, y un fallo no llega a main.
+on:
+  pull_request:
+
+permissions:
+  contents: read
+
+# Un push nuevo al mismo PR cancela la comprobación anterior, que ya no sirve.
+concurrency:
+  group: ci-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+jobs:
+  check:
+    name: Tipos, tests y compilación
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v7
+      # La versión de pnpm sale de "packageManager" en package.json.
+      - uses: pnpm/action-setup@v6
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm test
+      # Comprueba los tipos (juego, Worker y common) y compila.
+      - run: pnpm run build
