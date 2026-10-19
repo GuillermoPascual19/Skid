@@ -57,7 +57,7 @@
     "VAPID_PUBLIC_KEY": "BJmwTicRwRFCqeHJTNHkdKJifK-JaekC5lIyPBaBiRU6UXPTLhWNBm9kCu9PTPqlq8tLN2qF22GGEZMEp5Y754o",
     // Turnstile (comprobar que es una persona al crear cuenta): la clave pública del widget, del panel
     // de Cloudflare. La secreta es el secreto TURNSTILE_SECRET. Sin las dos, no se comprueba.
-    "TURNSTILE_SITE_KEY": ""
+    "TURNSTILE_SITE_KEY": "0x4AAAAAAFbIFJ7ZfHClT6vR"
   },
   // Recordatorio de racha: cada día a las 18:00 UTC (las 20:00 en Madrid en verano, las 19:00 en invierno).
   "triggers": { "crons": ["0 18 * * *"] },
