@@ -3,8 +3,9 @@
 **Español** · [English](README.en.md)
 
 Puzzle de deslizamiento sobre hielo: el pingüino no frena hasta chocar, y hay que recoger las piezas
-en orden con el menor número de movimientos. Retos diarios y semanales, duelos y ligas entre amigos,
-y niveles creados por los jugadores.
+en orden con el menor número de movimientos. Retos diarios y semanales, contrarreloj, duelos en directo,
+ligas entre amigos, un ranking global con premio cada mes y niveles creados por los jugadores. En siete
+idiomas, se instala como app y se puede jugar sin conexión.
 
 **Juega en <https://skid.gpm-854.workers.dev>**
 
@@ -54,10 +55,10 @@ y niveles creados por los jugadores.
 | Sonido | Web Audio API: música y efectos sintetizados en el navegador, sin archivos de audio |
 | Servidor | [Cloudflare Workers](https://developers.cloudflare.com/workers/): sirve el juego (static assets) y la API `/api/*` |
 | Base de datos | [Cloudflare D1](https://developers.cloudflare.com/d1/) (SQLite) con migraciones SQL; Rate Limiting de Workers contra abusos |
-| Cuentas | Jugadores anónimos con token; [Iniciar sesión con Google](https://developers.google.com/identity/gsi/web) opcional |
-| Tests | [Vitest](https://vitest.dev/) 4 |
+| Cuentas | Jugadores anónimos con la sesión en una cookie `HttpOnly`; [Turnstile](https://developers.cloudflare.com/turnstile/) al crearlas; [Iniciar sesión con Google](https://developers.google.com/identity/gsi/web) opcional |
+| Calidad | [Vitest](https://vitest.dev/) 4 (tests, también de las rutas con su SQL real) y [Biome](https://biomejs.dev/) 2 (estilo y errores comunes) |
 | Herramientas | Node 24, [pnpm](https://pnpm.io/) 10, [Wrangler](https://developers.cloudflare.com/workers/wrangler/) 4 |
-| Despliegue | GitHub Actions: tests, build, migraciones y despliegue en cada merge a `main` |
+| Despliegue | GitHub Actions: en cada PR, estilo, tipos, tests y compilación (obligatorio para fusionar); en cada merge a `main`, migraciones y despliegue; cada lunes, copia de seguridad cifrada de la base de datos |
 
 La lógica del juego (`common/`) es TypeScript puro y la usan los dos lados: el navegador para jugar y
 el servidor para reproducir cada partida y comprobar que es válida.
@@ -143,7 +144,7 @@ backend/                   el Worker de Cloudflare: sirve el juego (dist/) y la 
     routes/                un archivo por apartado: daily, weekly, timeattack, duels, leagues,
                            seasons, global, reactions, levels, players, friends, stats, achievements,
                            push, errors, admin, health
-  migrations/              esquema de la base de datos D1 (0001 a 0023)
+  migrations/              esquema de la base de datos D1 (0001 a 0024)
 common/                    lo que usan los dos; sin APIs del navegador ni imports de fuera
   logic/                   reglas puras: el servidor reproduce las partidas con este mismo código
     engine/                tablero, movimiento, solver, generador, elementos, aleatorio

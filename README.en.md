@@ -3,10 +3,11 @@
 [Español](README.md) · **English**
 
 Ice-sliding puzzle: the penguin doesn't stop until it hits something, and you have to collect the
-pieces in order in as few moves as possible. Daily and weekly challenges, duels and leagues with
-friends, and levels made by the players.
+pieces in order in as few moves as possible. Daily and weekly challenges, time attack, live duels,
+leagues with friends, a global ranking with a monthly prize and levels made by the players. In seven
+languages, installable as an app and playable offline.
 
-**Play at <https://skid.gpm-854.workers.dev>** (the game is in Spanish).
+**Play at <https://skid.gpm-854.workers.dev>**
 
 ## What's inside
 
@@ -54,10 +55,10 @@ friends, and levels made by the players.
 | Sound | Web Audio API: music and effects synthesized in the browser, no audio files |
 | Server | [Cloudflare Workers](https://developers.cloudflare.com/workers/): serves the game (static assets) and the `/api/*` API |
 | Database | [Cloudflare D1](https://developers.cloudflare.com/d1/) (SQLite) with SQL migrations; Workers Rate Limiting against abuse |
-| Accounts | Anonymous players with a token; optional [Sign in with Google](https://developers.google.com/identity/gsi/web) |
-| Tests | [Vitest](https://vitest.dev/) 4 |
+| Accounts | Anonymous players with the session in an `HttpOnly` cookie; [Turnstile](https://developers.cloudflare.com/turnstile/) when creating them; optional [Sign in with Google](https://developers.google.com/identity/gsi/web) |
+| Quality | [Vitest](https://vitest.dev/) 4 (tests, including the routes with their real SQL) and [Biome](https://biomejs.dev/) 2 (style and common mistakes) |
 | Tooling | Node 24, [pnpm](https://pnpm.io/) 10, [Wrangler](https://developers.cloudflare.com/workers/wrangler/) 4 |
-| Deployment | GitHub Actions: tests, build, migrations and deploy on every merge to `main` |
+| Deployment | GitHub Actions: on every PR, style, types, tests and build (required to merge); on every merge to `main`, migrations and deploy; every Monday, an encrypted database backup |
 
 The game logic (`common/`) is plain TypeScript used on both sides: by the browser to play, and by the
 server to replay every game and check that it's valid.
@@ -143,7 +144,7 @@ backend/                   the Cloudflare Worker: serves the game (dist/) and th
     routes/                one file per feature: daily, weekly, timeattack, duels, leagues,
                            seasons, global, reactions, levels, players, friends, stats, achievements,
                            push, errors, admin, health
-  migrations/              D1 database schema (0001 to 0023)
+  migrations/              D1 database schema (0001 to 0024)
 common/                    used by both; no browser APIs and no imports from outside
   logic/                   pure rules: the server replays games with this very same code
     engine/                board, movement, solver, generator, elements, randomness
