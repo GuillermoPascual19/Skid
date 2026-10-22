@@ -65,7 +65,7 @@ server to replay every game and check that it's valid.
 
 ## Development
 
-You need **Node 24** (see `.node-version`) and **pnpm** (its version is in `packageManager` in
+You need **Node 24 LTS**, at least 24.22.1 (the exact version is in `.node-version`; with an older one, pnpm won't install or run anything) and **pnpm** (its version is in `packageManager` in
 `package.json`; `corepack enable` installs it for you). For security, `pnpm-workspace.yaml` only lets
 `esbuild`, `sharp` and `workerd` run install scripts, and doesn't install versions published less
 than 3 days ago.

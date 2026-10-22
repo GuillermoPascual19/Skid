@@ -12,3 +12,7 @@ strictDepBuilds: true
 # No instalar versiones publicadas hace menos de 3 días (en minutos): los paquetes
 # comprometidos suelen detectarse y retirarse antes.
 minimumReleaseAge: 4320
+
+# Que no se instale con un Node que no cumpla "engines" de package.json (por ejemplo, una
+# versión con fallos de seguridad conocidos).
+engineStrict: true
