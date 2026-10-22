@@ -65,7 +65,7 @@ el servidor para reproducir cada partida y comprobar que es válida.
 
 ## Desarrollo
 
-Hace falta **Node 24** (ver `.node-version`) y **pnpm** (la versión está en `packageManager` de
+Hace falta **Node 24 LTS**, como mínimo la 24.22.1 (la versión exacta está en `.node-version`; con una anterior, pnpm no instala ni ejecuta nada) y **pnpm** (la versión está en `packageManager` de
 `package.json`; con `corepack enable` se instala sola). Por seguridad, `pnpm-workspace.yaml` solo deja
 ejecutar scripts de instalación a `esbuild`, `sharp` y `workerd`, y no instala versiones publicadas
 hace menos de 3 días.
